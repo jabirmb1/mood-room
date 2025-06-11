@@ -32,7 +32,8 @@ export default function RootLayout({
       >
 
         <NavBar />
-        <main className="flex-grow">{children}</main>
+        {/* main content area has some side margins for better readability */}
+        <main className="flex-grow w-[90vw] m-auto">{children}</main>
         <Footer />
       </body>
     </html>
