@@ -1,7 +1,33 @@
-export default function generationPage() {
-  
+'use client'
+import { Canvas } from "@react-three/fiber"
+import { Object3D } from "@/components/3d/Object3D"
+import { OrbitControls } from "@react-three/drei"
 
-    return (
-      <h1>Generation</h1>
-    )
+/**** This page is used to generate a modd room from user input, for now this is just a testing page to load models and
+ * test out the movement logic.
+ */
+export default function GenerationPage() {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <h1> generate/ edit room</h1>
+      <p>Customize your room by selecting a 3D model and applying a color palette.</p>
+      <div className = "bg-gray-500 h-[70vh] w-full">
+        <Canvas className = "w-full h-full" camera={{ position: [0, 5, 5], fov: 50}}>
+          <OrbitControls/>
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[5, 5, 5]} />
+          <Object3D
+            url="/assets/NormTable.glb"
+            mode = "edit"
+            colorPalette={{
+              primary: "#0000ff",
+              secondary: "#ff0000",
+              accent: "#ff0000"
+            }}/>
+        </Canvas>
+        
+      </div>
+    </div>
+  )
 }
+
