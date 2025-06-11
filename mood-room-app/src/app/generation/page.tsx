@@ -19,13 +19,28 @@ export default function GenerationPage() {
           <Object3D
             url="/assets/NormTable.glb"
             mode = "edit"
-            colorPalette={{
+            colourPalette={{
               primary: "#0000ff",
               secondary: "#ff0000",
-              accent: "#ff0000"
+              tertiary: "#ff0000"
             }}/>
-        </Canvas>
-        
+
+          <Object3D
+            url="/assets/NormTable.glb"
+            mode = "edit"
+            colourPalette={{
+              primary: "#ff0000",
+              secondary: "#ff0000",
+              tertiary: "#ff0000"}}
+            position = {[120, 0, 0]}
+            />
+
+          <Object3D
+            url="/assets/NormTable.glb"
+            mode = "edit"
+            position = {[240, 0, 0]}
+            />
+        </Canvas>        
       </div>
     </div>
   )
