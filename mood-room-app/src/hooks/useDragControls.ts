@@ -45,7 +45,7 @@ function handlePointerMove(e: ThreeEvent<PointerEvent>, ref: React.RefObject<THR
     const ray = e.ray;
     const intersection = new THREE.Vector3();
 
-    if (ray.intersectPlane(plane.current, intersection)) {// if our ray interescts the dragging plane, it means that it is a draggable objecy
+    if (ray.intersectPlane(plane.current, intersection)) {// if our ray interescts the dragging plane, it means that it is a draggable object
         const newPos = intersection.add(dragOffset.current);
         // update object's position to new position
         ref.current.position.copy(newPos);

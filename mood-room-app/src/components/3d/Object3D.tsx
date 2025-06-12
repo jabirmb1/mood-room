@@ -2,7 +2,8 @@
 import { useGLTF} from "@react-three/drei";
 import { useEffect, useState, useRef, useMemo} from "react";
 import { useDragControls } from "@/hooks/useDragControls";
-import { useFrame, ThreeEvent } from "@react-three/fiber";
+import {ThreeEvent } from "@react-three/fiber";
+import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
 import * as THREE from "three";
 // importing types and functions
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette } from "@/utils/object3D";
@@ -43,7 +44,8 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0],  
     onChange: onPositionChange,
   });
 
-  
+  // add in movement logic:
+  useKeyboardMovement({ref: ref, enabled: isSelected, onChange: onPositionChange});
 
   // add in a custom colour palette to model if user has specfied one.
   useEffect(() => {
@@ -96,6 +98,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0],  
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}/>
 
-    </>
+
+      </>
   );
 }
