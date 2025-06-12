@@ -27,6 +27,7 @@ export function cloneModel(scene: THREE.Object3D) {
     clonedModel.traverse((child: any) => {
         if (child.isMesh && child.material) {
             child.material = child.material.clone();
+            child.userData.isDraggable = true// we also want all models (except for floors and walls) to be draggable.
             meshesWithMaterials.push(child);
         }
     });
@@ -116,3 +117,15 @@ export function applyHoverEffect(
         });
       }
   }
+
+// This function will be used to move the object from the current position (an alternative to just dragging e.g. keyboard presses)
+// UI buttons etc
+//
+export function moveObject(ref: React.RefObject<THREE.Object3D>, newPos: [number, number, number],  onChange: (newPos: [number, number, number]) => void)
+{
+  if (!ref.current) return;
+
+  const pos = ref.current.position;
+  pos.set(pos.x + newPos[0], pos.y + newPos[1], pos.z + newPos[2]);
+  onChange([pos.x, pos.y, pos.z]);// pass the change up to parent component for rerender.
+}
