@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useMemo} from "react";
 import { useDragControls } from "@/hooks/useDragControls";
 import {ThreeEvent } from "@react-three/fiber";
 import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
+import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette } from "@/utils/object3D";
@@ -19,7 +20,6 @@ type Object3DProps = {
   mode: "edit" | "view";// if user can edit the model or just view it
   colourPalette?: ColourPalette;// colour palette to apply to the model
   position?: [number, number, number];// position of the model in the scene
-  size?: number;// size of the model in the scene.
   isSelected: boolean;// boolean flag to check if current model is the selected one or not.
   onSelect: () => void;// a function to be run when it is selected.
   onDragging: (dragging: boolean) => void
@@ -28,13 +28,21 @@ type Object3DProps = {
 };
 
 
-export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0],  size = 1, isSelected = false, onSelect, onDragging, onPositionChange}: Object3DProps) {
+
+export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, onSelect, onDragging, onPositionChange}: Object3DProps) {
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
   // we clone the model and also the material to make it fully independant of other models (allows us to place multiple of 
   // same model if needed)
   const clonedScene = useMemo(() => cloneModel(scene), [scene]);
   const ref = useRef<THREE.Object3D>(null)// pass in a reference down to the dragging controls so that script knows which object to drag.
   const [hovered, setHovered] = useState(false);
+
+  // all models used are propertionaly modelled relative to each other, so we will not use any scaling logic
+  // to normalise models.
+  const baseScale = globalScale;// this scale represents the default size of object
+  // will be used to e.g. reset object back to normal size when needed.
+  const [scale, setScale] = useState<number>(baseScale);
+
   
   // add in the dragging logic:
   const { onPointerDown, onPointerMove, onPointerUp } = useDragControls(ref, {
@@ -63,8 +71,8 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0],  
   // add in a hovered effect if user is in edit mode and hovers over model
   useEffect(() => {
     if (!ref.current) return;
-    applyHoverEffect(ref.current, hovered, mode, size);
-  }, [hovered, mode, size]);
+    applyHoverEffect(ref.current, hovered, mode, scale);
+  }, [hovered, mode, scale]);
 
   useEffect(() => {
     if (isSelected) {
@@ -80,7 +88,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0],  
         ref={ref}
         object={clonedScene}
         position={position}
-        scale={size}
+        scale={scale}
         onClick={(e: ThreeEvent<MouseEvent>)=> {
           e.stopPropagation();
           if (mode === "edit") onSelect();
@@ -97,8 +105,6 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0],  
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}/>
-
-
       </>
   );
 }

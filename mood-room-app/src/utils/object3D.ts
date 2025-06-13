@@ -83,9 +83,11 @@ export function applyHoverEffect(
     model: THREE.Object3D & { meshesWithMaterials?: THREE.Mesh[] },
     hovered: boolean,
     mode: 'view' | 'edit',
-    baseSize: number
-  ) {
-      model.scale.setScalar(hovered ? 1.2 * baseSize : baseSize); // slightly increase model when hovered.
+    currentSize: number) {
+    
+    const scaleFactor = hovered ? 1.2 : 1.0;
+    // uniformly scale up the model by 20%.
+    model.scale.set( currentSize * scaleFactor,  currentSize * scaleFactor,  currentSize * scaleFactor);
   
       const meshes = model.meshesWithMaterials ?? [];
   
