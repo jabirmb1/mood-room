@@ -72,7 +72,7 @@ export default function GenerationPage() {
       <h1>generate/edit room</h1>
       <p>Customize your room by selecting a 3D model and applying a color palette.</p>
       
-      <div className="bg-gray-500 h-[70vh] w-full">
+      <div className="bg-gray-500 h-[70vh] w-full relative">
         <Canvas className="w-full h-full" camera={{ position: [0, 5, 5], fov: 50 }}>
           <ambientLight intensity={0.5} />
           <directionalLight position={[5, 5, 5]} />
