@@ -1,3 +1,6 @@
+// Home page
+// has generate button, 3d model e.g and social media feed
+
 import Image from "next/image";
 
 export default function Home() {
@@ -7,3 +10,4 @@ export default function Home() {
     </div>
   );
 }
+  

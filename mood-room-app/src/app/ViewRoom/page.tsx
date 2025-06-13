@@ -1,3 +1,5 @@
+// you can view other rooms when clicked on (in 3d)
+
 export default function ViewRoomPage() {
   
 
