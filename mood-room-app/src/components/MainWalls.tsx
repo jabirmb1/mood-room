@@ -30,7 +30,6 @@ export default function MainWalls() {
           cellColor="#888"
           fadeDistance={100}
           fadeStrength={1}
-          infiniteGrid
         />
       )}
       <mesh position={[-ROOM_SIZE / 2, WALL_HEIGHT / 2, 0]}>

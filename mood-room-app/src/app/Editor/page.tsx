@@ -77,7 +77,7 @@ export default function Editor() {
               colourPalette={model.colourPalette}
               mode="edit"
               isSelected={selectedId === model.id}
-              onSelect={() => setSelectedId(model.id)}
+              setSelectedId ={setSelectedId}
               onDragging={setDragging}
               onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
             />

@@ -1,5 +1,6 @@
+'use client'
 import { Html } from "@react-three/drei";
-import { useRef } from "react";
+import { useEffect } from "react";
 import * as THREE from "three";
 import React from "react";
 
@@ -8,13 +9,16 @@ import React from "react";
 
 type ObjectEditorPanelProps = {
   objectRef: React.RefObject<THREE.Object3D>,// what object this panel is referencing from.
-  onClose: ()=> void;// function to happen when the panel closes
+  onClose: ()=> void;// function to run when closing the panel and do some clean up.
 }
 export function ObjectEditorPanel({objectRef, onClose}: ObjectEditorPanelProps)
 {
+
   return(
     <>
-      <Html className = "absolute right-0 h-full w-[10rem] bg-white-100">
+    {/* I can't seem to get the menu to take half width of canavas and full height of canavas */}
+     <Html className="absolute top-0 right-0 h-full w-1/2 bg-black text-white z-50 p-4">
+
         <button type = "button" onClick = {onClose}>X</button>
       </Html>
     </>

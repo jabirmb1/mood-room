@@ -8,6 +8,7 @@ import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette } from "@/utils/object3D";
+import { ObjectEditorPanel } from "../ObjectEditorPanel";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
  * , change it's position and size.
@@ -21,15 +22,15 @@ type Object3DProps = {
   colourPalette?: ColourPalette;// colour palette to apply to the model
   position?: [number, number, number];// position of the model in the scene
   isSelected: boolean;// boolean flag to check if current model is the selected one or not.
-  onSelect: () => void;// a function to be run when it is selected.
-  onDragging: (dragging: boolean) => void
-  onPositionChange: (newPos: [number, number, number]) => void
+  setSelectedId: (id: string | null) => void;// this will be used for the object to select and unselect itself.
+  onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
+  onPositionChange: (newPos: [number, number, number]) => void// function to run when the object's positon changes.
 
 };
 
 
 
-export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, onSelect, onDragging, onPositionChange}: Object3DProps) {
+export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, setSelectedId, onDragging, onPositionChange}: Object3DProps) {
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
   // we clone the model and also the material to make it fully independant of other models (allows us to place multiple of 
   // same model if needed)
@@ -41,6 +42,8 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   // to normalise models.
   const baseScale = globalScale;// this scale represents the default size of object
   // will be used to e.g. reset object back to normal size when needed.
+
+  // current scale. size of object.
   const [scale, setScale] = useState<number>(baseScale);
 
   
@@ -73,14 +76,6 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     if (!ref.current) return;
     applyHoverEffect(ref.current, hovered, mode, scale);
   }, [hovered, mode, scale]);
-
-  useEffect(() => {
-    if (isSelected) {
-      // TO-DO: add in selected functionality.
-      console.log("Model selected:", url);
-    }
-  }, [isSelected, url]);
-
   
   return (
     <>
@@ -91,7 +86,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
         scale={scale}
         onClick={(e: ThreeEvent<MouseEvent>)=> {
           e.stopPropagation();
-          if (mode === "edit") onSelect();
+          if (mode === "edit") setSelectedId(id);// object is clicked, so now pass it's id back up to parent component.
         }}
         onPointerOver={(e: ThreeEvent<PointerEvent>) => {
           e.stopPropagation();
@@ -105,6 +100,10 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}/>
+
+      {isSelected && (
+        <ObjectEditorPanel objectRef={ref} onClose={() => setSelectedId(null)} />
+      )}
       </>
   );
 }
