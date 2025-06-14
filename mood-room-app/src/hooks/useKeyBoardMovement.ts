@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { moveObject } from "@/utils/object3D";
+import { globalScale } from "@/utils/const";
 
 /*** This hook is used to move an object via keybaord controls *********/
 
@@ -36,7 +37,7 @@ export function useKeyboardMovement({ref, enabled, onChange}: useKeyboardMovemen
   useFrame(() => {
     if (!enabled || !ref.current) return;
 
-    const step = 1.0;// how far to move object per press.
+    const step = globalScale;// how far to move object per press., here we want it to be one unit which is just our global scale
     let delta: [number, number, number] = [0, 0, 0];// change from original position of object.
 
     if (keysPressed.current["w"] || keysPressed.current["arrowup"]) {
