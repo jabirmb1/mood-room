@@ -55,7 +55,7 @@ export default function Editor() {
       document.body.style.overflow = 'auto';
     } else {
       // Optionally disable page scroll when popup closed
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'auto';
     }
     return () => {
       // Clean up overflow style on unmount
@@ -78,21 +78,25 @@ export default function Editor() {
       <h1 className="text-xl font-bold mb-2">Editor</h1>
       <p>Edit your generated room layout</p>
 
-      <div className="bg-gray-200 w-full h-[80vh] mt-4 relative">
+      <div className="w-full h-[80vh] mt-4 relative">
         <div className="relative w-full h-full">
           <Canvas 
             shadows 
             camera={{ position: [10, 10, 10], fov: 50 }}
             style={{ 
               position: 'relative',
-              zIndex: 1,
-              touchAction: isPopupOpen ? 'none' : 'auto',
+              height: '100%',
+              width: '100%',
+              background: '#e5e7eb',
+              touchAction: isPopupOpen ? 'pan-y' : 'none',
+              cursor: isDragging ? 'grabbing' : 'grab'
             }}
             onWheel={(e) => {
-              if (isPopupOpen) {
+              if (!isPopupOpen) {
                 e.stopPropagation();
               }
             }}
+            className="canvas-container"
           >
             <ambientLight intensity={0.5} />
             <directionalLight position={[5, 10, 5]} />

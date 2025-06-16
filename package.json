@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "framer-motion": "^12.18.1",
-    "uuid": "^11.1.0"
-  }
-}
