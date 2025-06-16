@@ -46,11 +46,18 @@ export default function Editor() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [models, setModels] = useState(() => initialModels);
   const [isDragging, setDragging] = useState(false);
+  const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if objects can be translated or e.g, change thier properties
+  // (like colour, size, rotatione etc.)
 
   const handlePositionChange = useCallback((id: string, newPos: [number, number, number]) => {
     setModels(prev => prev.map(model =>
       model.id === id ? { ...model, position: newPos } : model
     ));
+  }, []);
+
+  const handleSelect = useCallback((id: string | null) => {
+    setEditingMode('edit'); // Always reset to edit mode on select
+    setSelectedId(id);
   }, []);
 
   useEffect(() => {
@@ -77,7 +84,9 @@ export default function Editor() {
               colourPalette={model.colourPalette}
               mode="edit"
               isSelected={selectedId === model.id}
-              setSelectedId ={setSelectedId}
+              editingMode={editingMode}
+              setSelectedId ={handleSelect}
+              setEditingMode={setEditingMode}
               onDragging={setDragging}
               onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
             />

@@ -23,7 +23,10 @@ type Object3DProps = {
   colourPalette?: ColourPalette;// colour palette to apply to the model
   position?: [number, number, number];// position of the model in the scene
   isSelected: boolean;// boolean flag to check if current model is the selected one or not.
+  editingMode: 'edit' | 'move';//what mode the object is in, e.g. edit means that side panel will show to change the object's properties
+  // e.g. size, colour, rotation etc, 'move' will instead show a floating panel which will help user's to translate object.
   setSelectedId: (id: string | null) => void;// this will be used for the object to select and unselect itself.
+  setEditingMode: (mode: 'edit' | 'move') => void;
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
   onPositionChange: (newPos: [number, number, number]) => void// function to run when the object's positon changes.
 
@@ -31,7 +34,7 @@ type Object3DProps = {
 
 
 
-export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, setSelectedId, onDragging, onPositionChange}: Object3DProps) {
+export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, editingMode = 'edit', setSelectedId, setEditingMode, onDragging, onPositionChange}: Object3DProps) {
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
 
    // we clone the model and also the material to make it fully independent of other models
@@ -44,9 +47,6 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   const modelRef = useRef<THREE.Object3D>(null)// reference to change model's colour, size and rotation
   const groupRef = useRef<THREE.Object3D>(null)// reference needed to change model's position (including the floating UI's position)
   const [hovered, setHovered] = useState(false);
-  const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if object needs to show editing panel or floating panel
-  // editing panel allows for change of colours, rotation, size etc, floating panel allows users to translate object.
-  
   const [isHorizontalMode, setIsHorizontalMode] = useState(true); 
 
   // all models used are propertionaly modelled relative to each other, so we will not use any scaling logic
@@ -92,7 +92,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   
   return (
     <>
-      <group ref = {groupRef}position={position}>
+      <group ref = {groupRef}>
 
         {(isSelected && mode === 'edit' && editingMode === 'move') &&(
           // default into starting with horizontal mode whenever we open the panel.
@@ -109,7 +109,11 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
             scale={scale}
             onClick={(e: ThreeEvent<MouseEvent>) => {
               e.stopPropagation();
-              if (mode === "edit" && editingMode !== "move") {
+              if (mode === 'edit') {
+                if (editingMode === 'move') {// this prevents locking, e.g. object1 in movde mode but we click object 2, 
+                  // would have been stuck in move mode and could not render anything.
+                  setEditingMode('edit'); // reset to edit when switching
+                }
                 setSelectedId(id);
               }
             }}
