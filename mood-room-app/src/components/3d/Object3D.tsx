@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 import { useGLTF} from "@react-three/drei";
 import { useEffect, useState, useRef, useMemo} from "react";
 import { useDragControls } from "@/hooks/useDragControls";

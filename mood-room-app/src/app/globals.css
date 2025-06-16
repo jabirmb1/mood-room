@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+input[type="range"]::-webkit-slider-thumb {
+    height: 24px;
+    width: 24px;
+    border-radius: 9999px;
+    background: #facc15; /* yellow */
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -9px; /* to vertically center the thumb */
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    height: 24px;
+    width: 24px;
+    border-radius: 9999px;
+    background: #facc15;
+    cursor: pointer;
+  }
+  

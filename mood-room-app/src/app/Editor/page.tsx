@@ -47,6 +47,22 @@ export default function Editor() {
   const [models, setModels] = useState(() => initialModels);
   const [isDragging, setDragging] = useState(false);
 
+  // When selectedId is non-null, editor panel is open so user can scroll when popup is open.
+  const isPopupOpen = selectedId !== null;
+  useEffect(() => {
+    if (isPopupOpen) {
+      // Allow page scroll when popup is open
+      document.body.style.overflow = 'auto';
+    } else {
+      // Optionally disable page scroll when popup closed
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      // Clean up overflow style on unmount
+      document.body.style.overflow = 'auto';
+    };
+  }, [isPopupOpen]);
+
   const handlePositionChange = useCallback((id: string, newPos: [number, number, number]) => {
     setModels(prev => prev.map(model =>
       model.id === id ? { ...model, position: newPos } : model
@@ -63,26 +79,43 @@ export default function Editor() {
       <p>Edit your generated room layout</p>
 
       <div className="bg-gray-200 w-full h-[80vh] mt-4 relative">
-        <Canvas shadows camera={{ position: [10, 10, 10], fov: 50 }}>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[5, 10, 5]} />
-          <OrbitControls enabled={!isDragging} />
-          <MainWalls />
-          {models.map((model) => (
-            <Object3D
-              key={model.id}
-              id={model.id}
-              url={model.url}
-              position={model.position}
-              colourPalette={model.colourPalette}
-              mode="edit"
-              isSelected={selectedId === model.id}
-              setSelectedId ={setSelectedId}
-              onDragging={setDragging}
-              onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
+        <div className="relative w-full h-full">
+          <Canvas 
+            shadows 
+            camera={{ position: [10, 10, 10], fov: 50 }}
+            style={{ 
+              position: 'relative',
+              zIndex: 1,
+              touchAction: isPopupOpen ? 'none' : 'auto',
+            }}
+            onWheel={(e) => {
+              if (isPopupOpen) {
+                e.stopPropagation();
+              }
+            }}
+          >
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[5, 10, 5]} />
+            <OrbitControls 
+              enabled={!isDragging && !isPopupOpen}
             />
-          ))}
-        </Canvas>
+            <MainWalls />
+            {models.map((model) => (
+              <Object3D
+                key={model.id}
+                id={model.id}
+                url={model.url}
+                position={model.position}
+                colourPalette={model.colourPalette}
+                mode="edit"
+                isSelected={selectedId === model.id}
+                setSelectedId={setSelectedId}
+                onDragging={setDragging}
+                onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
+              />
+            ))}
+          </Canvas>
+        </div>
       </div>
     </div>
   );

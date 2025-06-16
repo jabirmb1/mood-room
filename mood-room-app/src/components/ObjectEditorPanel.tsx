@@ -1,26 +1,56 @@
-'use client'
+
+'use client';
 import { Html } from "@react-three/drei";
-import { useEffect } from "react";
+import { RefObject } from "react";
 import * as THREE from "three";
 import React from "react";
-
-// This component is will be used to show a menu to edit a selected 3dObject e.g. changing colours, size, rotation etc.
-//
+import { motion } from "framer-motion";
+import { RotatingSlider } from "./RotatingSlider";
+import { ColourWheel } from "./ColourWheel";
 
 type ObjectEditorPanelProps = {
-  objectRef: React.RefObject<THREE.Object3D>,// what object this panel is referencing from.
-  onClose: ()=> void;// function to run when closing the panel and do some clean up.
-}
-export function ObjectEditorPanel({objectRef, onClose}: ObjectEditorPanelProps)
-{
+  objectRef: RefObject<THREE.Object3D>;
+  onClose: () => void;
+};
 
-  return(
-    <>
-    {/* I can't seem to get the menu to take half width of canavas and full height of canavas */}
-     <Html className="absolute top-0 right-0 h-full w-1/2 bg-black text-white z-50 p-4">
+export function ObjectEditorPanel({ objectRef, onClose }: ObjectEditorPanelProps) {
+  return (
+    <Html fullscreen>
+      <div className="absolute inset-0 grid grid-cols-2 rounded">
+        {/* Left side: preview area */}
+        <div className="bg-gray-100 p-6">
+          <h2 className="text-xl font-semibold mb-4">Object Preview</h2>
+          <div className="w-full h-64 bg-white rounded shadow-inner flex items-center justify-center">
+            <p>Live preview area</p>
+          </div>
+        </div>
 
-        <button type = "button" onClick = {onClose}>X</button>
-      </Html>
-    </>
-  )
+        {/* Right side: controls */}
+        <motion.aside
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          transition={{ type: 'tween', duration: 0.3 }}
+          className="bg-white shadow-lg border-l border-gray-200 p-6 flex-1"
+        >
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold mb-4">Object Controls</h2>
+
+            <div className="flex gap-2 justify-center">
+              <ColourWheel objectRef={objectRef} />
+            </div>
+
+            <div className="flex gap-2 justify-center">
+              <RotatingSlider />
+            </div>
+
+            <div className="flex gap-6 md:gap-4 sm:gap-2 justify-center">
+              <button className="bg-red-500 text-white px-4 py-2 rounded outline-color-transparent" onClick={onClose}>Close</button>
+              <button className="bg-red-500 text-white px-4 py-2 rounded outline-color-transparent">Delete Object</button>
+            </div>
+          </div>
+          
+        </motion.aside>
+      </div>
+    </Html>
+  );
 }

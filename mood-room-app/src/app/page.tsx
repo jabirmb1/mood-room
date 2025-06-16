@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { RotatingSlider } from "../components/RotatingSlider";
 export default function Home() {
   return (
     <div>
