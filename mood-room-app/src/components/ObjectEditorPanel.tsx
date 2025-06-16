@@ -10,8 +10,9 @@ import React from "react";
 type ObjectEditorPanelProps = {
   objectRef: React.RefObject<THREE.Object3D>,// what object this panel is referencing from.
   onClose: ()=> void;// function to run when closing the panel and do some clean up.
+  setMode: (mode: string) => void;
 }
-export function ObjectEditorPanel({objectRef, onClose}: ObjectEditorPanelProps)
+export function ObjectEditorPanel({objectRef, onClose, setMode}: ObjectEditorPanelProps)
 {
 
   return(
@@ -20,6 +21,7 @@ export function ObjectEditorPanel({objectRef, onClose}: ObjectEditorPanelProps)
      <Html className="absolute top-0 right-0 h-full w-1/2 bg-black text-white z-50 p-4">
 
         <button type = "button" onClick = {onClose}>X</button>
+        <button type = "button" onClick = {() => setMode('move')}>move</button>
       </Html>
     </>
   )
