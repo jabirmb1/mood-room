@@ -131,3 +131,17 @@ export function moveObject(ref: React.RefObject<THREE.Object3D>, newPos: [number
   pos.set(pos.x + newPos[0], pos.y + newPos[1], pos.z + newPos[2]);
   onChange([pos.x, pos.y, pos.z]);// pass the change up to parent component for rerender.
 }
+
+
+
+// This function calculates the bounding box and maximum dimension of a 3D object.
+//
+export function calculateObjectBoxSize(object: THREE.Object3D) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+  const maxDim = Math.max(size.x, size.y, size.z);
+  return { box, size, center, maxDim };
+}

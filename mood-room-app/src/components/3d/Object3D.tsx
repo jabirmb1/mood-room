@@ -29,12 +29,15 @@ type Object3DProps = {
   setEditingMode: (mode: 'edit' | 'move') => void;
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
   onPositionChange: (newPos: [number, number, number]) => void// function to run when the object's positon changes.
+  onGroupRefUpdate?: (ref: THREE.Object3D | null) => void;// a callback to explicitly expose this component's interal group ref to parent.
 
 };
 
 
 
-export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, editingMode = 'edit', setSelectedId, setEditingMode, onDragging, onPositionChange}: Object3DProps) {
+export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, editingMode = 'edit', 
+  setSelectedId, setEditingMode, onDragging, onPositionChange, onGroupRefUpdate}: Object3DProps) {
+
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
 
    // we clone the model and also the material to make it fully independent of other models
@@ -70,6 +73,19 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   // add in movement logic:
   useKeyboardMovement({ref: groupRef, enabled: isSelected && mode === 'edit' && editingMode === 'move',
     isHorizontalMode: isHorizontalMode, onChange: onPositionChange});
+
+  
+  // if the parent page/ component wants the internal group ref (e.g. for camera animations), pass it to them now.
+  useEffect(()=> {
+    if (onGroupRefUpdate)// parent wants to access this object's group ref
+    {
+      onGroupRefUpdate(groupRef.current)
+    }
+    // clean up when unmounting:
+    return () => {
+      if (onGroupRefUpdate) onGroupRefUpdate(null);
+    };
+  }, [onGroupRefUpdate])
 
   // add in a custom colour palette to model if user has specfied one.
   useEffect(() => {
