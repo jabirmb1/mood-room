@@ -92,7 +92,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   
   return (
     <>
-      <group ref = {groupRef}>
+      <group ref = {groupRef} position={position}>
 
         {(isSelected && mode === 'edit' && editingMode === 'move') &&(
           // default into starting with horizontal mode whenever we open the panel.
