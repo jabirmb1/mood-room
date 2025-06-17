@@ -1,28 +1,55 @@
-'use client'
-import { Html } from "@react-three/drei";
-import { useEffect } from "react";
-import * as THREE from "three";
 import React from "react";
-
-// This component is will be used to show a menu to edit a selected 3dObject e.g. changing colours, size, rotation etc.
-//
+import * as THREE from "three";
+import { motion } from "framer-motion";
+import { RotatingSlider } from "./RotatingSlider";
+import { ColourWheel } from "./ColourWheel";
 
 type ObjectEditorPanelProps = {
-  objectRef: React.RefObject<THREE.Object3D>,// what object this panel is referencing from.
-  onClose: ()=> void;// function to run when closing the panel and do some clean up.
+  objectRef: React.RefObject<THREE.Object3D>;
+  onClose: () => void;
   setMode: (mode: string) => void;
-}
-export function ObjectEditorPanel({objectRef, onClose, setMode}: ObjectEditorPanelProps)
-{
+};
 
-  return(
-    <>
-    {/* I can't seem to get the menu to take half width of canavas and full height of canavas */}
-     <Html className="absolute top-0 right-0 h-full w-1/2 bg-black text-white z-50 p-4">
+export function ObjectEditorPanel({ objectRef, onClose, setMode }: ObjectEditorPanelProps) {
+  return (
+    <motion.aside
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'tween', duration: 0.3 }}
+      className="bg-white shadow-xl border-l border-gray-300 p-6 flex flex-col h-full w-full"
+    >
+      <h2 className="text-xl font-semibold mb-4">Object Controls</h2>
 
-        <button type = "button" onClick = {onClose}>X</button>
-        <button type = "button" onClick = {() => setMode('move')}>move</button>
-      </Html>
-    </>
-  )
+      <div className="flex gap-2 justify-center mb-4">
+        <ColourWheel objectRef={objectRef} />
+      </div>
+
+      <div className="flex gap-2 justify-center mb-6">
+        <RotatingSlider />
+      </div>
+
+      <div className="flex gap-6 md:gap-4 sm:gap-2 justify-center mt-auto">
+        <button
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded outline-none"
+          onClick={onClose}
+        >
+          Close
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('move')}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded outline-none"
+        >
+          Move
+        </button>
+        <button
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded outline-none"
+          // Optional delete logic
+        >
+          Delete Object
+        </button>
+      </div>
+    </motion.aside>
+  );
 }
