@@ -147,10 +147,6 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
             onPointerUp={onPointerUp}/>
         )}
       </group>
-
-      {(isSelected && mode === 'edit' && editingMode === 'edit') &&(
-        <ObjectEditorPanel objectRef={modelRef} onClose={() => setSelectedId(null)} setMode={setEditingMode} />
-      )}
       </>
   );
 }
