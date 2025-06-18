@@ -145,7 +145,7 @@ export default function Editor() {
               className={`
                 z-10 bg-white
                 w-full h-[30vh] mt-2
-                lg:absolute lg:top-0 lg:right-0 lg:h-full lg:w-1/2 lg:mt-0
+                absolute bottom-0 lg:top-0 lg:right-0 lg:bottom-auto lg:h-full lg:w-1/2 lg:mt-0
               `}
             >
               <ObjectEditorPanel

@@ -17,7 +17,7 @@ export function ObjectEditorPanel({ objectRef, onClose, setMode }: ObjectEditorP
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'tween', duration: 0.3 }}
-      className="bg-white shadow-xl border-l border-gray-300 p-6 flex flex-col h-full w-full"
+      className="bg-white shadow-xl border-l border-gray-300 p-6 flex flex-col h-full w-full  overflow-y-auto"
     >
       <h2 className="text-xl font-semibold mb-4">Object Controls</h2>
 
