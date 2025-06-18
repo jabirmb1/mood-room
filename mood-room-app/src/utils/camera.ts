@@ -7,6 +7,7 @@ import { calculateObjectBoxSize } from './object3D';
 export function computeCameraTargetPositions( object: THREE.Object3D | null, resetPosition: [number, number, number]) {
   const desiredCameraPos = new THREE.Vector3();// target position to go to
   const desiredLookAt = new THREE.Vector3();// which face to look at.
+  const zoomOffset = -1;// how much to zoom the camera into the object (- makes it go closer, + makes camera further)
 
   if (object) {
     // grab the box dimension so we can calculate the distance.
@@ -19,7 +20,8 @@ export function computeCameraTargetPositions( object: THREE.Object3D | null, res
       .multiplyScalar(distance);
 
     desiredCameraPos.copy(object.position).add(front);
-    desiredCameraPos.y += maxDim;// move the camera slightly off the ground (scales with e.g. tall objects)
+    desiredCameraPos.y = center.y; // Align camera Y to object center (eye level)
+    desiredCameraPos.z += zoomOffset// zoom into object slightly more
 
     desiredLookAt.copy(center);
   }
