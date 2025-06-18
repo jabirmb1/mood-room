@@ -29,14 +29,15 @@ type Object3DProps = {
   setIsHoveringObject?: (hover: boolean) => void;// if this object is currently being hovered or not.
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
   onPositionChange: (newPos: [number, number, number]) => void// function to run when the object's positon changes.
-  onGroupRefUpdate?: (ref: THREE.Object3D | null) => void;// a callback to explicitly expose this component's interal group ref to parent.
+  onModelRefUpdate?: (ref: React.RefObject<THREE.Object3D>) => void;// a callback to explicitly expose the object's internal modelRef to parent.
+  onGroupRefUpdate?: (ref: React.RefObject<THREE.Object3D>)=> void;// a callback to explicitly expose this component's interal group ref to parent.
 
 };
 
 
 
 export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, editingMode = 'edit', 
-  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onPositionChange, onGroupRefUpdate}: Object3DProps) {
+  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onPositionChange, onModelRefUpdate, onGroupRefUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
 
@@ -79,13 +80,23 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   useEffect(()=> {
     if (onGroupRefUpdate)// parent wants to access this object's group ref
     {
-      onGroupRefUpdate(groupRef.current)
+      onGroupRefUpdate(groupRef)
     }
     // clean up when unmounting:
     return () => {
       if (onGroupRefUpdate) onGroupRefUpdate(null);
     };
   }, [onGroupRefUpdate])
+
+  // if parent page wants the internal model ref, pass it to them.
+  useEffect(() => {
+    if (onModelRefUpdate) {
+      onModelRefUpdate(modelRef);// passing the object itself.
+    }
+    return () => {
+      if (onModelRefUpdate) onModelRefUpdate(null);
+    };
+  }, [onModelRefUpdate]);
 
   // add in a custom colour palette to model if user has specfied one.
   useEffect(() => {

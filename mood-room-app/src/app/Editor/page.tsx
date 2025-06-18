@@ -2,16 +2,15 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import { OrbitControls } from '@react-three/drei';
 import MainWalls from '@/components/MainWalls';
-import * as THREE from 'three';
 import { Object3D } from '@/components/3d/Object3D';
 import { CameraController } from '@/components/CameraController';
 import { v4 as uuidv4 } from 'uuid';
 import { defaultCameraPosition } from '@/utils/const';
 import { ObjectEditorPanel } from '@/components/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useModelRefs } from '@/hooks/useModelRefs';
 
 // model type.
 type Model = {
@@ -50,10 +49,11 @@ const initialModels: Model[] = [
 ];
 
 export default function Editor() {
+  // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
+  // rotation, movement, dragging, camera, and model is e.g. changing colour:
+  const { groupRefs, modelRefs, getGroupRefUpdateHandler, getModelRefUpdateHandler } = useModelRefs();
+
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
-  const modelRefs = useRef<Record<string, THREE.Object3D>>({});//a reference of each model (used to zoom camera to the
-  // correct selected model.)
-  const selectedRef = selectedId ? modelRefs.current[selectedId] : null;
   const [models, setModels] = useState(() => initialModels);// array of current/ active models.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not.
   const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if the user wants to show model's editor panel
@@ -62,6 +62,10 @@ export default function Editor() {
   // used so that we can disable/ enable it from child components e.g. camera movement.)
   const isPopupOpen = (selectedId !== null && editingMode === 'edit');// if the editor panel is open or not.
   const [isHoveringObject, setIsHoveringObject] = useState(false);// tracks if any object is being hovered over.
+
+  // getting the selected model's group and model refs:
+  const selectedGroupRef = selectedId ? groupRefs.current[selectedId] : null;
+  const selectedModelRef = selectedId ? modelRefs.current[selectedId] : null;
 
   // function to keep track of each model's position.
   const handlePositionChange = useCallback((id: string, newPos: [number, number, number]) => {
@@ -75,12 +79,6 @@ export default function Editor() {
   const handleSelect = useCallback((id: string | null) => {
     setEditingMode('edit');
     setSelectedId(id);
-  }, []);
-
-  // function to edit a child compnent's attributes via it's ref.
-  const handleGroupRefUpdate = useCallback((id: string) => (ref: THREE.Object3D | null) => {
-    if (ref) modelRefs.current[id] = ref;
-    else delete modelRefs.current[id];
   }, []);
 
   return (
@@ -103,7 +101,7 @@ export default function Editor() {
             {/* Lights and 3D content */}
             <ambientLight intensity={0.5} />
             <directionalLight position={[5, 10, 5]} />
-            <OrbitControls enabled={!isDragging && !isPopupOpen} ref={orbitControlsRef} />
+            <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
             <MainWalls />
 
             {models.map((model) => (
@@ -121,13 +119,14 @@ export default function Editor() {
                 setIsHoveringObject={setIsHoveringObject}
                 onDragging={setDragging}
                 onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
-                onGroupRefUpdate={handleGroupRefUpdate(model.id)}
+                onModelRefUpdate={getModelRefUpdateHandler(model.id)}
+                onGroupRefUpdate={getGroupRefUpdateHandler(model.id)}
               />
             ))}
             {orbitControlsRef.current && (
               <CameraController
                 controlsRef={orbitControlsRef}
-                targetRef={selectedRef && editingMode === 'edit' ? { current: selectedRef } : null}
+                targetRef={selectedGroupRef && editingMode === 'edit' ? selectedGroupRef: null}
                 resetPosition={[10, 10, 10]}
               />
             )}
@@ -156,7 +155,7 @@ export default function Editor() {
               `}
             >
               <ObjectEditorPanel
-                objectRef={selectedRef}
+                objectRef={selectedModelRef}
                 onClose={() => setSelectedId(null)}
                 setMode={setEditingMode}
               />
