@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import { OrbitControls } from '@react-three/drei';
 import MainWalls from '@/components/MainWalls';
 import * as THREE from 'three';
@@ -12,6 +13,7 @@ import { defaultCameraPosition } from '@/utils/const';
 import { ObjectEditorPanel } from '@/components/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
 
+// model type.
 type Model = {
   id: string;
   url: string;
@@ -23,6 +25,7 @@ type Model = {
   position: [number, number, number];
 };
 
+//place holder array of models until adding/ deletion of object functionality is added.
 const initialModels: Model[] = [
   {
     id: uuidv4(),
@@ -47,33 +50,34 @@ const initialModels: Model[] = [
 ];
 
 export default function Editor() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const modelRefs = useRef<Record<string, THREE.Object3D>>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
+  const modelRefs = useRef<Record<string, THREE.Object3D>>({});//a reference of each model (used to zoom camera to the
+  // correct selected model.)
   const selectedRef = selectedId ? modelRefs.current[selectedId] : null;
-  const [models, setModels] = useState(() => initialModels);
-  const [isDragging, setDragging] = useState(false);
-  const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');
-  const orbitControlsRef = useRef<typeof OrbitControls | null>(null);
+  const [models, setModels] = useState(() => initialModels);// array of current/ active models.
+  const [isDragging, setDragging] = useState(false);// if user is dragging a model or not.
+  const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if the user wants to show model's editor panel
+  //or instead show a floating panel so they can move model around.
+  const orbitControlsRef = useRef<typeof OrbitControls | null>(null);//reference of the orbital controls tag (
+  // used so that we can disable/ enable it from child components e.g. camera movement.)
+  const isPopupOpen = (selectedId !== null && editingMode === 'edit');// if the editor panel is open or not.
+  const [isHoveringObject, setIsHoveringObject] = useState(false);// tracks if any object is being hovered over.
 
-  const isPopupOpen = selectedId !== null;
-  useEffect(() => {
-    document.body.style.overflow = 'auto';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isPopupOpen]);
-
+  // function to keep track of each model's position.
   const handlePositionChange = useCallback((id: string, newPos: [number, number, number]) => {
     setModels(prev =>
       prev.map(model => model.id === id ? { ...model, position: newPos } : model)
     );
   }, []);
 
+  // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
+  // and then change the selected ID.
   const handleSelect = useCallback((id: string | null) => {
     setEditingMode('edit');
     setSelectedId(id);
   }, []);
 
+  // function to edit a child compnent's attributes via it's ref.
   const handleGroupRefUpdate = useCallback((id: string) => (ref: THREE.Object3D | null) => {
     if (ref) modelRefs.current[id] = ref;
     else delete modelRefs.current[id];
@@ -89,23 +93,19 @@ export default function Editor() {
           <Canvas
             shadows
             camera={{ position: defaultCameraPosition, fov: 50 }}
-            style={{
-              height: '100%',
-              width: '100%',
-              background: '#e5e7eb',
-              touchAction: isPopupOpen ? 'pan-y' : 'none',
-              cursor: isDragging ? 'grabbing' : 'grab',
-            }}
             onWheel={(e) => {
               if (!isPopupOpen) e.stopPropagation();
             }}
-            className="canvas-container"
-          >
+            className={`canvas-container h-full w-full bg-gray-200
+             ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
+              {/* if object if being hovered over change cursor into a grab */}
+
             {/* Lights and 3D content */}
             <ambientLight intensity={0.5} />
             <directionalLight position={[5, 10, 5]} />
             <OrbitControls enabled={!isDragging && !isPopupOpen} ref={orbitControlsRef} />
             <MainWalls />
+
             {models.map((model) => (
               <Object3D
                 key={model.id}
@@ -118,6 +118,7 @@ export default function Editor() {
                 editingMode={editingMode}
                 setSelectedId={handleSelect}
                 setEditingMode={setEditingMode}
+                setIsHoveringObject={setIsHoveringObject}
                 onDragging={setDragging}
                 onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
                 onGroupRefUpdate={handleGroupRefUpdate(model.id)}
@@ -132,9 +133,15 @@ export default function Editor() {
             )}
           </Canvas>
         </div>
+        
+        {/* adding in a little note at the top left corner of canvas to let users know that they can seleect an object */}
+        <div className="absolute top-2 left-2 z-20 pointer-events-none select-none bg-black/30 text-white font-semibold text-sm rounded-lg px-3 py-1 shadow-lg max-w-xs leading-tight">
+          <p>* To select an object please double click it *</p>
+        </div>
+
   
         {/* Editor Panel */}
-        <AnimatePresence>
+        <AnimatePresence>{/* animate the panel coming in from the side */}
           {isPopupOpen && editingMode === 'edit' && (
             <motion.div
               key="editor-panel"

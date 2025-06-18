@@ -25,7 +25,8 @@ type Object3DProps = {
   editingMode: 'edit' | 'move';//what mode the object is in, e.g. edit means that side panel will show to change the object's properties
   // e.g. size, colour, rotation etc, 'move' will instead show a floating panel which will help user's to translate object.
   setSelectedId: (id: string | null) => void;// this will be used for the object to select and unselect itself.
-  setEditingMode: (mode: 'edit' | 'move') => void;
+  setEditingMode: (mode: 'edit' | 'move') => void;// if object should show it's panel or it is being moved.
+  setIsHoveringObject?: (hover: boolean) => void;// if this object is currently being hovered or not.
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
   onPositionChange: (newPos: [number, number, number]) => void// function to run when the object's positon changes.
   onGroupRefUpdate?: (ref: THREE.Object3D | null) => void;// a callback to explicitly expose this component's interal group ref to parent.
@@ -35,7 +36,7 @@ type Object3DProps = {
 
 
 export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, editingMode = 'edit', 
-  setSelectedId, setEditingMode, onDragging, onPositionChange, onGroupRefUpdate}: Object3DProps) {
+  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onPositionChange, onGroupRefUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
 
@@ -122,7 +123,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
             ref={modelRef}
             object={clonedScene}
             scale={scale}
-            onClick={(e: ThreeEvent<MouseEvent>) => {
+            onDoubleClick={(e: ThreeEvent<MouseEvent>) => {// we use double click to select an object to prevent accidental selections.
               e.stopPropagation();
               if (mode === 'edit') {
                 if (editingMode === 'move') {// this prevents locking, e.g. object1 in movde mode but we click object 2, 
@@ -134,11 +135,17 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
             }}
             onPointerOver={(e: ThreeEvent<PointerEvent>) => {
               e.stopPropagation();
-              if (mode === "edit") setHovered(true);
+              if (mode === "edit") {
+                setHovered(true);
+                setIsHoveringObject?.(true);// notify parent that an object is being hovered
+              }
             }}
             onPointerOut={(e: ThreeEvent<PointerEvent>) => {
               e.stopPropagation();
-              if (mode === "edit") setHovered(false);
+              if (mode === "edit"){
+                setHovered(false);
+                setIsHoveringObject?.(false);// object has stopped being hovered.
+              } 
             }}
             // passing in the functions from the hook so we can drag the object around.
             onPointerDown={onPointerDown}
