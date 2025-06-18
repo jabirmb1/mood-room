@@ -8,7 +8,6 @@ import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette } from "@/utils/object3D";
-import { ObjectEditorPanel } from "../ObjectEditorPanel";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour

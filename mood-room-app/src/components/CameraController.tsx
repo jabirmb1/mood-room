@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { defaultCameraPosition } from '@/utils/const';
 import * as THREE from 'three';
 import { computeCameraTargetPositions } from '@/utils/camera';
+import { useDevice } from '@/hooks/useIsDevice';
 
 type CameraControllerProps = {
   controlsRef?: React.RefObject<any>;// reference to a controller e.g. Orbital controls (we need to disbale them during animation)
@@ -16,6 +17,10 @@ export function CameraController({ controlsRef,  targetRef, resetPosition = defa
   const isMoving = useRef(false);// flag that indicates that we are still in an animartion (zooming in/out)
   const desiredCameraPos = useRef(new THREE.Vector3());// target position
   const desiredLookAt = useRef(new THREE.Vector3());// target face/ orientation
+  let cameraOffsetX = 0;// how much to offset the camera by (e.g since panel covers half of screen in desktop)
+  let zoomOffset = 0;// how much to zoom camera out by depending on screen size/ type.
+  // we need to offset the camera by a certain amount to recenter the camera.
+  const {isDesktop} = useDevice();
 
   // once the controller is not null, set it the flag to true so that we can start calling it's functions.
   useEffect(() => {
@@ -27,13 +32,16 @@ export function CameraController({ controlsRef,  targetRef, resetPosition = defa
   // when the controller is ready, just find out where our target location and orientation is.
   useEffect(() => {
     if (!controlsReady) return;
+    cameraOffsetX = isDesktop ? 2.45 : 0;// for desktops, panel coveres half of the canvas, so shift camera to the right to offset it.
+    zoomOffset = isDesktop? 0: 2.5// for smaller devices, pan the camera back a pit
+    console.log("is it a desktop?", isDesktop)
 
-    const { desiredCameraPos: camPos, desiredLookAt: lookAt } = computeCameraTargetPositions(targetRef?.current ?? null, resetPosition);
+    const { desiredCameraPos: camPos, desiredLookAt: lookAt } = computeCameraTargetPositions(targetRef?.current ?? null, resetPosition, cameraOffsetX, zoomOffset);
     // copying current camera and position.
     desiredCameraPos.current.copy(camPos);
     desiredLookAt.current.copy(lookAt);
     isMoving.current = true;
-  }, [targetRef, resetPosition, controlsReady]);
+  }, [targetRef, resetPosition, controlsReady, isDesktop]);
 
   // smoothly moving the camera to the target location.
   useFrame(({ camera }) => {

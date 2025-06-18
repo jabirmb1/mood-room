@@ -2,12 +2,13 @@ import * as THREE from 'three';
 import { calculateObjectBoxSize } from './object3D';
 /******** This file handles all logic relating to the camera **********/
 
+
 // This function just computes and returns the final position of where the camera should stop at, given an object.
 // if no object is present, then it will just reset the camera.
-export function computeCameraTargetPositions( object: THREE.Object3D | null, resetPosition: [number, number, number]) {
+export function computeCameraTargetPositions( object: THREE.Object3D | null, resetPosition: [number, number, number],
+   cameraXOffset: number = 0, zoomOffset: number = 0 ) {
   const desiredCameraPos = new THREE.Vector3();// target position to go to
   const desiredLookAt = new THREE.Vector3();// which face to look at.
-  const zoomOffset = -1;// how much to zoom the camera into the object (- makes it go closer, + makes camera further)
 
   if (object) {
     // grab the box dimension so we can calculate the distance.
@@ -24,6 +25,7 @@ export function computeCameraTargetPositions( object: THREE.Object3D | null, res
     desiredCameraPos.z += zoomOffset// zoom into object slightly more
 
     desiredLookAt.copy(center);
+    desiredLookAt.x += cameraXOffset; // add any offsets when needed.
   }
   else {
     desiredCameraPos.set(...resetPosition);
