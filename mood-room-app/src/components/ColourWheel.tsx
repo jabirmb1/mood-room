@@ -1,12 +1,14 @@
-// colour wheel used in editor panel to chnage colours
+// colour wheel used in editor panel to chnage colours of an Object
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
+import ColourButton from './ColourButton';
 import * as THREE from 'three';
+import { getObjectMaterialMap} from '../utils/object3D'
 
 type ColourWheelProps = {
-  objectRef: React.RefObject<THREE.Object3D>;
+  objectRef: React.RefObject<THREE.Object3D>; // reference of the object that this colour wheel is linked to.
 };
 
 type MaterialColorMap = {
@@ -24,28 +26,29 @@ export function ColourWheel({ objectRef }: ColourWheelProps) {
     tertiary: '#0000ff',
   });
 
-  //store material references by name
   const [materialMap, setMaterialMap] = useState<Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>>>({});
+  const [availableTypes, setAvailableTypes] = useState<Set<'primary' | 'secondary' | 'tertiary'>>(new Set());
 
-  // On first load or when object changes, collect named materials
+  // going through and travering the object figuring out which colours and parts does it have.
   useEffect(() => {
-    const obj = objectRef.current;
-    if (!obj) return;
+    if (!objectRef.current) return;
 
-    const newMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>> = {};
+    const { materialMap, initialColors, availableTypes } = getObjectMaterialMap(objectRef);
 
-    obj.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        const material = mesh.material as THREE.MeshStandardMaterial;
+    setMaterialMap(materialMap);
+    setAvailableTypes(availableTypes);
 
-        if (material.name === 'primary') newMap.primary = material;
-        if (material.name === 'secondary') newMap.secondary = material;
-        if (material.name === 'tertiary') newMap.tertiary = material;
-      }
-    });
+    // Initialise colors to match actual material colors
+    setColors((prev) => ({
+      ...prev,
+      ...initialColors,
+    }));
 
-    setMaterialMap(newMap);
+    // Default to first available type
+    const firstAvailable = ['primary', 'secondary', 'tertiary'].find((type) => availableTypes.has(type));
+    if (firstAvailable) {
+      setActiveColorType(firstAvailable);
+    }
   }, [objectRef]);
 
   // Apply color to active material whenever it changes
@@ -59,34 +62,37 @@ export function ColourWheel({ objectRef }: ColourWheelProps) {
   return (
     <div className="flex items-center justify-center">
       <div className="flex flex-col items-center">
-        <h3 className="font-semibold mb-2">Change to your liking!!</h3>
+        <h3 className="font-semibold mb-2">Change to your liking!</h3>
 
         {/* Color target buttons header */}
         <p className="mb-1 text-sm font-medium text-gray-700">Select Material Channel:</p>
 
-        {/* Color buttons  with labels*/}
-        <div className="flex gap-2 mb-4">
-          {(['primary', 'secondary', 'tertiary'] as const).map((type) => (
-            <div key={type} className="flex items-center">
-              <button
-                className={`w-8 h-8 rounded border ${activeColorType === type ? 'ring-2 ring-black' : ''}`}
-                style={{ backgroundColor: colors[type] }}
-                onClick={() => setActiveColorType(type)}
-              />
-              <span className="ml-2">{type}</span>
-            </div>
-          ))}
+        {/* Color buttons with labels */}
+        <div  className="flex gap-4 mb-4">
+        {(['primary', 'secondary', 'tertiary'] as const).map((type) => (
+          <ColourButton
+            key={type}
+            type={type}
+            isActive={activeColorType === type}
+            isAvailable={availableTypes.has(type)}
+            color={colors[type]}
+            onClick={() => availableTypes.has(type) && setActiveColorType(type)}
+          />
+        ))}
         </div>
 
+        {/* Only show color picker if the active material exists */}
         {/* Color picker/ wheel display */}
-        <div className="mb-4">
+        {availableTypes.has(activeColorType) ? (
           <HexColorPicker
             color={colors[activeColorType]}
             onChange={(newColor) => {
               setColors((prev) => ({ ...prev, [activeColorType]: newColor }));
             }}
           />
-        </div>
+        ) : (
+          <div className="text-sm text-gray-400 mt-4 italic">This material does not exist on this object.</div>
+        )}
       </div>
     </div>
   );

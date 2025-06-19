@@ -38,42 +38,77 @@ export function cloneModel(scene: THREE.Object3D) {
     return clonedModel;
 }
 
-// This function applies a colour pallete to the model.
-//note: since changing colour of a model isn't that frequent, this function won't using caching.
+// This function will return an object's colour map given the reference of an object
+// a colour map just stores what colour palette an object is using and at what parts:
 //
-export function applyColourPalette(model: THREE.Object3D, colourPalette?: ColourPalette)
-{
-    if(!colourPalette) return // user did not specify custom colours, so just use default ones instead.
+export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>): {
+  materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>>; // current mapping of object's different parts to different colours
+  initialColors: Partial<MaterialColorMap>; // what the default colours of the object was (e.g. before user changed them)
+  availableTypes: Set<'primary' | 'secondary' | 'tertiary'>; // if object has primary, secondary or tertiary.
+} {
+  const obj = objectRef.current;
+  const materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>> = {};
+  const availableTypes = new Set<'primary' | 'secondary' | 'tertiary'>();
+  const initialColors: Partial<MaterialColorMap> = {};
 
-   // mapping the colour palette to the material names in the model to reduce code
-       // each material in a model will be primary, secondary, or tertiary.
-       const materialColorMap: MaterialColorMap = {
-         primary: colourPalette.primary,
-         secondary: colourPalette.secondary,
-         tertiary: colourPalette.tertiary,
-       };
-     
-       // traverse through the model and apply the colors to the materials
-       model.traverse((child) => {
-         if (child instanceof THREE.Mesh) {
-           // Handle both single material and array of materials
-           const materials = Array.isArray(child.material) ? child.material : [child.material];
+  if (!obj) return { materialMap, initialColors, availableTypes };
 
-           materials.forEach((material) => {
-             if (!material) return; // if object e.g. doesn't have secondary, it means that it also doesn't have tertiary, so return early.
+  // check for cached meshes first (e.g. if model was cloned and stored cache)
+  const meshes: THREE.Mesh[] = (obj as any).meshesWithMaterials ?? [];
 
-             if (material.name === 'primary' || material.name === 'secondary' || material.name === 'tertiary') {
-               const key = material.name as keyof MaterialColorMap;
-                 // getting the material name to apply the color e.g. if material name is 'primary', then apply the primary color from the color palette.
-               const color = materialColorMap[key];
-               if (color) { // if the color is defined in the color palette, then apply it to the material
-                 material.color.set(color);
-                 material.needsUpdate = true;
-               }
-             }
-           });
-         }
-      });
+  const targets = meshes.length > 0 ? meshes : [];
+
+  // fallback: traverse if no cache exists
+  if (targets.length === 0) {
+    obj.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        targets.push(child as THREE.Mesh);
+      }
+    });
+  }
+
+  // collect materials and their colors
+  for (const mesh of targets) {
+    const material = mesh.material as THREE.MeshStandardMaterial;
+    if (!material) continue;
+
+    ['primary', 'secondary', 'tertiary'].forEach((type) => {
+      if (material.name === type) {
+        materialMap[type] = material;
+        availableTypes.add(type);
+        initialColors[type] = `#${material.color.getHexString()}`;
+      }
+    });
+  }
+
+  return { materialMap, initialColors, availableTypes };
+}
+
+// This function applies a colour palette to the model.
+// we use the getMaterialMapFromRef function to give it a slight performance boost.
+//
+export function applyColourPalette(model: THREE.Object3D, colourPalette?: ColourPalette) {
+  if (!colourPalette) return; // user did not specify custom colours, so just use default ones instead.
+
+  // mapping the colour palette to the material names in the model to reduce code
+  // each material in a model will be primary, secondary, or tertiary.
+  const materialColorMap: MaterialColorMap = {
+    primary: colourPalette.primary,
+    secondary: colourPalette.secondary,
+    tertiary: colourPalette.tertiary,
+  };
+
+  // use material map utility to avoid redundant traversal
+  const { materialMap } = getObjectMaterialMap({ current: model });
+
+  Object.entries(materialMap).forEach(([type, material]) => {
+    const key = type as keyof MaterialColorMap;
+    const color = materialColorMap[key];
+    if (color) {
+      material.color.set(color);
+      material.needsUpdate = true;
+    }
+  });
 }
 
 
