@@ -2,7 +2,7 @@
 // This componentn will handle all the UI buttons sliders that can affect an object's rotation.
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { RotatingSlider } from "./RotatingSlider"; 
+import { RotatingSlider } from "../RotatingSlider"; 
 import { getObjectRotation } from "@/utils/object3D";
 import {normaliseDegrees} from "@/utils/rotation";
 
@@ -11,7 +11,7 @@ type RotateComponentProps = {
   objectId: string;// id of the object that it is rotating.
 };
 
-export function RotateComponent({ objectRef, objectId }: RotateComponentProps) {
+export function ObjectRotationPanel({ objectRef, objectId }: RotateComponentProps) {
   const [rotation, setRotation] = useState(() => getObjectRotation(objectRef))// intialise the rotation to object's
   // current rotation.
 

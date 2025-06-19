@@ -1,8 +1,8 @@
 import React from "react";
 import * as THREE from "three";
 import { motion } from "framer-motion";
-import { RotateComponent } from "./RotateComponent";
-import { ColourWheel } from "./ColourWheel";
+import { ObjectRotationPanel } from "./ObjectRotationPanel";
+import { ObjectColourPanel } from "./ObjectColourPanel";
 
 type ObjectEditorPanelProps = {
   objectRef: React.RefObject<THREE.Object3D>;// which oject that this panel relates to/ is linked up with
@@ -23,11 +23,11 @@ export function ObjectEditorPanel({ objectRef,objectId, onClose, setMode }: Obje
       <h2 className="text-xl font-semibold mb-4">Object Controls</h2>
 
       <div className="flex gap-2 justify-center mb-4">
-        <ColourWheel objectRef={objectRef} />
+        <ObjectColourPanel objectRef={objectRef} />
       </div>
 
       <div className="flex gap-2 justify-center mb-6">
-        <RotateComponent objectRef={objectRef} objectId = {objectId}/>
+        <ObjectRotationPanel objectRef={objectRef} objectId = {objectId}/>
       </div>
 
       <div className="flex gap-6 md:gap-4 sm:gap-2 justify-center mt-auto">

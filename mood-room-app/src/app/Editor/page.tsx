@@ -8,7 +8,7 @@ import { Object3D } from '@/components/3d/Object3D';
 import { CameraController } from '@/components/CameraController';
 import { v4 as uuidv4 } from 'uuid';
 import { defaultCameraPosition } from '@/utils/const';
-import { ObjectEditorPanel } from '@/components/ObjectEditorPanel';
+import { ObjectEditorPanel } from '@/components/ObjectEditorPanel/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useModelRefs } from '@/hooks/useModelRefs';
 

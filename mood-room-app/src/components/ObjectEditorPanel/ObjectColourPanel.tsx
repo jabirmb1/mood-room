@@ -3,9 +3,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
-import ColourButton from './ColourButton';
+import ColourButton from '../ColourButton';
 import * as THREE from 'three';
-import { getObjectMaterialMap} from '../utils/object3D'
+import { getObjectMaterialMap} from '../../utils/object3D'
 
 type ColourWheelProps = {
   objectRef: React.RefObject<THREE.Object3D>; // reference of the object that this colour wheel is linked to.
@@ -17,7 +17,7 @@ type MaterialColorMap = {
   tertiary: string;
 };
 
-export function ColourWheel({ objectRef }: ColourWheelProps) {
+export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
   const [activeColorType, setActiveColorType] = useState<'primary' | 'secondary' | 'tertiary'>('primary');
 
   const [colors, setColors] = useState<MaterialColorMap>({
