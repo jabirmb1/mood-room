@@ -30,7 +30,7 @@ const initialModels: Model[] = [
     id: uuidv4(),
     url: "/assets/NormTable.glb",
     colourPalette: {
-      primary: "#0000ff",
+      primary: "#0ff0ff",
       secondary: "#ff0000",
       tertiary: "#ff0000"
     },
@@ -127,7 +127,7 @@ export default function Editor() {
               <CameraController
                 controlsRef={orbitControlsRef}
                 targetRef={selectedGroupRef && editingMode === 'edit' ? selectedGroupRef: null}
-                resetPosition={[10, 10, 10]}
+                resetPosition={defaultCameraPosition}
               />
             )}
           </Canvas>
@@ -156,6 +156,7 @@ export default function Editor() {
             >
               <ObjectEditorPanel
                 objectRef={selectedModelRef}
+                objectId = {selectedId}
                 onClose={() => setSelectedId(null)}
                 setMode={setEditingMode}
               />

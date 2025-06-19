@@ -7,7 +7,7 @@ import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
 import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette } from "@/utils/object3D";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivotHorizontal } from "@/utils/object3D";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
@@ -41,12 +41,14 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
 
-   // we clone the model and also the material to make it fully independent of other models
+// we clone the model and also the material to make it fully independent of other models
   // (allows us to place multiple of same model if needed)
-  const clonedScene = useMemo(() => {
+  const clonedScene= useMemo(() => {
     if (!scene) return null; // adding a safeguard to return null if the object doesn't exist.
-    return cloneModel(scene);
+    const cloned = cloneModel(scene);
+    return centerPivotHorizontal(cloned);// return centered model.
   }, [scene]);
+
 
   const modelRef = useRef<THREE.Object3D>(null)// reference to change model's colour, size and rotation
   const groupRef = useRef<THREE.Object3D>(null)// reference needed to change model's position (including the floating UI's position)
@@ -116,10 +118,28 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     if (!modelRef.current) return;
     applyHoverEffect(modelRef.current, hovered, mode, scale);
   }, [hovered, mode, scale]);
+
+  {/* The code below just shows the bounding box for the model }
+  useEffect(() => {
+    if (!modelRef.current) return;
+  
+    const helper = new THREE.BoxHelper(modelRef.current, 0xffff00);
+    groupRef.current?.add(helper);
+  
+    return () => {
+      groupRef.current?.remove(helper);
+    };
+  }, [modelRef.current]);
+   */}
   
   return (
     <>
       <group ref = {groupRef} position={position}>
+          {/****
+           * code below just shows us the pivot of each model, uncomment this to visualise it
+           {isSelected && (
+        <axesHelper args={[4]} /> // size 0.5 or tweak as needed
+      )} */}
 
         {(isSelected && mode === 'edit' && editingMode === 'move') &&(
           // default into starting with horizontal mode whenever we open the panel.

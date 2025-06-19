@@ -180,3 +180,32 @@ export function calculateObjectBoxSize(object: THREE.Object3D) {
   const maxDim = Math.max(size.x, size.y, size.z);
   return { box, size, center, maxDim };
 }
+
+// This function just returns the object's current rotation in degrees.
+//
+export function getObjectRotation(objectRef:  React.RefObject<THREE.Object3D>)
+{
+  const model = objectRef.current;
+  if (model) {
+    return THREE.MathUtils.radToDeg(model.rotation.y);
+  }
+  return 0;
+}
+
+// This function will just center the pivot of an object horizontally so that it can be rotated as expected.
+// it retuns a new group with the model centered.
+//
+export function centerPivotHorizontal(object: THREE.Object3D) {
+  // get bounding box and center the pivot based on that bounding box.
+  const box = new THREE.Box3().setFromObject(object);
+  const center = new THREE.Vector3();
+  const pivotGroup = new THREE.Group();
+  box.getCenter(center);
+
+  // Shift horizontally only (X and Z), leave Y unchanged
+  const centerXZ = new THREE.Vector3(center.x, 0, center.z);
+  object.position.sub(centerXZ);
+  pivotGroup.add(object);
+
+  return pivotGroup;
+}
