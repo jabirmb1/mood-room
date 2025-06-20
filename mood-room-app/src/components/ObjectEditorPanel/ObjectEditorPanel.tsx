@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { motion } from "framer-motion";
 import { ObjectRotationPanel } from "./ObjectRotationPanel";
 import { ObjectColourPanel } from "./ObjectColourPanel";
+import { ObjectSizePanel } from "./ObjectSizePanel";
 
 type ObjectEditorPanelProps = {
   objectRef: React.RefObject<THREE.Object3D>;// which oject that this panel relates to/ is linked up with
@@ -28,6 +29,10 @@ export function ObjectEditorPanel({ objectRef,objectId, onClose, setMode }: Obje
 
       <div className="flex gap-2 justify-center mb-6">
         <ObjectRotationPanel objectRef={objectRef} objectId = {objectId}/>
+      </div>
+
+      <div className="flex gap-2 justify-center mb-6">
+        <ObjectSizePanel objectRef={objectRef} objectId = {objectId}/>
       </div>
 
       <div className="flex gap-6 md:gap-4 sm:gap-2 justify-center mt-auto">

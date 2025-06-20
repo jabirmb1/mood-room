@@ -7,7 +7,7 @@ import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
 import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivotHorizontal } from "@/utils/object3D";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivotHorizontal, getObjectSizeDifference } from "@/utils/object3D";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
@@ -43,11 +43,17 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
 
 // we clone the model and also the material to make it fully independent of other models
   // (allows us to place multiple of same model if needed)
-  const clonedScene= useMemo(() => {
-    if (!scene) return null; // adding a safeguard to return null if the object doesn't exist.
+  const clonedScene = useMemo(() => {
+    if (!scene) return null;
     const cloned = cloneModel(scene);
-    return centerPivotHorizontal(cloned);// return centered model.
+    const centered = centerPivotHorizontal(cloned);
+  
+    centered.scale.set(globalScale, globalScale, globalScale); // on first load, load it into global scale
+    centered.userData.baseScale = globalScale; // record what the current size is.
+  
+    return centered;
   }, [scene]);
+  
 
 
   const modelRef = useRef<THREE.Object3D>(null)// reference to change model's colour, size and rotation
@@ -57,13 +63,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
 
   // all models used are propertionaly modelled relative to each other, so we will not use any scaling logic
   // to normalise models.
-  const baseScale = globalScale;// this scale represents the default size of object
-  // will be used to e.g. reset object back to normal size when needed.
-
-  // current scale. size of object.
-  const [scale, setScale] = useState<number>(baseScale);
-
-  
+  const currentScale = modelRef.current?.scale.x ?? globalScale;
   // add in the dragging logic:
   const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({objectRef: groupRef,
     enabled: mode === "edit" && editingMode === 'move' && isSelected ,
@@ -116,8 +116,22 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   // add in a hovered effect if user is in edit mode and hovers over model
   useEffect(() => {
     if (!modelRef.current) return;
-    applyHoverEffect(modelRef.current, hovered, mode, scale);
-  }, [hovered, mode, scale]);
+    applyHoverEffect(modelRef.current, hovered, mode);
+  }, [hovered, mode, currentScale]);
+
+  // making hover effects temporarily size up and down the objects.
+  useEffect(() => {
+    if (!modelRef.current) return;
+  
+    const model = modelRef.current;
+    const scaleFactor = hovered && mode === 'edit' ? 1.20 : 1.0;
+  
+    const base = model.userData.baseScale ?? globalScale;
+    model.scale.set(base * scaleFactor, base * scaleFactor, base * scaleFactor);
+    console.log(getObjectSizeDifference(modelRef));
+  
+  }, [hovered, mode, modelRef.current?.userData.baseScale]);
+  
 
   {/* The code below just shows the bounding box for the model }
   useEffect(() => {
@@ -153,7 +167,6 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
           <primitive
             ref={modelRef}
             object={clonedScene}
-            scale={scale}
             onDoubleClick={(e: ThreeEvent<MouseEvent>) => {// we use double click to select an object to prevent accidental selections.
               e.stopPropagation();
               if (mode === 'edit') {

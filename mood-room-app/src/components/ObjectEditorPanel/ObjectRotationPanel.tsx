@@ -2,7 +2,7 @@
 // This componentn will handle all the UI buttons sliders that can affect an object's rotation.
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { RotatingSlider } from "../RotatingSlider"; 
+import { HorizontalSlider } from "../HorizontalSlider"; 
 import { getObjectRotation } from "@/utils/object3D";
 import {normaliseDegrees} from "@/utils/rotation";
 
@@ -37,7 +37,9 @@ export function ObjectRotationPanel({ objectRef, objectId }: RotateComponentProp
 
   return (
     <div className="w-full mt-6">
-      <RotatingSlider rotation={rotation} setRotation={setRotation} />
+      <HorizontalSlider  value={rotation} onChange={setRotation} min={-180} max={180} step={1} 
+      unit="°" trackColor="bg-gray-800" rangeLabelColor="text-grey-300" valueTextColor="text-grey-400" />
+ 
       <div className="flex justify-center gap-4 mt-4">
         <button
           onClick={() => handleRotate(-90)}

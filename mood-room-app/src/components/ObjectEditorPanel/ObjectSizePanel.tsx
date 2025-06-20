@@ -1,0 +1,80 @@
+'use client'
+
+import { useEffect, useState } from "react";
+import * as THREE from "three";
+import { HorizontalSlider } from "../HorizontalSlider"; 
+import { getObjectSizeDifference } from "@/utils/object3D";
+import { globalScale } from "@/utils/const";
+
+type ObjectScalePanelProps = {
+  objectRef: React.RefObject<THREE.Object3D>;
+  objectId: string;
+};
+
+export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) {
+  const [sizePercentage, setSizePercentage] = useState(() => getObjectSizeDifference(objectRef));
+
+  // Update slider value when objectId changes (so that it can link up to the new object)
+  useEffect(() => {
+    setSizePercentage(getObjectSizeDifference(objectRef));
+  }, [objectId]);
+
+  // Apply the new scale to the model
+  useEffect(() => {
+    const model = objectRef.current;
+    if (model) {
+      const scaleFactor = 1 + sizePercentage / 100;
+      const newScale = globalScale * scaleFactor;
+      model.userData.baseScale  = newScale;// update the base scale of the model so that the app keeps track of model's
+      // current scale (also used for calculations.)
+      model.scale.set(newScale, newScale, newScale);
+    }
+  }, [sizePercentage]);
+
+  const handleSizeChange = (delta: number) => {
+    setSizePercentage(prev => prev + delta);
+  };
+
+  return (
+    <div className="w-full mt-6 flex flex-col items-stretch border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
+    <p className="text-lg font-semibold mb-4 text-center">Size</p>
+  
+    <HorizontalSlider
+      value={sizePercentage}
+      onChange={setSizePercentage}
+      min={-50}
+      max={50}
+      step={1}
+      unit="%"
+      trackColor="bg-gray-800"
+      valueTextColor="text-gray-400"
+    />
+  
+    <div className="flex justify-center gap-4 mt-4">
+      <button
+        type="button"
+        onClick={() => handleSizeChange(-10)}
+        className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+      >
+        -10%
+      </button>
+      <button
+        type="button"
+        onClick={() => handleSizeChange(10)}
+        className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+      >
+        +10%
+      </button>
+    </div>
+  
+    <button
+      type="button"
+      onClick={() => setSizePercentage(0)}
+      className="mt-4 px-4 py-1 text-sm bg-blue-200 rounded hover:bg-blue-400"
+    >
+      Reset Size
+    </button>
+  </div>
+  
+  );
+}

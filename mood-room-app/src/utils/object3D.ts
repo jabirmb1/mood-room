@@ -1,5 +1,6 @@
 // This file contains all logic that relates to the model and how to change it.
 import * as THREE from "three";
+import { globalScale } from "./const";
 
 // declaring types here:
 export type ColourPalette = {
@@ -118,12 +119,7 @@ export function applyHoverEffect(
     model: THREE.Object3D & { meshesWithMaterials?: THREE.Mesh[] },
     hovered: boolean,
     mode: 'view' | 'edit',
-    currentSize: number) {
-    
-    const scaleFactor = hovered ? 1.2 : 1.0;
-    // uniformly scale up the model by 20%.
-    model.scale.set( currentSize * scaleFactor,  currentSize * scaleFactor,  currentSize * scaleFactor);
-  
+) {
       const meshes = model.meshesWithMaterials ?? [];
   
       if (meshes.length > 0) {
@@ -191,6 +187,22 @@ export function getObjectRotation(objectRef:  React.RefObject<THREE.Object3D>)
   }
   return 0;
 }
+
+// Returns the object's scale difference as a percentage
+// precondtion: model uses uniform scaling
+//
+export function getObjectSizeDifference(objectRef: React.RefObject<THREE.Object3D>) {
+  const model = objectRef.current;
+  if (model) {
+    const current = model.userData.baseScale ?? model.scale.x; // fall back to scale if no base
+
+    // Useing only baseScale comparison to avoid hover distortion
+    const percentageChange = ((current / globalScale) - 1) * 100;
+    return percentageChange;
+  }
+  return 0;
+}
+
 
 // This function will just center the pivot of an object horizontally so that it can be rotated as expected.
 // it retuns a new group with the model centered.
