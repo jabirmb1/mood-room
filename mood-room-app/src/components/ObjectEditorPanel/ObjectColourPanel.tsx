@@ -6,6 +6,7 @@ import { HexColorPicker } from 'react-colorful';
 import ColourButton from '../ColourButton';
 import * as THREE from 'three';
 import { getObjectMaterialMap} from '../../utils/object3D'
+import './colourPicker.css';
 
 type ColourWheelProps = {
   objectRef: React.RefObject<THREE.Object3D>; // reference of the object that this colour wheel is linked to.
@@ -60,9 +61,9 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
   }, [colors, activeColorType, materialMap]);
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="w-full mt-6 flex flex-col items-center border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
       <div className="flex flex-col items-center">
-        <h3 className="font-semibold mb-2">Change to your liking!</h3>
+        <h3 className="text-lg font-semibold mb-4 text-center">Colour</h3>
 
         {/* Color target buttons header */}
         <p className="mb-1 text-sm font-medium text-gray-700">Select Material Channel:</p>
@@ -83,13 +84,16 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
 
         {/* Only show color picker if the active material exists */}
         {/* Color picker/ wheel display */}
+        {/* later probs use tailwinds @ apply to override some of the styles for this colour picker to make it bigger */}
         {availableTypes.has(activeColorType) ? (
-          <HexColorPicker
-            color={colors[activeColorType]}
-            onChange={(newColor) => {
-              setColors((prev) => ({ ...prev, [activeColorType]: newColor }));
-            }}
-          />
+          <div className = "colour-picker-wrapper">
+            <HexColorPicker
+              className='w-[90%]'
+              color={colors[activeColorType]}
+              onChange={(newColor) => {
+                setColors((prev) => ({ ...prev, [activeColorType]: newColor }));
+              }}/>
+          </div>
         ) : (
           <div className="text-sm text-gray-400 mt-4 italic">This material does not exist on this object.</div>
         )}

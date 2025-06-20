@@ -36,7 +36,8 @@ export function ObjectRotationPanel({ objectRef, objectId }: RotateComponentProp
   };
 
   return (
-    <div className="w-full mt-6">
+    <div className="w-full mt-6 flex flex-col items-stretch border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
+      <p className ="text-lg font-semibold mb-4 text-center">Rotation</p>
       <HorizontalSlider  value={rotation} onChange={setRotation} min={-180} max={180} step={1} 
       unit="°" trackColor="bg-gray-800" rangeLabelColor="text-grey-300" valueTextColor="text-grey-400" />
  
@@ -54,6 +55,8 @@ export function ObjectRotationPanel({ objectRef, objectId }: RotateComponentProp
           ⟳ 90° clockwise
         </button>
       </div>
+      <button type = 'button'  className="mt-4 px-4 py-1 text-sm bg-blue-200 rounded hover:bg-blue-400"
+      onClick={()=> setRotation(0)}>Reset Rotation</button>
     </div>
   );
 }
