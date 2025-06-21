@@ -130,6 +130,7 @@ export function applyColourPalette(model: THREE.Object3D, colourPalette?: Colour
 }
 
 // This function resets an object's colour palette.
+// it also returns the inital colours in case if it is needed
 //
 export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D>) {
   const object = objectRef.current;
@@ -146,6 +147,7 @@ export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D>) {
       material.needsUpdate = true;
     }
   });
+  return initialcolours;
 }
 
 
