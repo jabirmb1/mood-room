@@ -128,7 +128,6 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   
     const base = model.userData.baseScale ?? globalScale;
     model.scale.set(base * scaleFactor, base * scaleFactor, base * scaleFactor);
-    console.log(getObjectSizeDifference(modelRef));
   
   }, [hovered, mode, modelRef.current?.userData.baseScale]);
   

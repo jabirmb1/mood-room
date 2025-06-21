@@ -7,19 +7,19 @@ type ColourButtonProps = {
   type: 'primary' | 'secondary' | 'tertiary';// if the button relates to the primary, secondary or tertary part of model.
   isActive: boolean;// enabled/ disabled.
   isAvailable: boolean;// if the model has e.g. a tertairy part to change colour with (and this button is a teriarty type.)
-  color: string;// what colour to display.
+  colour: string;// what colour to display.
   onClick: () => void;// function to run when this button is clicked.
 };
 
-export function ColourButton({ type, isActive, isAvailable, color, onClick } : ColourButtonProps){
+export function ColourButton({ type, isActive, isAvailable, colour, onClick } : ColourButtonProps){
     const buttonRef = useRef<HTMLButtonElement>(null);
 
-    // Dynamically apply backgroundColor via js (work around to not use inline styles for the colour)
+    // Dynamically apply backgroundcolour via js (work around to not use inline styles for the colour)
     useEffect(() => {
       if (buttonRef.current) {
-        buttonRef.current.style.backgroundColor = isAvailable ? color : 'grey';
+        buttonRef.current.style.backgroundColor = isAvailable ? colour : 'grey';
       }
-    }, [color, isAvailable]);
+    }, [colour, isAvailable]);
   
     return (
     <div className="flex flex-col items-center text-center">

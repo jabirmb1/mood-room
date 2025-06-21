@@ -8,13 +8,13 @@ export default function NavBar() {
     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <ul className="flex space-x-8 text-base font-medium text-gray-800">
             <li>
-                <Link href="/" className="transition-colors hover:text-[#7FD0BD]">Home</Link>
+                <Link href="/" className="transition-colours hover:text-[#7FD0BD]">Home</Link>
             </li>
             <li>
-                <Link href="/generation" className="transition-colors hover:text-[#7FD0BD]">Generate</Link>
+                <Link href="/generation" className="transition-colours hover:text-[#7FD0BD]">Generate</Link>
             </li>
             <li>
-                <Link href="/socials" className="transition-colors hover:text-[#7FD0BD]">Socials</Link>
+                <Link href="/socials" className="transition-colours hover:text-[#7FD0BD]">Socials</Link>
             </li>
         </ul>
     </div>
@@ -23,7 +23,7 @@ export default function NavBar() {
     <div className="absolute right-6 top-1/2 transform -translate-y-1/2">
         <Link
             href="/login"
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-800 font-medium transition-colors hover:text-[#7FD0BD] hover:border-[#7FD0BD]"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-800 font-medium transition-colours hover:text-[#7FD0BD] hover:border-[#7FD0BD]"
         >
             Login
         </Link>

@@ -9,7 +9,7 @@ export type ColourPalette = {
     tertiary?: string;
   };
 
-type MaterialColorMap = {
+type MaterialcolourMap = {
   primary?: string;
   secondary?: string;
   tertiary?: string;
@@ -20,7 +20,8 @@ type MaterialColorMap = {
 export function cloneModel(scene: THREE.Object3D) {
     // cloning the scene
     const clonedModel = scene.clone(true);
-    
+    // whilst we clone the model, we can also store the inital model's colours into the userdata.
+    const initialcolours: MaterialcolourMap = {};
     // cache for meshes with materials
     const meshesWithMaterials: THREE.Mesh[] = [];
 
@@ -31,10 +32,22 @@ export function cloneModel(scene: THREE.Object3D) {
             child.userData.isDraggable = true// we also want all models (except for floors and walls) to be draggable.
             meshesWithMaterials.push(child);
         }
+        // also store the initial colours of the models, but only the parts that the user can change. (primary, secondary, tertiary).
+        const mat = child.material;
+        if (
+          mat &&
+          mat instanceof THREE.MeshStandardMaterial &&
+          typeof mat.name === 'string' &&
+          ['primary', 'secondary', 'tertiary'].includes(mat.name)
+        ) {
+          initialcolours[mat.name as keyof MaterialcolourMap] = `#${mat.color.getHexString()}`;
+        }
     });
 
     // attach cached meshes to the cloned model for later reuse
     (clonedModel as any).meshesWithMaterials = meshesWithMaterials;
+    clonedModel.userData.initialcolours = initialcolours;
+    console.log(initialcolours);
 
     return clonedModel;
 }
@@ -44,15 +57,18 @@ export function cloneModel(scene: THREE.Object3D) {
 //
 export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>): {
   materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>>; // current mapping of object's different parts to different colours
-  initialColors: Partial<MaterialColorMap>; // what the default colours of the object was (e.g. before user changed them)
+  currentcolours: Partial<MaterialcolourMap>;// current colours that the model is using.
+  initialcolours: Partial<MaterialcolourMap>; // what the default colours of the object was (e.g. before user changed them)
   availableTypes: Set<'primary' | 'secondary' | 'tertiary'>; // if object has primary, secondary or tertiary.
 } {
   const obj = objectRef.current;
   const materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>> = {};
   const availableTypes = new Set<'primary' | 'secondary' | 'tertiary'>();
-  const initialColors: Partial<MaterialColorMap> = {};
-
-  if (!obj) return { materialMap, initialColors, availableTypes };
+  const currentcolours: Partial<MaterialcolourMap> = {};
+  const initialcolours: Partial<MaterialcolourMap> =
+  (obj?.userData?.initialcolours as MaterialcolourMap) ?? {};// grab the inital model colours from the user data (if it doesn't exist, get empty array)
+  console.log(obj?.userData?.initialcolours)
+  if (!obj) return { materialMap,currentcolours, initialcolours, availableTypes };
 
   // check for cached meshes first (e.g. if model was cloned and stored cache)
   const meshes: THREE.Mesh[] = (obj as any).meshesWithMaterials ?? [];
@@ -68,7 +84,7 @@ export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>)
     });
   }
 
-  // collect materials and their colors
+  // collect materials and their colours
   for (const mesh of targets) {
     const material = mesh.material as THREE.MeshStandardMaterial;
     if (!material) continue;
@@ -77,12 +93,13 @@ export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>)
       if (material.name === type) {
         materialMap[type] = material;
         availableTypes.add(type);
-        initialColors[type] = `#${material.color.getHexString()}`;
+         // Extract current colour from material:
+         currentcolours[type] = `#${material.color.getHexString()}`;
       }
     });
   }
 
-  return { materialMap, initialColors, availableTypes };
+  return { materialMap, currentcolours, initialcolours, availableTypes };
 }
 
 // This function applies a colour palette to the model.
@@ -93,7 +110,7 @@ export function applyColourPalette(model: THREE.Object3D, colourPalette?: Colour
 
   // mapping the colour palette to the material names in the model to reduce code
   // each material in a model will be primary, secondary, or tertiary.
-  const materialColorMap: MaterialColorMap = {
+  const materialcolourMap: MaterialcolourMap = {
     primary: colourPalette.primary,
     secondary: colourPalette.secondary,
     tertiary: colourPalette.tertiary,
@@ -103,14 +120,34 @@ export function applyColourPalette(model: THREE.Object3D, colourPalette?: Colour
   const { materialMap } = getObjectMaterialMap({ current: model });
 
   Object.entries(materialMap).forEach(([type, material]) => {
-    const key = type as keyof MaterialColorMap;
-    const color = materialColorMap[key];
-    if (color) {
-      material.color.set(color);
+    const key = type as keyof MaterialcolourMap;
+    const colour = materialcolourMap[key];
+    if (colour) {
+      material.color.set(colour);
       material.needsUpdate = true;
     }
   });
 }
+
+// This function resets an object's colour palette.
+//
+export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D>) {
+  const object = objectRef.current;
+  if (!object) return;
+  // grab the inital colours from the user daata if they exist.
+  const initialcolours: MaterialcolourMap = object.userData.initialcolours ?? {};
+  const { materialMap } = getObjectMaterialMap(objectRef);
+
+  // go through all existing editable components and change their colour.
+  Object.entries(materialMap).forEach(([type, material]) => {
+    const key = type as keyof MaterialcolourMap;
+    if (initialcolours[key]) {
+      material.color.set(initialcolours[key]!);
+      material.needsUpdate = true;
+    }
+  });
+}
+
 
 
 // This function will get a model and apply a hover effect (making it slightly larger and highlighting it as yellow)
@@ -218,6 +255,9 @@ export function centerPivotHorizontal(object: THREE.Object3D) {
   const centerXZ = new THREE.Vector3(center.x, 0, center.z);
   object.position.sub(centerXZ);
   pivotGroup.add(object);
+  // Deep copy userData from the object to the pivot group
+  // (assuming userData is a simple object without functions or circular references)
+  pivotGroup.userData = JSON.parse(JSON.stringify(object.userData));
 
   return pivotGroup;
 }

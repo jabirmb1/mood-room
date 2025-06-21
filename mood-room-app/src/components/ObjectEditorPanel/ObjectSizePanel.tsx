@@ -46,8 +46,8 @@ export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) 
       max={50}
       step={1}
       unit="%"
-      trackColor="bg-gray-800"
-      valueTextColor="text-gray-400"
+      trackcolour="bg-gray-800"
+      valueTextcolour="text-gray-400"
     />
   
     <div className="flex justify-center gap-4 mt-4">

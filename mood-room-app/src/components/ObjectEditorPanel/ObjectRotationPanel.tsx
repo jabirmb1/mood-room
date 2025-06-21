@@ -39,7 +39,7 @@ export function ObjectRotationPanel({ objectRef, objectId }: RotateComponentProp
     <div className="w-full mt-6 flex flex-col items-stretch border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
       <p className ="text-lg font-semibold mb-4 text-center">Rotation</p>
       <HorizontalSlider  value={rotation} onChange={setRotation} min={-180} max={180} step={1} 
-      unit="°" trackColor="bg-gray-800" rangeLabelColor="text-grey-300" valueTextColor="text-grey-400" />
+      unit="°" trackcolour="bg-gray-800" rangeLabelcolour="text-grey-300" valueTextcolour="text-grey-400" />
  
       <div className="flex justify-center gap-4 mt-4">
         <button

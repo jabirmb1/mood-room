@@ -5,23 +5,23 @@ import React, { useEffect, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import ColourButton from '../ColourButton';
 import * as THREE from 'three';
-import { getObjectMaterialMap} from '../../utils/object3D'
+import { getObjectMaterialMap, resetColourPalette} from '../../utils/object3D'
 import './colourPicker.css';
 
 type ColourWheelProps = {
   objectRef: React.RefObject<THREE.Object3D>; // reference of the object that this colour wheel is linked to.
 };
 
-type MaterialColorMap = {
+type MaterialcolourMap = {
   primary: string;
   secondary: string;
   tertiary: string;
 };
 
 export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
-  const [activeColorType, setActiveColorType] = useState<'primary' | 'secondary' | 'tertiary'>('primary');
+  const [activecolourType, setActivecolourType] = useState<'primary' | 'secondary' | 'tertiary'>('primary');
 
-  const [colors, setColors] = useState<MaterialColorMap>({
+  const [colours, setcolours] = useState<MaterialcolourMap>({
     primary: '#ff0000',
     secondary: '#00ff00',
     tertiary: '#0000ff',
@@ -34,66 +34,71 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
   useEffect(() => {
     if (!objectRef.current) return;
 
-    const { materialMap, initialColors, availableTypes } = getObjectMaterialMap(objectRef);
+    const { materialMap, currentcolours, availableTypes } = getObjectMaterialMap(objectRef);
 
     setMaterialMap(materialMap);
     setAvailableTypes(availableTypes);
 
-    // Initialise colors to match actual material colors
-    setColors((prev) => ({
+    // Initialise colours to match current model colours
+    setcolours((prev) => ({
       ...prev,
-      ...initialColors,
+      ...currentcolours,
     }));
 
     // Default to first available type
     const firstAvailable = ['primary', 'secondary', 'tertiary'].find((type) => availableTypes.has(type));
     if (firstAvailable) {
-      setActiveColorType(firstAvailable);
+      setActivecolourType(firstAvailable);
     }
   }, [objectRef]);
 
-  // Apply color to active material whenever it changes
+  // Apply colour to active material whenever it changes
   useEffect(() => {
-    const mat = materialMap[activeColorType];
+    const mat = materialMap[activecolourType];
     if (mat) {
-      mat.color.set(colors[activeColorType]);
+      mat.color.set(colours[activecolourType]);
     }
-  }, [colors, activeColorType, materialMap]);
+  }, [colours, activecolourType, materialMap]);
 
   return (
     <div className="w-full mt-6 flex flex-col items-center border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
       <div className="flex flex-col items-center">
         <h3 className="text-lg font-semibold mb-4 text-center">Colour</h3>
 
-        {/* Color target buttons header */}
+        {/* colour target buttons header */}
         <p className="mb-1 text-sm font-medium text-gray-700">Select Material Channel:</p>
 
-        {/* Color buttons with labels */}
+        {/* colour buttons with labels */}
         <div  className="flex gap-4 mb-4">
         {(['primary', 'secondary', 'tertiary'] as const).map((type) => (
           <ColourButton
             key={type}
             type={type}
-            isActive={activeColorType === type}
+            isActive={activecolourType === type}
             isAvailable={availableTypes.has(type)}
-            color={colors[type]}
-            onClick={() => availableTypes.has(type) && setActiveColorType(type)}
+            colour={colours[type]}
+            onClick={() => availableTypes.has(type) && setActivecolourType(type)}
           />
         ))}
         </div>
 
-        {/* Only show color picker if the active material exists */}
-        {/* Color picker/ wheel display */}
+        {/* Only show colour picker if the active material exists */}
+        {/* colour picker/ wheel display */}
         {/* later probs use tailwinds @ apply to override some of the styles for this colour picker to make it bigger */}
-        {availableTypes.has(activeColorType) ? (
-          <div className = "colour-picker-wrapper">
-            <HexColorPicker
-              className='w-[90%]'
-              color={colors[activeColorType]}
-              onChange={(newColor) => {
-                setColors((prev) => ({ ...prev, [activeColorType]: newColor }));
-              }}/>
-          </div>
+        {availableTypes.has(activecolourType) ? (
+          <>
+            <div className = "colour-picker-wrapper">
+              <HexColorPicker
+                className='w-[90%]'
+                color={colours[activecolourType]}
+                onChange={(newcolour) => {
+                  setcolours((prev) => ({ ...prev, [activecolourType]: newcolour }));
+                }}/>
+            </div>
+            <button type = 'button'
+            className = "mt-4 px-4 py-1 text-sm bg-blue-200 rounded hover:bg-blue-400"
+             onClick={()=>resetColourPalette(objectRef)}>Reset Model colours</button>
+          </>
         ) : (
           <div className="text-sm text-gray-400 mt-4 italic">This material does not exist on this object.</div>
         )}

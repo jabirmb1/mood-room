@@ -16,10 +16,10 @@ import { useModelRefs } from '@/hooks/useModelRefs';
 type Model = {
   id: string;
   url: string;
-  colourPalette: {
-    primary: string;
-    secondary: string;
-    tertiary: string;
+  colourPalette?: {
+    primary?: string;
+    secondary?: string;
+    tertiary?: string;
   };
   position: [number, number, number];
 };
@@ -28,7 +28,7 @@ type Model = {
 const initialModels: Model[] = [
   {
     id: uuidv4(),
-    url: "/assets/NormTable.glb",
+    url: "/assets/Tvold.glb",
     colourPalette: {
       primary: "#0ff0ff",
       secondary: "#ff0000",
@@ -38,12 +38,7 @@ const initialModels: Model[] = [
   },
   {
     id: uuidv4(),
-    url: "/assets/NormTable.glb",
-    colourPalette: {
-      primary: "#ff0000",
-      secondary: "#00ff00",
-      tertiary: "#0000ff"
-    },
+    url: "/assets/Tvold.glb",
     position: [4, 0, 0],
   },
 ];

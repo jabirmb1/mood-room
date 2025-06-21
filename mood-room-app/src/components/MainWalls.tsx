@@ -27,7 +27,7 @@ export default function MainWalls() {
         <Grid
           args={[ROOM_SIZE, ROOM_SIZE]}
           position={[0, 0.3, 0]}
-          cellColor="#888"
+          cellcolor="#888"
           fadeDistance={100}
           fadeStrength={1}
         />
