@@ -121,7 +121,7 @@ export default function Editor() {
             {orbitControlsRef.current && (
               <CameraController
                 controlsRef={orbitControlsRef}
-                targetRef={selectedGroupRef && editingMode === 'edit' ? selectedGroupRef: null}
+                targetRef={selectedModelRef && editingMode === 'edit' ? selectedModelRef: null}
                 resetPosition={defaultCameraPosition}
               />
             )}

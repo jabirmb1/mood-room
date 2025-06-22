@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { defaultCameraPosition } from '@/utils/const';
 import * as THREE from 'three';
 import { computeCameraTargetPositions } from '@/utils/camera';
+import { calculateObjectBoxSize } from '@/utils/object3D';
 import { useDevice } from '@/hooks/useIsDevice';
 
 type CameraControllerProps = {
@@ -30,15 +31,26 @@ export function CameraController({ controlsRef,  targetRef, resetPosition = defa
   // when the controller is ready, just find out where our target location and orientation is.
   useEffect(() => {
     if (!controlsReady) return;
-    const cameraOffsetX = isDesktop ? 2.45 : 0;// for desktops, panel coveres half of the canvas, so shift camera to the right to offset it.
-    const zoomOffset = isDesktop? 0: 2.5// for smaller devices, pan the camera back a pit
-
-    const { desiredCameraPos: camPos, desiredLookAt: lookAt } = computeCameraTargetPositions(targetRef?.current ?? null, resetPosition, cameraOffsetX, zoomOffset);
-    // copying current camera and position.
+  
+    let cameraOffsetX = 0;
+    const zoomOffset = isDesktop ? 1 : 2.5;
+  
+    if (isDesktop && targetRef?.current) {
+      // calculate the needed offset here.
+      const { maxDim } = calculateObjectBoxSize(targetRef.current);
+      const panelFraction = 0.5; // 50% panel width
+      cameraOffsetX = - (panelFraction / 2) * maxDim * 2.25; // shift left so object fits in visible area
+    }
+  
+    const { desiredCameraPos: camPos, desiredLookAt: lookAt } = computeCameraTargetPositions( targetRef?.current ?? null, resetPosition, cameraOffsetX,zoomOffset);
+    
+      // copying current camera and position.
+    desiredCameraPos.current.copy(camPos);
     desiredCameraPos.current.copy(camPos);
     desiredLookAt.current.copy(lookAt);
     setIsMoving(true);
   }, [targetRef, resetPosition, controlsReady, isDesktop]);
+  
 
   // smoothly moving the camera to the target location.
   useFrame(({ camera }) => {
