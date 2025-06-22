@@ -166,6 +166,8 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
           <primitive
             ref={modelRef}
             object={clonedScene}
+            castShadow = {true}
+            recieveShadow = {true}
             onDoubleClick={(e: ThreeEvent<MouseEvent>) => {// we use double click to select an object to prevent accidental selections.
               e.stopPropagation();
               if (mode === 'edit') {

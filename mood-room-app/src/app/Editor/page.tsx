@@ -94,8 +94,8 @@ export default function Editor() {
               {/* if object if being hovered over change cursor into a grab */}
 
             {/* Lights and 3D content */}
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[5, 10, 5]} />
+            <ambientLight intensity={!(isPopupOpen) ? 0.5 : 0.25} />
+            <directionalLight intensity = {(!isPopupOpen)? 1: 0.3} position={[5, 10, 5]} />
             <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
             <MainWalls />
 
@@ -121,8 +121,9 @@ export default function Editor() {
             {orbitControlsRef.current && (
               <CameraController
                 controlsRef={orbitControlsRef}
-                targetRef={selectedModelRef && editingMode === 'edit' ? selectedModelRef: null}
+                targetRef={selectedModelRef && (isPopupOpen) ? selectedModelRef: null}
                 resetPosition={defaultCameraPosition}
+                showSpotlight={true}
               />
             )}
           </Canvas>

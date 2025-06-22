@@ -16,10 +16,10 @@ export default function MainWalls() {
 
   return (
     <>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} material={floorMaterial}>
+      <mesh receiveShadow = {true}  castShadow = {true} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} material={floorMaterial}>
         <boxGeometry args={[ROOM_SIZE, ROOM_SIZE, WALL_THICKNESS]} />
       </mesh>
-      <mesh position={[0, WALL_HEIGHT / 2, -ROOM_SIZE / 2]}>
+      <mesh  receiveShadow = {true}  castShadow = {true} position={[0, WALL_HEIGHT / 2, -ROOM_SIZE / 2]}>
         <boxGeometry args={[ROOM_SIZE, WALL_HEIGHT, WALL_THICKNESS]} />
         <meshStandardMaterial color="lightgray" />
       </mesh>
@@ -32,7 +32,7 @@ export default function MainWalls() {
           fadeStrength={1}
         />
       )}
-      <mesh position={[-ROOM_SIZE / 2, WALL_HEIGHT / 2, 0]}>
+      <mesh  receiveShadow = {true}  castShadow = {true} position={[-ROOM_SIZE / 2, WALL_HEIGHT / 2, 0]}>
         <boxGeometry args={[WALL_THICKNESS, WALL_HEIGHT, ROOM_SIZE]} />
         <meshStandardMaterial color="lightgray" />
       </mesh>
