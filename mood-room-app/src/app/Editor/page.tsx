@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import MainWalls from '@/components/MainWalls';
@@ -11,6 +11,8 @@ import { defaultCameraPosition } from '@/utils/const';
 import { ObjectEditorPanel } from '@/components/ObjectEditorPanel/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useModelRefs } from '@/hooks/useModelRefs';
+import * as THREE from "three";
+import { LightIntensityTransition } from '@/components/LightIntensityTransition';
 
 // model type.
 type Model = {
@@ -58,9 +60,18 @@ export default function Editor() {
   const isPopupOpen = (selectedId !== null && editingMode === 'edit');// if the editor panel is open or not.
   const [isHoveringObject, setIsHoveringObject] = useState(false);// tracks if any object is being hovered over.
 
+  // light intensities.
+  const [ambientIntensity, setAmbientIntensity] = useState(0.5);
+  const [directionalIntensity, setDirectionalIntensity] = useState(1);
+
   // getting the selected model's group and model refs:
   const selectedGroupRef = selectedId ? groupRefs.current[selectedId] : null;
   const selectedModelRef = selectedId ? modelRefs.current[selectedId] : null;
+
+  // creating some refs for the lighting:
+  const ambientRef = useRef<THREE.AmbientLight>(null);
+  const directionalRef = useRef<THREE.DirectionalLight>(null);
+
 
   // function to keep track of each model's position.
   const handlePositionChange = useCallback((id: string, newPos: [number, number, number]) => {
@@ -75,6 +86,17 @@ export default function Editor() {
     setEditingMode('edit');
     setSelectedId(id);
   }, []);
+
+  // creating a useEfect to just dim the lights down and not dim them down when pop up is open or not (object editor)
+  useEffect(() => {
+    if (isPopupOpen) {
+      setAmbientIntensity(0.25);
+      setDirectionalIntensity(0.3);
+    } else {
+      setAmbientIntensity(0.5);
+      setDirectionalIntensity(1);
+    }
+  }, [isPopupOpen]);
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-screen">
@@ -94,9 +116,12 @@ export default function Editor() {
               {/* if object if being hovered over change cursor into a grab */}
 
             {/* Lights and 3D content */}
-            <ambientLight intensity={!(isPopupOpen) ? 0.5 : 0.25} />
-            <directionalLight intensity = {(!isPopupOpen)? 1: 0.3} position={[5, 10, 5]} />
+            <ambientLight ref={ambientRef} intensity={ambientIntensity} />
+            <directionalLight ref={directionalRef} intensity={directionalIntensity} position={[5, 10, 5]} />
+            <LightIntensityTransition lightRef={ambientRef} targetIntensity={ambientIntensity} />
+            <LightIntensityTransition lightRef={directionalRef} targetIntensity={directionalIntensity} />
             <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
+
             <MainWalls />
 
             {models.map((model) => (
