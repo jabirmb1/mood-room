@@ -113,6 +113,27 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     }
   }, [colourPalette]);
 
+ /*  developer console log to just see all materials name as object loads
+ useEffect(() => {
+    if (!clonedScene) return;
+  
+    const materialNames = new Set<string>();
+  
+    clonedScene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mat = (child as THREE.Mesh).material;
+        if (Array.isArray(mat)) {
+          mat.forEach((m) => materialNames.add(m.name));
+        } else if (mat) {
+          materialNames.add(mat.name);
+        }
+      }
+    });
+  
+    console.log(`[${id}] Loaded materials:`, Array.from(materialNames));
+  }, [clonedScene, id]); */
+  
+
   // add in a hovered effect if user is in edit mode and hovers over model
   useEffect(() => {
     if (!modelRef.current) return;

@@ -38,7 +38,7 @@ const initialModels: Model[] = [
   },
   {
     id: uuidv4(),
-    url: "/assets/Tvold.glb",
+    url: "/assets/BookShelfBasic.glb",
     position: [4, 0, 0],
   },
 ];

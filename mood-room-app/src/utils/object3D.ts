@@ -1,6 +1,6 @@
 // This file contains all logic that relates to the model and how to change it.
 import * as THREE from "three";
-import { globalScale } from "./const";
+import { globalScale, modelMaterialNames } from "./const";
 
 // declaring types here:
 export type ColourPalette = {
@@ -34,14 +34,11 @@ export function cloneModel(scene: THREE.Object3D) {
         }
         // also store the initial colours of the models, but only the parts that the user can change. (primary, secondary, tertiary).
         const mat = child.material;
-        if (
-          mat &&
-          mat instanceof THREE.MeshStandardMaterial &&
-          typeof mat.name === 'string' &&
-          ['primary', 'secondary', 'tertiary'].includes(mat.name)
-        ) {
-          initialcolours[mat.name as keyof MaterialcolourMap] = `#${mat.color.getHexString()}`;
-        }
+        if (mat &&  mat instanceof THREE.MeshStandardMaterial &&typeof mat.name === 'string'){
+          const baseName = getBaseMaterialName(mat.name, modelMaterialNames);
+          if (baseName) initialcolours[baseName] = `#${mat.color.getHexString()}`;
+
+        } 
     });
 
     // attach cached meshes to the cloned model for later reuse
@@ -89,14 +86,12 @@ export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>)
     const material = mesh.material as THREE.MeshStandardMaterial;
     if (!material) continue;
 
-    ['primary', 'secondary', 'tertiary'].forEach((type) => {
-      if (material.name === type) {
-        materialMap[type] = material;
-        availableTypes.add(type);
-         // Extract current colour from material:
-         currentcolours[type] = `#${material.color.getHexString()}`;
-      }
-    });
+    const baseName = getBaseMaterialName(material.name, modelMaterialNames);
+    if (baseName) {
+      materialMap[baseName] = material;
+      availableTypes.add(baseName);
+      currentcolours[baseName] = `#${material.color.getHexString()}`;
+    }
   }
 
   return { materialMap, currentcolours, initialcolours, availableTypes };
@@ -263,3 +258,13 @@ export function centerPivotHorizontal(object: THREE.Object3D) {
 
   return pivotGroup;
 }
+
+// This function is used to quickly get the object's materials's names and e.g. normalise the models e.g. primary.001 and primary.002
+// will both be turned into just primary. we pass in the name that we want to compare and also an array of valid basenames to compare with.
+// returs undefined if basename does not exist.
+//
+export function getBaseMaterialName<T extends string>(name: string, validBaseNames: T[]): T | undefined {
+  const base = name.split('.')[0];
+  return validBaseNames.includes(base as T) ? (base as T) : undefined;
+}
+
