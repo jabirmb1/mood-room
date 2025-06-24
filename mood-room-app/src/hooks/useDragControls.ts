@@ -4,7 +4,9 @@ import { useThree, ThreeEvent } from "@react-three/fiber";// we use this library
 /* This hook is used to easily drag and drop any objects which call upon it */
 
 type UseDragControlsProps =  {
+    objectRef: React.RefObject<THREE.Object3D>// which object that it is reffering to.
     enabled: boolean;// when to enable drag controls
+    isHorizontalMode: boolean// whether we want to drag it vertically or horizontally.
     onStart?: () => void;// function to run when dragging starts
     onEnd?: () => void;// function to run when dragging ends
     onChange?: (newPos: [number, number, number]) => void;// function to run when position changes
@@ -17,28 +19,33 @@ type DragHandlers = {
 
 // This function will run when user clicks down on the object referenced by the passed in ref.
 //
-function handlePointerDown(
-    e: ThreeEvent<PointerEvent>, ref: React.RefObject<THREE.Object3D>, camera: THREE.Camera, plane: React.MutableRefObject<THREE.Plane>,  dragOffset: 
-    React.MutableRefObject<THREE.Vector3>, setDragging: (v: boolean) => void, enabled: boolean, onStart?: () => void) {
-    if (!enabled || !ref.current) return;
-    e.stopPropagation();
-  
-    setDragging(true);
-    onStart?.();// call the function if it exists and has been assigned.
-  
-    // we need to grab the intersection of where mouse collides with object, then we need to clone that point to avoid changing original data
-    const intersect = e.intersections?.[0] || e;
-    const point = intersect.point.clone();
-  
-    // we make the dragging plane be the one that is in front of camera ans then we anchor it (change this to floor of room later)
-    plane.current.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), point);
-    dragOffset.current.subVectors(ref.current.position, point);// calculate how much new position is from old position.
+function handlePointerDown( e: ThreeEvent<PointerEvent>, ref: React.RefObject<THREE.Object3D>, 
+  plane: React.MutableRefObject<THREE.Plane>, dragOffset: React.MutableRefObject<THREE.Vector3>, 
+  setDragging: (v: boolean) => void,enabled: boolean,isHorizontalMode: boolean,onStart?: () => void) {
+
+  if (!enabled || !ref.current) return;
+  e.stopPropagation();
+
+  setDragging(true);
+  onStart?.();
+
+  const point = e.point.clone();
+
+  // This method creates a plane on y and z axis depending on the mode, allows us to easily drag object, no matter the camera angle.
+  if (isHorizontalMode) {
+    plane.current.set(new THREE.Vector3(0, 1, 0), -point.y);
+  } else {
+    plane.current.set(new THREE.Vector3(0, 0, 1), -point.z);
   }
+
+  dragOffset.current.copy(ref.current.position).sub(point);
+}
+
   
 // This function is called as we drag an object.
 //
 function handlePointerMove(e: ThreeEvent<PointerEvent>, ref: React.RefObject<THREE.Object3D>, plane: React.MutableRefObject<THREE.Plane>, 
-    dragOffset: React.MutableRefObject<THREE.Vector3>,dragging: boolean, onChange?: (newPos: [number, number, number]) => void) {
+    dragOffset: React.MutableRefObject<THREE.Vector3>,dragging: boolean, isHorizontalMode: boolean, onChange?: (newPos: [number, number, number]) => void) {
 
     if (!dragging || !ref.current) return;
 
@@ -47,9 +54,15 @@ function handlePointerMove(e: ThreeEvent<PointerEvent>, ref: React.RefObject<THR
 
     if (ray.intersectPlane(plane.current, intersection)) {// if our ray interescts the dragging plane, it means that it is a draggable object
         const newPos = intersection.add(dragOffset.current);
+        const oldPos = ref.current.position;// we will need to keep track of old position in case if we want to disable
+        // vertical/ horizontal movement:
+
         // update object's position to new position
-        ref.current.position.copy(newPos);
-        onChange?.([newPos.x, newPos.y, newPos.z]);
+        // Apply axis constraint
+        const lockedPos: [number, number, number] = isHorizontalMode? [newPos.x, oldPos.y, newPos.z] : [oldPos.x, newPos.y, oldPos.z];
+
+        ref.current.position.set(...lockedPos);
+        onChange?.(lockedPos);
     }
 }
 
@@ -62,7 +75,7 @@ function handlePointerUp( setDragging: (v: boolean) => void, dragging: boolean, 
 }
   
   // dragging hook that we can use to append to objects and allow them to be draggable.
-  export function useDragControls( ref: React.RefObject<THREE.Object3D>,  { enabled, onStart, onEnd, onChange }:
+  export function useDragControls({objectRef, enabled, isHorizontalMode, onStart, onEnd, onChange }:
      UseDragControlsProps): DragHandlers {
     const { camera } = useThree();
     const [dragging, setDragging] = useState(false);
@@ -72,12 +85,12 @@ function handlePointerUp( setDragging: (v: boolean) => void, dragging: boolean, 
     // we use useCallback to stop recreating functions every render and instead just use the old ones (improves efficiency).
     return {
         onPointerDown: useCallback(
-          (e) => handlePointerDown(e, ref, camera, plane, dragOffset, setDragging, enabled, onStart),
-          [ref, camera, plane, dragOffset, setDragging, enabled, onStart]
+          (e) => handlePointerDown(e, objectRef, plane, dragOffset, setDragging, enabled,isHorizontalMode, onStart),
+          [objectRef, camera, plane, dragOffset, setDragging, enabled, onStart]
         ),
         onPointerMove: useCallback(
-          (e) => handlePointerMove(e, ref, plane, dragOffset, dragging, onChange),
-          [ref, plane, dragOffset, dragging, onChange]
+          (e) => handlePointerMove(e, objectRef, plane, dragOffset, dragging, isHorizontalMode, onChange),
+          [objectRef, plane, dragOffset, dragging, isHorizontalMode, onChange]
         ),
         onPointerUp: useCallback(
           () => handlePointerUp(setDragging, dragging, onEnd),
