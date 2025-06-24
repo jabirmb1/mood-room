@@ -1,9 +1,12 @@
+// adding new furniture tab
+
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from 'framer-motion';
 
-interface FurnitureItem {
+// used to definbe shape and properties of furniture
+export interface FurnitureItem {
   id: string;
   name: string; // add name aswell
   url: string;
@@ -14,14 +17,14 @@ interface FurnitureItem {
     tertiary: string;
   };
   position: [number, number, number];
-  // category?: string; For filtering later if want to add
+  // category For filtering later if want to add
 }
 
 interface AddFurnitureTabProps {
   onAddFurniture: (model: Omit<FurnitureItem, 'thumbnail'>) => void;
 }
 
-// Mock data - this would come from your database later
+//connect to DB later
 const FURNITURE_ITEMS: FurnitureItem[] = [
   {
     id: '1',
@@ -49,35 +52,18 @@ const FURNITURE_ITEMS: FurnitureItem[] = [
   },
 ];
 
-console.log('Furniture items loaded:', FURNITURE_ITEMS);
+console.log('Furniture items loaded:', FURNITURE_ITEMS); //remove later
 
 export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
-  // For future filtering
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchValue, setSearchValue] = useState<string>('');
   
-  // Debug logs
-  useEffect(() => {
-    return () => {
-      console.log('AddFurnitureTab unmounting');
-    };
-  }, []);
-  
-  console.log('AddFurnitureTab render - searchValue:', searchValue);
-  
-  // Add error boundary
-  if (!Array.isArray(FURNITURE_ITEMS)) {
-    console.error('FURNITURE_ITEMS is not properly initialized');
-    return <div>Error: Failed to load furniture items</div>;
-  }
-
   // This would be a database query later
   // const filteredItems = activeCategory === 'all' 
   //   ? FURNITURE_ITEMS 
   //   : FURNITURE_ITEMS.filter(item => item.category === activeCategory);
 
   return (
-    <div className="h-full flex flex-col border border-black rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
+    <div className="h-full flex flex-col rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
       <h1 className="text-xl font-bold text-center mb-3 mt-4">Add More Furniture</h1>
 
       {/*Search button by name*/}
@@ -130,7 +116,7 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
                   damping: 10
                 }}
               >
-                <div className="aspect-square bg-gray-100 relative">
+                <div className="aspect-square bg-gray-100 relative"> {/* thumbnail */}
                   <img
                     src={item.thumbnail}
                     alt={item.name}
@@ -141,7 +127,7 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
                     }}
                   />
                 </div>
-                <div className="p-3">
+                <div className="p-3"> {/* name */}
                   <h3 className="font-medium text-sm truncate">{item.name}</h3>
                 </div>
               </motion.div>

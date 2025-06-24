@@ -1,16 +1,16 @@
-// components/Editor.tsx
+// editor page where u can customize it all
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { LightingConfig, LightingPanel } from '@/components/LightingPanel';
 import MainWalls from '@/components/MainWalls';
 import { Object3D } from '@/components/3d/Object3D';
 import { v4 as uuidv4 } from 'uuid';
 import { AddFurnitureTab } from '@/components/AddFurnitureTab';
 import { FurnitureItem } from '@/components/AddFurnitureTab';
-import { number } from 'framer-motion';
-
+import { Sun } from 'lucide-react';
 
 type Model = {
   id: string;
@@ -21,6 +21,7 @@ type Model = {
     tertiary: string;
   };
   position: [number, number, number];
+  scale?: [number, number, number];
 };
 
 const initialModels: Model[] = [
@@ -47,10 +48,16 @@ const initialModels: Model[] = [
 ];
 
 export default function Editor() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);  //needed due to popup for editor of furniture
   const [models, setModels] = useState(() => initialModels);
-  const [isDragging, setDragging] = useState(false);
-  const [showFurnitureTab, setShowFurnitureTab] = useState(false);
+  const [isDragging, setDragging] = useState(false); // needed for orbit controls
+  const [showFurnitureTab, setShowFurnitureTab] = useState(false); // needed for popup of furniture tab hide or not
+  const [showLightingPanel, setShowLightingPanel] = useState(false); // needed for popup of lighting panel hide or not
+  const [lightingConfig, setLightingConfig] = useState<LightingConfig>({ // base ligthing when just loaded
+    ambient: { intensity: 0.5, color: '#ffffff' },
+    directional: { intensity: 1, color: '#ffffff' }
+  });
+
 
   // When selectedId is non-null, editor panel is open so user can scroll when popup is open.
   const isPopupOpen = selectedId !== null;
@@ -84,7 +91,7 @@ export default function Editor() {
       url: model.url,
       colourPalette: model.colourPalette,
       position: [3, 3, 3],
-      scale: [1, 1, 1], // Add this line
+      scale: [1, 1, 1]
     };
   
     console.log("Adding furniture:", newModel);
@@ -92,38 +99,61 @@ export default function Editor() {
     setModels(prev => [...prev, newModel]);
     setShowFurnitureTab(false); // optional: close the tab
   }
-  
+
+
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-screen">
       <h1 className="text-xl font-bold mb-2">Editor</h1>
       <p>Edit your generated room layout</p>
 
+      {/* code for adding furniture tab and lighting panel */}
       <div className="w-full h-[80vh] mt-4 relative">
-        {/* Button positioned absolutely over the canvas */}
-      <div className="absolute top-4 left-4 z-10">
-        <button
-          onClick={() => setShowFurnitureTab(!showFurnitureTab)}
-          className={`px-4 py-2 rounded text-white hover:cursor-pointer ${
-            showFurnitureTab ? 'bg-red-500' : 'bg-green-500'
-          }`}
-        >
-          {showFurnitureTab ? 'X' : 'Add'}
-        </button>
+        {/* furnitur button and ui*/}
+        <div className="absolute top-4 left-4 z-10">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowFurnitureTab(!showFurnitureTab)}
+              className={`px-4 py-2 rounded text-white hover:cursor-pointer ${
+                showFurnitureTab ? 'bg-red-500' : 'bg-green-500'
+              }`}
+            >
+              {showFurnitureTab ? 'X' : 'Add'}
+            </button>
+            
+          </div>
         
-        {showFurnitureTab && (
-          <div className="absolute left-0 mt-2 w-64 bg-white p-4 rounded shadow-lg">
-            <AddFurnitureTab onAddFurniture={handleAddFurniture} />
+          
+          {showFurnitureTab && (
+            <div className="absolute left-0 mt-2 w-64 bg-white p-4 rounded shadow-lg z-20">
+              <AddFurnitureTab onAddFurniture={handleAddFurniture} />
+            </div>
+          )}
+        </div>
+
+        {/* Top right lighting button */}
+        <div className="absolute top-4 right-4 z-10">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowLightingPanel(!showLightingPanel)}
+              className={`px-4 py-2 rounded text-white hover:cursor-pointer ${
+                showLightingPanel ? 'bg-red-500' : 'bg-white rounded shadow-lg hover:shadow-xl transition-shadow'
+              }`}
+            >
+              {showLightingPanel ? 'X' : <Sun className="w-5 h-5 text-yellow-600" />}
+            </button>
+          </div>
+          
+          {showLightingPanel && (
+          <div className="absolute right-0 mt-2 w-64 bg-white p-4 rounded shadow-lg z-20">
+            <LightingPanel 
+              config={lightingConfig}
+              onChange={setLightingConfig}
+            />
           </div>
         )}
-      </div>
-
-
-
-
-
-
-
+        </div>
+        
         <div className="relative w-full h-full">
           <Canvas 
             shadows 
@@ -145,8 +175,19 @@ export default function Editor() {
             }}
             className="canvas-container"
           >
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[5, 10, 5]} />
+            {/* base lighting we preset*/}
+            <ambientLight 
+              key={`ambient-${lightingConfig.ambient.intensity}-${lightingConfig.ambient.color}`} 
+              intensity={lightingConfig.ambient.intensity} 
+              color={lightingConfig.ambient.color}
+            />
+
+            <directionalLight 
+              key={`directional-${lightingConfig.directional.intensity}-${lightingConfig.directional.color}`} 
+              position={[5, 10, 5]} 
+              intensity={lightingConfig.directional.intensity}
+              color={lightingConfig.directional.color}
+            />
             <OrbitControls 
               enabled={!isDragging && !isPopupOpen}
             />
@@ -171,3 +212,4 @@ export default function Editor() {
     </div>
   );
 }
+
