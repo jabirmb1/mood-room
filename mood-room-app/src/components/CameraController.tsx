@@ -1,11 +1,13 @@
-import { useFrame } from '@react-three/fiber';
-import { useEffect, useRef, useState } from 'react';
+'use client'
+import { useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { defaultCameraPosition } from '@/utils/const';
 import { computeCameraTargetPositions } from '@/utils/camera';
 import { calculateObjectBoxSize } from '@/utils/object3D';
 import { useDevice } from '@/hooks/useIsDevice';
 import { createSpotLight, createDirectionalLight } from '@/utils/lights'; // make sure both imported
+import { useOcclusionTransparency } from '@/hooks/useOcclusion';
 
 type CameraControllerProps = {
   controlsRef?: React.RefObject<any>; // reference to a controller e.g. Orbital controls (we need to disable them during animation)
@@ -18,6 +20,7 @@ type CameraControllerProps = {
 // This component will be used to smoothly go in and out of a selected object.
 export function CameraController({controlsRef, targetRef, resetPosition = defaultCameraPosition, 
   showSpotlight = false, showDirectionLight = false,}: CameraControllerProps) { 
+  const {scene} = useThree();
   const [controlsReady, setControlsReady] = useState(false); // boolean flag stating of when the controller is not null
   const [isMoving, setIsMoving] = useState(false); // flag that indicates that we are still in an animation (zooming in/out)
   const desiredCameraPos = useRef(new THREE.Vector3()); // target position
@@ -32,6 +35,17 @@ export function CameraController({controlsRef, targetRef, resetPosition = defaul
   const directionalLightTarget = useRef(new THREE.Object3D());
 
   const { isDesktop } = useDevice();
+
+  const potentialOccluders = useMemo(() => {
+    // creating a list of potential occluders which filter out e.g. camera; target object ; light or invisible objects.
+    return scene.children.filter((obj) => {
+      if (obj === targetRef?.current || obj.type === 'Camera' || obj.type.includes('Light') || obj.visible === false ) return false;
+      return true;
+    });
+  }, [scene, targetRef?.current]);
+
+  useOcclusionTransparency({targetRef:targetRef, potentialOccluders:potentialOccluders, makeInvisible:true, sampleCount:15, throttleMs:50})
+  // test out throttling speed for 250 objects; might need to increase it
 
   // once the controller is not null, set it the flag to true so that we can start calling it's functions.
   useEffect(() => {

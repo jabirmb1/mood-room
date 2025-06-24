@@ -36,12 +36,12 @@ const initialModels: Model[] = [
       secondary: "#ff0000",
       tertiary: "#ff0000"
     },
-    position: [0, 0, 0],
+    position: [0, 0, -4],
   },
   {
     id: uuidv4(),
     url: "/assets/BookShelfBasic.glb",
-    position: [4, 0, 0],
+    position: [0, 0, -6],
   },
 ];
 
