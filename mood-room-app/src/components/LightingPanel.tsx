@@ -1,5 +1,8 @@
+// change and adjust lighting
+
 import React from 'react';
 
+// 
 export interface LightingConfig {
   ambient: { intensity: number; color: string };
   directional: { intensity: number; color: string };
@@ -11,7 +14,7 @@ interface LightingPanelProps {
 }
 
 export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }) => {
-  // ✅ Declare updateLight inside the component
+  
   const updateLight = (type: 'ambient' | 'directional', field: 'intensity' | 'color', value: number | string) => {
     onChange({
       ...config,
