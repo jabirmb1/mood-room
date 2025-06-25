@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion } from 'framer-motion';
 
 // used to definbe shape and properties of furniture
-export interface FurnitureItem {
+export interface ModelItem {
   id: string;
   name: string; // add name aswell
   url: string;
@@ -20,12 +20,12 @@ export interface FurnitureItem {
   // category For filtering later if want to add
 }
 
-interface AddFurnitureTabProps {
-  onAddFurniture: (model: Omit<FurnitureItem, 'thumbnail'>) => void;
+interface AddModelTabProps {
+  onAddModel: (model: Omit<ModelItem, 'thumbnail'>) => void;
 }
 
 //connect to DB later
-const FURNITURE_ITEMS: FurnitureItem[] = [
+const MODEL_ITEMS: ModelItem[] = [
   {
     id: '1',
     name: 'Modern Table',
@@ -52,9 +52,9 @@ const FURNITURE_ITEMS: FurnitureItem[] = [
   },
 ];
 
-console.log('Furniture items loaded:', FURNITURE_ITEMS); //remove later
+console.log('Furniture items loaded:', MODEL_ITEMS); //remove later
 
-export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
+export function AddModelTab({ onAddModel }: AddModelTabProps) {
   const [searchValue, setSearchValue] = useState<string>('');
   
   // This would be a database query later
@@ -81,7 +81,7 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
       <div className="flex-1 overflow-y-auto p-2">
         <div className="grid grid-cols-2 gap-4">
           {(() => {
-            const filteredItems = FURNITURE_ITEMS.filter(item => {
+            const filteredItems = MODEL_ITEMS.filter(item => {
               if (!searchValue.trim()) return true;
               const lowerCaseItemName = item.name.toLowerCase();
               const lowerCaseSearchValue = searchValue.toLowerCase();
@@ -101,8 +101,8 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
                 key={item.id}
                 onClick={() => {
                   // Only pass the necessary data to the parent
-                  const { thumbnail, ...furnitureData } = item;
-                  onAddFurniture(furnitureData);
+                  const { thumbnail, ...modelData } = item;
+                  onAddModel(modelData);
                 }}
                 className="group cursor-pointer rounded-lg overflow-hidden shadow-md"
                 whileHover={{

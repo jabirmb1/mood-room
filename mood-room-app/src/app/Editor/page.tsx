@@ -4,7 +4,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { LightingConfig, LightingPanel } from '@/components/LightingPanel';
 import MainWalls from '@/components/MainWalls';
 import { Object3D } from '@/components/3d/Object3D';
 import { CameraController } from '@/components/CameraController';
@@ -15,9 +14,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useModelRefs } from '@/hooks/useModelRefs';
 import * as THREE from "three";
 import { LightIntensityTransition } from '@/components/LightIntensityTransition';
-import { AddFurnitureTab } from '@/components/AddFurnitureTab';
-import { FurnitureItem } from '@/components/AddFurnitureTab';
-import { Sun } from 'lucide-react';
+import { AddModelButton } from '@/components/AddModelMenu/AddModelButton';
+import { ModelItem } from '@/components/AddModelMenu/AddModelTab';
+import { LightingButton } from '@/components/LightingPanel/LightingButton';
+import { LightingConfig } from '@/components/LightingPanel/LightingPanel';
 
 // model type.
 type Model = {
@@ -54,7 +54,7 @@ const initialModels: Model[] = [
 export default function Editor() {
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
-  const { groupRefs, modelRefs, getGroupRefUpdateHandler, getModelRefUpdateHandler } = useModelRefs();
+  const {modelRefs, getGroupRefUpdateHandler, getModelRefUpdateHandler } = useModelRefs();
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
   const [models, setModels] = useState(() => initialModels);// array of current/ active models.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not, needed for orbital controls
@@ -65,7 +65,7 @@ export default function Editor() {
   const isPopupOpen = (selectedId !== null && editingMode === 'edit');// if the editor panel is open or not.
   const [isHoveringObject, setIsHoveringObject] = useState(false);// tracks if any object is being hovered over.
 
-  const [showFurnitureTab, setShowFurnitureTab] = useState(false); // needed for popup of furniture tab hide or not
+  const [showAddModelTab, setShowAddModelTab] = useState(false); // needed for popup of furniture tab hide or not
   const [showLightingPanel, setShowLightingPanel] = useState(false); // needed for popup of lighting panel hide or not
   const [lightingConfig, setLightingConfig] = useState<LightingConfig>({ // base ligthing when just loaded
     ambient: { intensity: 0.5, colour: '#ffffff' },
@@ -74,7 +74,7 @@ export default function Editor() {
   // creating a use state to keep track of what lightings the user adjusted before the editor opens
   // (since we will me temporarily overriding them for a spot light effect when editor opens.)
   const [userLightingBeforePopup, setUserLightingBeforePopup] = useState<LightingConfig | null>(null);
-
+  
 
   // getting the selected model's group and model refs:
   const selectedModelRef = selectedId ? modelRefs.current[selectedId] : null;
@@ -124,7 +124,7 @@ export default function Editor() {
   
   
 
-  function handleAddFurniture(model: Omit<FurnitureItem, 'thumbnail'>): void {
+  function handleAddModel(model: Omit<ModelItem, 'thumbnail'>): void {
     const newModel: Model = {
       id: uuidv4(),
       url: model.url,
@@ -136,7 +136,7 @@ export default function Editor() {
     console.log("Adding furniture:", newModel);
   
     setModels(prev => [...prev, newModel]);
-    setShowFurnitureTab(false); // optional: close the tab
+    setShowAddModelTab(false); // optional: close the tab
   }
 
   // function to delete the selected model
@@ -203,45 +203,12 @@ export default function Editor() {
         </div>
 
         {/* furnitur button and ui*/}
-        <div className="absolute top-4 left-4 z-10">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowFurnitureTab(!showFurnitureTab)}
-              className={`px-4 py-2 rounded text-white hover:cursor-pointer ${
-                showFurnitureTab ? 'bg-red-500' : 'bg-green-500'
-              }`}
-            >
-              {showFurnitureTab ? 'X' : 'Add'}
-            </button>
-          </div>
-          {showFurnitureTab && (
-            <div className="absolute left-0 mt-2 w-64 bg-white p-4 rounded shadow-lg z-20">
-              <AddFurnitureTab onAddFurniture={handleAddFurniture} />
-            </div>
-          )}
-        </div>
+        <AddModelButton show={showAddModelTab} className={"absolute top-4 left-4 z-10"}
+         toggle = {()=> setShowAddModelTab(p => !p)} onAddModel={handleAddModel}/>
 
         {/* Top right lighting button */}
-        <div className="absolute top-4 right-4 z-10">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowLightingPanel(!showLightingPanel)}
-              className={`px-4 py-2 rounded text-white hover:cursor-pointer ${
-                showLightingPanel ? 'bg-red-500' : 'bg-white rounded shadow-lg hover:shadow-xl transition-shadow'
-              }`}
-            >
-              {showLightingPanel ? 'X' : <Sun className="w-5 h-5 text-yellow-600" />}
-            </button>
-          </div>
-          {showLightingPanel && (
-            <div className="absolute right-0 mt-2 w-96 bg-white p-4 rounded shadow-lg z-20 max-h-[50vh] overflow-y-auto">
-              <LightingPanel 
-                config={lightingConfig}
-                onChange={setLightingConfig}
-              />
-            </div>
-          )}
-        </div>
+        <LightingButton show = {showLightingPanel} toggle={() => setShowLightingPanel(p => !p)} config={lightingConfig} 
+        onChange={setLightingConfig} className="absolute top-4 right-4 z-10"/>
 
         {/* Editor Panel */}
         <AnimatePresence>{/* animate the panel coming in from the side */}
