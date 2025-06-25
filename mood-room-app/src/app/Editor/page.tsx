@@ -68,8 +68,8 @@ export default function Editor() {
   const [showFurnitureTab, setShowFurnitureTab] = useState(false); // needed for popup of furniture tab hide or not
   const [showLightingPanel, setShowLightingPanel] = useState(false); // needed for popup of lighting panel hide or not
   const [lightingConfig, setLightingConfig] = useState<LightingConfig>({ // base ligthing when just loaded
-    ambient: { intensity: 0.5, color: '#ffffff' },
-    directional: { intensity: 1, color: '#ffffff' }
+    ambient: { intensity: 0.5, colour: '#ffffff' },
+    directional: { intensity: 1, colour: '#ffffff' }
   });
   // creating a use state to keep track of what lightings the user adjusted before the editor opens
   // (since we will me temporarily overriding them for a spot light effect when editor opens.)
@@ -108,11 +108,11 @@ export default function Editor() {
       setLightingConfig((prev) => ({
         ambient: {
           intensity: Math.min(prev.ambient.intensity, 0.25),
-          color: '#ffffff', // force white spotlight
+          colour: '#ffffff', // force white spotlight
         },
         directional: {
           intensity: Math.min(prev.directional.intensity, 0.3),
-          color: '#ffffff', // force white spotlight
+          colour: '#ffffff', // force white spotlight
         },
       }));
     } else if (userLightingBeforePopup) {
@@ -160,8 +160,8 @@ export default function Editor() {
             className={`canvas-container h-full w-full bg-gray-200
              ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
               {/* if object if being hovered over change cursor into a grab */}
-              <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.color} />
-              <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.color} position={[5, 10, 5]} />
+              <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
+              <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
               <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
               <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
               <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
@@ -234,7 +234,7 @@ export default function Editor() {
             </button>
           </div>
           {showLightingPanel && (
-            <div className="absolute right-0 mt-2 w-64 bg-white p-4 rounded shadow-lg z-20">
+            <div className="absolute right-0 mt-2 w-96 bg-white p-4 rounded shadow-lg z-20 max-h-[50vh] overflow-y-auto">
               <LightingPanel 
                 config={lightingConfig}
                 onChange={setLightingConfig}
