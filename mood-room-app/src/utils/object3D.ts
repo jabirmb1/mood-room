@@ -44,7 +44,6 @@ export function cloneModel(scene: THREE.Object3D) {
     // attach cached meshes to the cloned model for later reuse
     (clonedModel as any).meshesWithMaterials = meshesWithMaterials;
     clonedModel.userData.initialcolours = initialcolours;
-    console.log(initialcolours);
 
     return clonedModel;
 }
@@ -64,7 +63,6 @@ export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>)
   const currentcolours: Partial<MaterialcolourMap> = {};
   const initialcolours: Partial<MaterialcolourMap> =
   (obj?.userData?.initialcolours as MaterialcolourMap) ?? {};// grab the inital model colours from the user data (if it doesn't exist, get empty array)
-  console.log(obj?.userData?.initialcolours)
   if (!obj) return { materialMap,currentcolours, initialcolours, availableTypes };
 
   // check for cached meshes first (e.g. if model was cloned and stored cache)
