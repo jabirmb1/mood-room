@@ -11,9 +11,10 @@ type ObjectFloatingPanelProps = {
   isHorizontalMode: boolean
   setIsHorizontalMode: React.Dispatch<React.SetStateAction<boolean>>;
   setMode: (mode: string) => void;
+  onDelete: ()=> void// function to delete object.
 }
 
-export function ObjectFloatingPanel({onClose, isHorizontalMode, setIsHorizontalMode, setMode} : ObjectFloatingPanelProps )
+export function ObjectFloatingPanel({onClose, isHorizontalMode, setIsHorizontalMode, setMode, onDelete} : ObjectFloatingPanelProps )
 {
   // we want the floating panel to always face camera to give it a 2-d hud feel, to do this we will manually rotate the panel
   // to always be perpendicular to the camera's face.
@@ -48,6 +49,9 @@ export function ObjectFloatingPanel({onClose, isHorizontalMode, setIsHorizontalM
             </button>
             
             <button onClick={onClose}>Close</button>
+
+            {/* button to delete object */}
+            <button onClick = {onDelete}>Delete</button>
           </div>
         </Html>
       </group>

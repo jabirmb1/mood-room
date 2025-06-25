@@ -139,6 +139,14 @@ export default function Editor() {
     setShowFurnitureTab(false); // optional: close the tab
   }
 
+  // function to delete the selected model
+  function deleteModel()
+  {
+    if (!selectedId) return;
+    setModels((prev) => prev.filter((model) => model.id !== selectedId));
+    setSelectedId(null);
+  }
+
   return (
     <div className="flex flex-col items-center justify-center w-full h-screen">
       <h1 className="text-xl font-bold mb-2">Editor</h1>
@@ -173,6 +181,7 @@ export default function Editor() {
                   setIsHoveringObject={setIsHoveringObject}
                   onDragging={setDragging}
                   onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
+                  onDelete={deleteModel}
                   onModelRefUpdate={getModelRefUpdateHandler(model.id)}
                   onGroupRefUpdate={getGroupRefUpdateHandler(model.id)}
                 />
@@ -251,6 +260,7 @@ export default function Editor() {
                 objectRef={selectedModelRef}
                 objectId={selectedId}
                 onClose={() => setSelectedId(null)}
+                onDelete = {deleteModel}
                 setMode={setEditingMode}
               />
             </motion.div>

@@ -9,10 +9,11 @@ type ObjectEditorPanelProps = {
   objectRef: React.RefObject<THREE.Object3D>;// which oject that this panel relates to/ is linked up with
   objectId: string;// Id of the linked up object
   onClose: () => void;// function to run when this panel closes
+  onDelete: () => void;// function to delete selected object.
   setMode: (mode: string) => void;// setting an object's mode from e.g. 'edit' to 'move' and vice versa
 };
 
-export function ObjectEditorPanel({ objectRef,objectId, onClose, setMode }: ObjectEditorPanelProps) {
+export function ObjectEditorPanel({ objectRef,objectId, onClose, onDelete, setMode }: ObjectEditorPanelProps) {
   return (
     <motion.aside
       initial={{ x: '100%' }}
@@ -51,7 +52,7 @@ export function ObjectEditorPanel({ objectRef,objectId, onClose, setMode }: Obje
         </button>
         <button
           className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded outline-none"
-          // Optional delete logic
+          onClick ={onDelete}
         >
           Delete Object
         </button>
