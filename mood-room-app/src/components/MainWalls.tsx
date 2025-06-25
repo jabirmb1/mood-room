@@ -27,9 +27,9 @@ export default function MainWalls() {
         <Grid
           args={[ROOM_SIZE, ROOM_SIZE]}
           position={[0, 0.3, 0]}
-          cellcolor="#888"
+          cellColor="#888"
           fadeDistance={100}
-          fadeStrength={1}
+          fadeStrength={1}  
         />
       )}
       <mesh  receiveShadow = {true}  castShadow = {true} position={[-ROOM_SIZE / 2, WALL_HEIGHT / 2, 0]}>
@@ -39,3 +39,4 @@ export default function MainWalls() {
     </>
   );
 }
+  

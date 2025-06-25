@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 // change and adjust lighting
 
 import React from 'react';
 
 // 
+=======
+import React from 'react';
+
+>>>>>>> origin/Fahi-code
 export interface LightingConfig {
   ambient: { intensity: number; color: string };
   directional: { intensity: number; color: string };
@@ -14,7 +19,11 @@ interface LightingPanelProps {
 }
 
 export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }) => {
+<<<<<<< HEAD
   
+=======
+  // ✅ Declare updateLight inside the component
+>>>>>>> origin/Fahi-code
   const updateLight = (type: 'ambient' | 'directional', field: 'intensity' | 'color', value: number | string) => {
     onChange({
       ...config,

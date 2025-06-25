@@ -29,6 +29,7 @@ type Object3DProps = {
   setIsHoveringObject?: (hover: boolean) => void;// if this object is currently being hovered or not.
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
   onPositionChange: (newPos: [number, number, number]) => void// function to run when the object's positon changes.
+  onDelete: ()=> void;// function to delete this object.
   onModelRefUpdate?: (ref: React.RefObject<THREE.Object3D>) => void;// a callback to explicitly expose the object's internal modelRef to parent.
   onGroupRefUpdate?: (ref: React.RefObject<THREE.Object3D>)=> void;// a callback to explicitly expose this component's interal group ref to parent.
 
@@ -37,7 +38,7 @@ type Object3DProps = {
 
 
 export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, editingMode = 'edit', 
-  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onPositionChange, onModelRefUpdate, onGroupRefUpdate}: Object3DProps) {
+  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onPositionChange, onDelete, onModelRefUpdate, onGroupRefUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
 
@@ -178,7 +179,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
         {(isSelected && mode === 'edit' && editingMode === 'move') &&(
           // default into starting with horizontal mode whenever we open the panel.
           <ObjectFloatingPanel  onClose={() => {setSelectedId(null); 
-              setEditingMode('edit')}} isHorizontalMode = {isHorizontalMode} setIsHorizontalMode = {setIsHorizontalMode} setMode={setEditingMode} />
+              setEditingMode('edit')}} isHorizontalMode = {isHorizontalMode} setIsHorizontalMode = {setIsHorizontalMode} setMode={setEditingMode} onDelete = {onDelete}/>
         )}
 
 

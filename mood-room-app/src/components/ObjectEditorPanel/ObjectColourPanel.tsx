@@ -91,6 +91,9 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
         {availableTypes.has(activeColourType) ? (
           <>
             <div className = "colour-picker-wrapper">
+              {/* note there is an infinite rerender error/ warning forthe hex colour picker with the onChange;
+              it doesn't seem to affect the app other than the warning so I will ignore it. if need be we can fix
+              this via throttling or debouncing later */}
             <HexColorPicker
               color={convertValidColourToHex(colours[activeColourType])}// convert to hex before passing it in
               onChange={(newColour) => {
