@@ -1,13 +1,11 @@
 // colour wheel used in editor panel to chnage colours of an Object
 'use client';
-
 import React, { useEffect, useState } from 'react';
-import { HexColorPicker } from 'react-colorful';
 import ColourButton from '../ColourButton';
 import * as THREE from 'three';
 import { getObjectMaterialMap, resetColourPalette} from '../../utils/object3D'
+import { ColourPickerControl } from '../ColourPickerControl';
 import './colourPicker.css';
-import { convertValidColourToHex } from '@/utils/colours';
 type ColourWheelProps = {
   objectRef: React.RefObject<THREE.Object3D>; // reference of the object that this colour wheel is linked to.
 };
@@ -91,31 +89,13 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
         {availableTypes.has(activeColourType) ? (
           <>
             <div className = "colour-picker-wrapper">
-              {/* note there is an infinite rerender error/ warning forthe hex colour picker with the onChange;
-              it doesn't seem to affect the app other than the warning so I will ignore it. if need be we can fix
-              this via throttling or debouncing later */}
-            <HexColorPicker
-              color={convertValidColourToHex(colours[activeColourType])}// convert to hex before passing it in
-              onChange={(newColour) => {
-                setColourText(newColour); // Keeps both picker and input in sync
-                setColours((prev) => ({ ...prev, [activeColourType]: newColour }));
+            <ColourPickerControl
+                value={colours[activeColourType]}
+                onChange={(newColour) => {
+                  setColours((prev) => ({ ...prev, [activeColourType]: newColour }));
                 }}
-            />
-            </div>
-            {/* Display current hex color value */}
-            <div className = 'flex flex-col justify-center'>
-              <div className = "flex gap-2 justify-center items-center text-1g p-1 mt-4">
-                <p>current colour:</p>
-                
-                <input
-                  type="text"
-                  className="border rounded text-center w-24"
-                  value={colourText}
-                  onChange={(e) => {
-                    const input = e.target.value;
-                    setColourText(input);
-                    if (convertValidColourToHex(input) !== '')  setColours((prev) => ({ ...prev, [activeColourType]: input }));
-                  }}
+                colourText="current colour"
+                showCloseButton={false}
               />
             </div>
             <p className = "text-xs text-red-500 font-bold"
@@ -124,8 +104,8 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
                  className="underline text-blue-600 hover:text-blue-800"
                 href = 'https://www.w3.org/TR/css-color-4/#named-colors'> list of colours inside the css spec. </a>
                 if you want to use colours that are not in that spec please just type in e.g. their hex, rgb, hsl equivalent.
-              </p>
-          </div>
+            </p>
+            
             <button type = 'button'
             className = "mt-4 px-4 py-1 text-sm bg-blue-200 rounded hover:bg-blue-400"
              onClick={()=>{
