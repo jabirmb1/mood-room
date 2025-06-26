@@ -18,6 +18,7 @@ import { AddModelButton } from '@/components/AddModelMenu/AddModelButton';
 import { ModelItem } from '@/components/AddModelMenu/AddModelTab';
 import { LightingButton } from '@/components/LightingPanel/LightingButton';
 import { LightingConfig } from '@/components/LightingPanel/LightingPanel';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 // model type.
 type Model = {
@@ -74,6 +75,9 @@ export default function Editor() {
   // creating a use state to keep track of what lightings the user adjusted before the editor opens
   // (since we will me temporarily overriding them for a spot light effect when editor opens.)
   const [userLightingBeforePopup, setUserLightingBeforePopup] = useState<LightingConfig | null>(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);// boolean flag keeping track if
+  // dialog right before model deletetion is open or not.
   
 
   // getting the selected model's group and model refs:
@@ -157,7 +161,7 @@ export default function Editor() {
           <Canvas
             shadows
             camera={{ position: defaultCameraPosition, fov: 50 }}
-            className={`canvas-container h-full w-full bg-gray-200
+            className={`canvas-container h-full w-full bg-gray-200 z-50
              ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
               {/* if object if being hovered over change cursor into a grab */}
               <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
@@ -181,7 +185,7 @@ export default function Editor() {
                   setIsHoveringObject={setIsHoveringObject}
                   onDragging={setDragging}
                   onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
-                  onDelete={deleteModel}
+                  onDelete={() => setIsDeleteDialogOpen(true)}
                   onModelRefUpdate={getModelRefUpdateHandler(model.id)}
                   onGroupRefUpdate={getGroupRefUpdateHandler(model.id)}
                 />
@@ -227,13 +231,30 @@ export default function Editor() {
                 objectRef={selectedModelRef}
                 objectId={selectedId}
                 onClose={() => setSelectedId(null)}
-                onDelete = {deleteModel}
+                onDelete = {() => setIsDeleteDialogOpen(true)}
                 setMode={setEditingMode}
               />
             </motion.aside>
           )}
         </AnimatePresence>
       </div>
+
+      {/* warning dialog before user deletes an object */}
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title= 'Confirm Model Deletion'
+        body="Are you sure you want to delete this model?"
+        confirmText="Delete"
+        confirmColour="bg-red-600 text-white"
+        cancelText="Cancel"
+        cancelColour="bg-gray-200 text-black"
+        onConfirm={() => {
+          deleteModel();
+          setIsDeleteDialogOpen(false);
+        }}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+    />
     </section>
   )
 }
