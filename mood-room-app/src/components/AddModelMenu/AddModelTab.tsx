@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion } from 'framer-motion';
 
 // used to definbe shape and properties of furniture
-export interface FurnitureItem {
+export interface ModelItem {
   id: string;
   name: string; // add name aswell
   url: string;
@@ -20,12 +20,12 @@ export interface FurnitureItem {
   // category For filtering later if want to add
 }
 
-interface AddFurnitureTabProps {
-  onAddFurniture: (model: Omit<FurnitureItem, 'thumbnail'>) => void;
+interface AddModelTabProps {
+  onAddModel: (model: Omit<ModelItem, 'thumbnail'>) => void;
 }
 
 //connect to DB later
-const FURNITURE_ITEMS: FurnitureItem[] = [
+const MODEL_ITEMS: ModelItem[] = [
   {
     id: '1',
     name: 'Modern Table',
@@ -52,9 +52,9 @@ const FURNITURE_ITEMS: FurnitureItem[] = [
   },
 ];
 
-console.log('Furniture items loaded:', FURNITURE_ITEMS); //remove later
+console.log('Furniture items loaded:', MODEL_ITEMS); //remove later
 
-export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
+export function AddModelTab({ onAddModel }: AddModelTabProps) {
   const [searchValue, setSearchValue] = useState<string>('');
   
   // This would be a database query later
@@ -63,25 +63,23 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
   //   : FURNITURE_ITEMS.filter(item => item.category === activeCategory);
 
   return (
-    <div className="h-full flex flex-col rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
+    <section className="h-full flex flex-col rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
       <h1 className="text-xl font-bold text-center mb-3 mt-4">Add More Furniture</h1>
 
       {/*Search button by name*/}
-      <div className="p-4">
-        <input 
-          type="text" 
-          placeholder="Search furniture..." 
-          className="w-full p-2 border rounded"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-        />
-      </div>
+      <input 
+        type="text" 
+        placeholder="Search furniture..." 
+        className="w-full p-2 border rounded"
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+      />
 
       {/* Filter items based on search */}
       <div className="flex-1 overflow-y-auto p-2">
-        <div className="grid grid-cols-2 gap-4">
+        <ul className="grid grid-cols-2 gap-4">
           {(() => {
-            const filteredItems = FURNITURE_ITEMS.filter(item => {
+            const filteredItems = MODEL_ITEMS.filter(item => {
               if (!searchValue.trim()) return true;
               const lowerCaseItemName = item.name.toLowerCase();
               const lowerCaseSearchValue = searchValue.toLowerCase();
@@ -90,9 +88,9 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
 
             if (filteredItems.length === 0) {
               return (
-                <div className="col-span-2 text-center py-8 text-gray-500">
+                <li className="col-span-2 text-center py-8 text-gray-500">
                   No furniture found matching "{searchValue}"
-                </div>
+                </li>
               );
             }
 
@@ -101,8 +99,8 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
                 key={item.id}
                 onClick={() => {
                   // Only pass the necessary data to the parent
-                  const { thumbnail, ...furnitureData } = item;
-                  onAddFurniture(furnitureData);
+                  const { thumbnail, ...modelData } = item;
+                  onAddModel(modelData);
                 }}
                 className="group cursor-pointer rounded-lg overflow-hidden shadow-md"
                 whileHover={{
@@ -116,7 +114,7 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
                   damping: 10
                 }}
               >
-                <div className="aspect-square bg-gray-100 relative"> {/* thumbnail */}
+                <figure className="aspect-square bg-gray-100 relative"> {/* thumbnail */}
                   <img
                     src={item.thumbnail}
                     alt={item.name}
@@ -126,15 +124,14 @@ export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
                       (e.target as HTMLImageElement).src = '/placeholder-thumbnail.png';
                     }}
                   />
-                </div>
-                <div className="p-3"> {/* name */}
-                  <h3 className="font-medium text-sm truncate">{item.name}</h3>
-                </div>
+                  {/* name */}
+                  <figcaption className="font-medium p-3 text-sm truncate">{item.name}</figcaption>
+                </figure>
               </motion.div>
             ));
           })()}
-        </div>
+        </ul>
       </div>
-    </div>
+    </section>
   );
 }

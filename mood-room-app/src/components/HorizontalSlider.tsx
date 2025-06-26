@@ -36,13 +36,14 @@ export function HorizontalSlider({
 }: HorizontalSliderProps) {
   return (
     <div>
-      <label className={`block mb-2 text-xl font-medium ${labelcolour}`}>
+      <label htmlFor= 'htmlSlider' className={`block mb-2 text-xl font-medium ${labelcolour}`}>
         {label}
       </label>
       <div className="flex items-center gap-4 w-full">
         <span className={`text-sm ${rangeLabelcolour}`}>{min}{unit}</span>
         <input
           type="range"
+          id = 'htmlSlider'
           min={min}
           max={max}
           step={step}
@@ -53,9 +54,9 @@ export function HorizontalSlider({
         <span className={`text-sm ${rangeLabelcolour}`}>{max}{unit}</span>
       </div>
       {showValue && (
-        <div className={`mt-2 text-center text-sm mb-2 ${valueTextcolour}`}>
+        <output className={`mt-2 text-center text-sm mb-2 ${valueTextcolour}`}>
           Current: {value.toFixed(1)}{unit}
-        </div>
+        </output>
       )}
     </div>
   );

@@ -40,7 +40,7 @@ export function ObjectFloatingPanel({onClose, isHorizontalMode, setIsHorizontalM
       <group ref={groupRef} position={[0, 1.2, 0]}>
         {/* using Html so we can create a floating bar on top of object when in move mode */}
         <Html position={[0, 1.2, 0]} center distanceFactor={8} transform>
-          <div className="bg-white p-2 rounded shadow flex gap-2">
+          <aside className="bg-white p-2 rounded shadow flex gap-2">
               <button onClick={() => setMode("edit")}>Edit</button>{/* if we set the mode into 'edit' then we can open editor menu */}
 
               {/* This button just allows the user to move the model vertically or horizontally*/}
@@ -52,7 +52,7 @@ export function ObjectFloatingPanel({onClose, isHorizontalMode, setIsHorizontalM
 
             {/* button to delete object */}
             <button onClick = {onDelete}>Delete</button>
-          </div>
+          </aside>
         </Html>
       </group>
     </>
