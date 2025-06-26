@@ -62,7 +62,7 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
   if (!colours) return null;
 
   return (
-    <div className="w-full mt-6 flex flex-col items-center border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
+    <article className="w-full mt-6 flex flex-col items-center border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
       <div className="flex flex-col items-center">
         <h3 className="text-lg font-semibold mb-4 text-center">Colour</h3>
 
@@ -117,6 +117,6 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
           <div className="text-sm text-gray-400 mt-4 italic">This material does not exist on this object.</div>
         )}
       </div>
-    </div>
+    </article>
   );
 }

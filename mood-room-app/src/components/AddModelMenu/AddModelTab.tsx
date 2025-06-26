@@ -63,23 +63,21 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
   //   : FURNITURE_ITEMS.filter(item => item.category === activeCategory);
 
   return (
-    <div className="h-full flex flex-col rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
+    <section className="h-full flex flex-col rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
       <h1 className="text-xl font-bold text-center mb-3 mt-4">Add More Furniture</h1>
 
       {/*Search button by name*/}
-      <div className="p-4">
-        <input 
-          type="text" 
-          placeholder="Search furniture..." 
-          className="w-full p-2 border rounded"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-        />
-      </div>
+      <input 
+        type="text" 
+        placeholder="Search furniture..." 
+        className="w-full p-2 border rounded"
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+      />
 
       {/* Filter items based on search */}
       <div className="flex-1 overflow-y-auto p-2">
-        <div className="grid grid-cols-2 gap-4">
+        <ul className="grid grid-cols-2 gap-4">
           {(() => {
             const filteredItems = MODEL_ITEMS.filter(item => {
               if (!searchValue.trim()) return true;
@@ -90,9 +88,9 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
 
             if (filteredItems.length === 0) {
               return (
-                <div className="col-span-2 text-center py-8 text-gray-500">
+                <li className="col-span-2 text-center py-8 text-gray-500">
                   No furniture found matching "{searchValue}"
-                </div>
+                </li>
               );
             }
 
@@ -116,7 +114,7 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
                   damping: 10
                 }}
               >
-                <div className="aspect-square bg-gray-100 relative"> {/* thumbnail */}
+                <figure className="aspect-square bg-gray-100 relative"> {/* thumbnail */}
                   <img
                     src={item.thumbnail}
                     alt={item.name}
@@ -126,15 +124,14 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
                       (e.target as HTMLImageElement).src = '/placeholder-thumbnail.png';
                     }}
                   />
-                </div>
-                <div className="p-3"> {/* name */}
-                  <h3 className="font-medium text-sm truncate">{item.name}</h3>
-                </div>
+                  {/* name */}
+                  <figcaption className="font-medium p-3 text-sm truncate">{item.name}</figcaption>
+                </figure>
               </motion.div>
             ));
           })()}
-        </div>
+        </ul>
       </div>
-    </div>
+    </section>
   );
 }

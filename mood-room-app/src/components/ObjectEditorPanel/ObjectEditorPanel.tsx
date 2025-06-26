@@ -15,48 +15,42 @@ type ObjectEditorPanelProps = {
 
 export function ObjectEditorPanel({ objectRef,objectId, onClose, onDelete, setMode }: ObjectEditorPanelProps) {
   return (
-    <motion.aside
-      initial={{ x: '100%' }}
-      animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={{ type: 'tween', duration: 0.3 }}
-      className="bg-white shadow-xl border-l border-gray-300 p-6 flex flex-col h-full w-full  overflow-y-auto"
-    >
-      <h2 className="text-xl font-semibold mb- text-center">Object Controls</h2>
+      <article className = "bg-white shadow-xl border-l border-gray-300 p-6 flex flex-col h-full w-full  overflow-y-auto">
+        <h2 className="text-xl font-semibold mb- text-center">Object Controls</h2>
 
-      <div className="flex gap-2 justify-center mb-4">
-        <ObjectColourPanel objectRef={objectRef} />
-      </div>
+        <section className="flex gap-2 justify-center mb-4">
+          <ObjectColourPanel objectRef={objectRef} />
+        </section>
 
-      <div className="flex gap-2 justify-center mb-6">
-        <ObjectRotationPanel objectRef={objectRef} objectId = {objectId}/>
-      </div>
+        <section className="flex gap-2 justify-center mb-6">
+          <ObjectRotationPanel objectRef={objectRef} objectId = {objectId}/>
+        </section>
 
-      <div className="flex gap-2 justify-center mb-6">
-        <ObjectSizePanel objectRef={objectRef} objectId = {objectId}/>
-      </div>
+        <section className="flex gap-2 justify-center mb-6">
+          <ObjectSizePanel objectRef={objectRef} objectId = {objectId}/>
+        </section>
 
-      <div className="flex gap-6 md:gap-4 sm:gap-2 justify-center mt-auto">
-        <button
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded outline-none"
-          onClick={onClose}
-        >
-          Close
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('move')}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded outline-none"
-        >
-          Move
-        </button>
-        <button
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded outline-none"
-          onClick ={onDelete}
-        >
-          Delete Object
-        </button>
-      </div>
-    </motion.aside>
+        <div className="flex gap-6 md:gap-4 sm:gap-2 justify-center mt-auto">
+          <button
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded outline-none"
+            onClick={onClose}
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('move')}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded outline-none"
+          >
+            Move
+          </button>
+          <button
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded outline-none"
+            onClick ={onDelete}
+          >
+            Delete Object
+          </button>
+        </div>
+    </article>
   );
 }

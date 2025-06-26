@@ -148,12 +148,12 @@ export default function Editor() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen">
+    <section className="flex flex-col items-center justify-center w-full h-screen">
       <h1 className="text-xl font-bold mb-2">Editor</h1>
       <p>Edit your generated room layout</p>
       <div className="w-full h-[80vh] mt-4 flex flex-col lg:flex-row relative">
         {/* Canvas Section */}
-        <div className={`relative flex-1 ${isPopupOpen && editingMode === 'edit' ? 'lg:w-1/2' : 'w-full'}`}>
+        <article className={`relative flex-1 ${isPopupOpen && editingMode === 'edit' ? 'lg:w-1/2' : 'w-full'}`}>
           <Canvas
             shadows
             camera={{ position: defaultCameraPosition, fov: 50 }}
@@ -197,10 +197,10 @@ export default function Editor() {
           </Canvas>
 
           {/* adding in a little note at the top left corner of canvas to let users know that they can seleect an object */}
-          <div className="absolute top-2 left-2 z-20 pointer-events-none select-none bg-black/30 text-white font-semibold text-sm rounded-lg px-3 py-1 shadow-lg max-w-xs leading-tight">
+          <aside className="absolute top-2 left-2 z-20 pointer-events-none select-none bg-black/30 text-white font-semibold text-sm rounded-lg px-3 py-1 shadow-lg max-w-xs leading-tight">
             <p>* To select an object please double click it *</p>
-          </div>
-        </div>
+          </aside>
+        </article>
 
         {/* furnitur button and ui*/}
         <AddModelButton show={showAddModelTab} className={"absolute top-4 left-4 z-10"}
@@ -213,14 +213,14 @@ export default function Editor() {
         {/* Editor Panel */}
         <AnimatePresence>{/* animate the panel coming in from the side */}
           {isPopupOpen && editingMode === 'edit' && (
-            <motion.div
+            <motion.aside
               key="editor-panel"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
               className={`z-10 bg-white
-                w-full h-[30vh] mt-2
+                w-full h-[30vh] mt-2 
                 absolute bottom-0 lg:top-0 lg:right-0 lg:bottom-auto lg:h-full lg:w-1/2 lg:mt-0`}
             >
               <ObjectEditorPanel
@@ -230,10 +230,10 @@ export default function Editor() {
                 onDelete = {deleteModel}
                 setMode={setEditingMode}
               />
-            </motion.div>
+            </motion.aside>
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </section>
   )
 }

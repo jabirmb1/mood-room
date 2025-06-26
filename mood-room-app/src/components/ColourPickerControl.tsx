@@ -44,9 +44,10 @@ export function ColourPickerControl({ value, showCloseButton = true, colourText 
       </div>
 
       <div className = "flex gap-2 justify-center items-center text-1g p-1 mt-4">
-            <p>{colourText}</p>
+            <label htmlFor='colour-input'>{colourText}</label>
             <input
                 type="text"
+                id = 'colour-input'
                 className="border rounded text-center text-sm p-1"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

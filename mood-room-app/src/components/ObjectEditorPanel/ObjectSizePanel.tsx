@@ -36,7 +36,7 @@ export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) 
   };
 
   return (
-    <div className="w-full mt-6 flex flex-col items-stretch border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
+    <article className="w-full mt-6 flex flex-col items-stretch border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
     <p className="text-lg font-semibold mb-4 text-center">Size</p>
   
     <HorizontalSlider
@@ -74,7 +74,7 @@ export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) 
     >
       Reset Size
     </button>
-  </div>
+  </article>
   
   );
 }
