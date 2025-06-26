@@ -4,10 +4,9 @@
 
 import { useState } from "react";
 import { motion } from 'framer-motion';
-import { FurnitureCategory } from './FurnitureCategory';
 
 // used to definbe shape and properties of furniture
-export interface ModelItem {
+export interface FurnitureItem {
   id: string;
   name: string; // add name aswell
   url: string;
@@ -21,12 +20,12 @@ export interface ModelItem {
   category?: string;
 }
 
-interface AddModelTabProps {
-  onAddModel: (model: Omit<ModelItem, 'thumbnail'>) => void;
+interface AddFurnitureTabProps {
+  onAddFurniture: (model: Omit<FurnitureItem, 'thumbnail'>) => void;
 }
 
 //connect to DB later
-const MODEL_ITEMS: ModelItem[] = [
+const FURNITURE_ITEMS: FurnitureItem[] = [
   {
     id: '1',
     name: 'Modern Table',
@@ -55,51 +54,52 @@ const MODEL_ITEMS: ModelItem[] = [
   },
 ];
 
-console.log('Furniture items loaded:', MODEL_ITEMS); //remove later
+console.log('Furniture items loaded:', FURNITURE_ITEMS); //remove later
 
-export function AddModelTab({ onAddModel }: AddModelTabProps) {
+export function AddFurnitureTab({ onAddFurniture }: AddFurnitureTabProps) {
   const [searchValue, setSearchValue] = useState<string>('');
-  const [filteredItems, setFilteredItems] = useState<ModelItem[]>(MODEL_ITEMS);
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-
+  
   return (
-    <section className="h-full flex flex-col rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
+    <div className="h-full flex flex-col rounded-lg h-[80vh]"> {/* h can be chamngerd depending on the canvas*/}
       <h1 className="text-xl font-bold text-center mb-3 mt-4">Add More Furniture</h1>
 
       {/*Search button by name*/}
-      <input 
-        type="text" 
-        placeholder="Search furniture..." 
-        className="w-full p-2 border rounded"
-        value={searchValue}
-        onChange={(e) => setSearchValue(e.target.value)}
-      />
-      
-      {/* Category filter */}
-      <FurnitureCategory
-        items={MODEL_ITEMS}
-        searchValue={searchValue}
-        onSelect={(filtered, category) => {
-          setFilteredItems(filtered);
-          setActiveCategory(category);
-        }}
-      />
+      <div className="p-4">
+        <input 
+          type="text" 
+          placeholder="Search furniture..." 
+          className="w-full p-2 border rounded"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+        />
+      </div>
 
       {/* Filter items based on search */}
       <div className="flex-1 overflow-y-auto p-2">
-        <ul className="grid grid-cols-2 gap-4">
-          {filteredItems.length === 0 ? (
-            <li className="col-span-2 text-center py-8 text-gray-500">
-              No furniture found matching "{searchValue} {activeCategory}"
-            </li>
-          ) : (
-            filteredItems.map((item) => (
+        <div className="grid grid-cols-2 gap-4">
+          {(() => {
+            const filteredItems = FURNITURE_ITEMS.filter(item => {
+              if (!searchValue.trim()) return true;
+              const lowerCaseItemName = item.name.toLowerCase();
+              const lowerCaseSearchValue = searchValue.toLowerCase();
+              return lowerCaseItemName.includes(lowerCaseSearchValue);
+            });
+
+            if (filteredItems.length === 0) {
+              return (
+                <div className="col-span-2 text-center py-8 text-gray-500">
+                  No furniture found matching "{searchValue}"
+                </div>
+              );
+            }
+
+            return filteredItems.map((item) => (
               <motion.div 
                 key={item.id}
                 onClick={() => {
                   // Only pass the necessary data to the parent
-                  const { thumbnail, ...modelData } = item;
-                  onAddModel(modelData);
+                  const { thumbnail, ...furnitureData } = item;
+                  onAddFurniture(furnitureData);
                 }}
                 className="group cursor-pointer rounded-lg overflow-hidden shadow-md"
                 whileHover={{
@@ -113,7 +113,7 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
                   damping: 10
                 }}
               >
-                <figure className="aspect-square bg-gray-100 relative"> {/* thumbnail */}
+                <div className="aspect-square bg-gray-100 relative"> {/* thumbnail */}
                   <img
                     src={item.thumbnail}
                     alt={item.name}
@@ -123,14 +123,15 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
                       (e.target as HTMLImageElement).src = '/placeholder-thumbnail.png';
                     }}
                   />
-                  {/* name */}
-                  <figcaption className="font-medium p-3 text-sm truncate">{item.name}</figcaption>
-                </figure>
+                </div>
+                <div className="p-3"> {/* name */}
+                  <h3 className="font-medium text-sm truncate">{item.name}</h3>
+                </div>
               </motion.div>
-            ))
-          )}
-        </ul>
+            ));
+          })()}
+        </div>
       </div>
-    </section>
+    </div>
   );
 }
