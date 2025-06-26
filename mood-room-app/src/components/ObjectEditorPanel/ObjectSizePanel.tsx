@@ -31,8 +31,14 @@ export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) 
     }
   }, [sizePercentage]);
 
-  const handleSizeChange = (delta: number) => {
-    setSizePercentage(prev => prev + delta);
+  // increases/ decreases size by delta unless if it's past the bounds (-50 and + 50).
+  function handleSizeChange(delta: number){
+    setSizePercentage(prev => {
+      const next = prev + delta;
+      if (next < -50) return prev;
+      if (next > 50) return prev;
+      return next;
+    });
   };
 
   return (
@@ -54,6 +60,7 @@ export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) 
       <button
         type="button"
         onClick={() => handleSizeChange(-10)}
+        disabled={sizePercentage <= -50}
         className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
       >
         -10%
@@ -61,6 +68,7 @@ export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) 
       <button
         type="button"
         onClick={() => handleSizeChange(10)}
+        disabled={sizePercentage >= 50}
         className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
       >
         +10%
