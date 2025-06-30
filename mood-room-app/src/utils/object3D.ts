@@ -58,25 +58,26 @@ export function cloneModel(scene: THREE.Object3D) {
 // a colour map just stores what colour palette an object is using and at what parts:
 //
 export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>): {
-  materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>>; // current mapping of object's different parts to different colours
+  materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial[]>>; // current mapping of object's different parts to different colours
   currentcolours: Partial<MaterialcolourMap>;// current colours that the model is using.
   initialcolours: Partial<MaterialcolourMap>; // what the default colours of the object was (e.g. before user changed them)
-  availableTypes: Set<'primary' | 'secondary' | 'tertiary'>; // if object has primary, secondary or tertiary.
+  availableTypes: Set<'primary' | 'secondary' | 'tertiary'>;// if object has primary, secondary or tertiary.
 } {
   const obj = objectRef.current;
-  const materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>> = {};
+  const materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial[]>> = {};// using an array for each category
+  // as e.g. a model may have multiple primaries that needs to be grouped together.
   const availableTypes = new Set<'primary' | 'secondary' | 'tertiary'>();
   const currentcolours: Partial<MaterialcolourMap> = {};
   const initialcolours: Partial<MaterialcolourMap> =
-  (obj?.userData?.initialcolours as MaterialcolourMap) ?? {};// grab the inital model colours from the user data (if it doesn't exist, get empty array)
-  if (!obj) return { materialMap,currentcolours, initialcolours, availableTypes };
+    (obj?.userData?.initialcolours as MaterialcolourMap) ?? {};// grab the inital model colours from the user data (if it doesn't exist, get empty array)
+  if (!obj) return { materialMap, currentcolours, initialcolours, availableTypes };
 
   // check for cached meshes first (e.g. if model was cloned and stored cache)
   const meshes: THREE.Mesh[] = (obj as any).meshesWithMaterials ?? [];
 
   const targets = meshes.length > 0 ? meshes : [];
 
-  // fallback: traverse if no cache exists
+   // fallback: traverse if no cache exists
   if (targets.length === 0) {
     obj.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -85,14 +86,18 @@ export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>)
     });
   }
 
-  // collect materials and their colours
+   // collect materials and their colours
   for (const mesh of targets) {
     const material = mesh.material as THREE.MeshStandardMaterial;
     if (!material) continue;
 
     const baseName = getBaseMaterialName(material.name, modelMaterialNames);
     if (baseName) {
-      materialMap[baseName] = material;
+      if (!materialMap[baseName]) {
+        materialMap[baseName] = [];
+      }
+      
+      materialMap[baseName]!.push(material);
       availableTypes.add(baseName);
       currentcolours[baseName] = `#${material.color.getHexString()}`;
     }
@@ -118,12 +123,14 @@ export function applyColourPalette(model: THREE.Object3D, colourPalette?: Colour
   // use material map utility to avoid redundant traversal
   const { materialMap } = getObjectMaterialMap({ current: model });
 
-  Object.entries(materialMap).forEach(([type, material]) => {
+  Object.entries(materialMap).forEach(([type, materials]) => {
     const key = type as keyof MaterialcolourMap;
     const colour = materialcolourMap[key];
-    if (colour) {
-      material.color.set(colour);
-      material.needsUpdate = true;
+    if (colour && materials) {
+      for (const mat of materials) {
+        mat.color.set(colour);
+        mat.needsUpdate = true;
+      }
     }
   });
 }
@@ -139,13 +146,17 @@ export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D>) {
   const { materialMap } = getObjectMaterialMap(objectRef);
 
   // go through all existing editable components and change their colour.
-  Object.entries(materialMap).forEach(([type, material]) => {
+  Object.entries(materialMap).forEach(([type, materials]) => {
     const key = type as keyof MaterialcolourMap;
-    if (initialcolours[key]) {
-      material.color.set(initialcolours[key]!);
-      material.needsUpdate = true;
+    const initialColour = initialcolours[key];
+    if (initialColour && materials) {
+      for (const mat of materials) {
+        mat.color.set(initialColour);
+        mat.needsUpdate = true;
+      }
     }
   });
+  
   return initialcolours;
 }
 

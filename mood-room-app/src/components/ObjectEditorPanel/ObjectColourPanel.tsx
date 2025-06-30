@@ -22,7 +22,7 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
   const [colours, setColours] = useState<MaterialcolourMap|null>(null);// colour that the current material has on.
   const [colourText, setColourText] = useState<string>('');;// a text string that just says what current colour is.
 
-  const [materialMap, setMaterialMap] = useState<Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>>>({});
+  const [materialMap, setMaterialMap] = useState<Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial[]>>>({});
   const [availableTypes, setAvailableTypes] = useState<Set<'primary' | 'secondary' | 'tertiary'>>(new Set());
 
   // going through and travering the object figuring out which colours and parts does it have.
@@ -45,9 +45,14 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
 
   // Apply colour to active material whenever it changes
   useEffect(() => {
-    const mat = materialMap[activeColourType];
-    if (mat) {
-      mat.color.set(colours[activeColourType]);
+    const mats = materialMap[activeColourType];
+    const newColour = colours?.[activeColourType];
+  
+    if (mats && newColour) {
+      for (const mat of mats) {// go through all e.g. 'primary' materials and give them the same colour
+        mat.color.set(newColour);
+        mat.needsUpdate = true;
+      }
     }
   }, [colours, activeColourType, materialMap]);
 
