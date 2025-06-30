@@ -7,7 +7,7 @@ import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
 import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivotHorizontal, getObjectSizeDifference } from "@/utils/object3D";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivotHorizontal, getObjectSizeDifference, applyCategoryTags } from "@/utils/object3D";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
@@ -51,6 +51,9 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   
     centered.scale.set(globalScale, globalScale, globalScale); // on first load, load it into global scale
     centered.userData.baseScale = globalScale; // record what the current size is.
+    // apply tags to the object during load:
+    applyCategoryTags(url, centered)
+    console.log(centered.userData)
   
     return centered;
   }, [scene]);
@@ -114,7 +117,8 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     }
   }, [colourPalette]);
 
- /*  developer console log to just see all materials name as object loads
+ 
+  /* prints out material names of the models as they are loaded up 
  useEffect(() => {
     if (!clonedScene) return;
   
@@ -132,7 +136,8 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     });
   
     console.log(`[${id}] Loaded materials:`, Array.from(materialNames));
-  }, [clonedScene, id]); */
+  }, [clonedScene, id]); 
+  */
   
 
   // add in a hovered effect if user is in edit mode and hovers over model
@@ -166,6 +171,8 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     };
   }, [modelRef.current]);
    */}
+
+   
   
   return (
     <>

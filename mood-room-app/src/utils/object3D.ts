@@ -15,6 +15,12 @@ type MaterialcolourMap = {
   tertiary?: string;
 }
 
+// each model tag inside json folders must be in this format.
+export type ModelTags = {
+  addTags?: string[];
+  removeTags?: string[];
+};
+
 // This function fully clones a model including its material.
 //
 export function cloneModel(scene: THREE.Object3D) {
@@ -266,3 +272,83 @@ export function getBaseMaterialName<T extends string>(name: string, validBaseNam
   return validBaseNames.includes(base as T) ? (base as T) : undefined;
 }
 
+
+// This function will determine of which folder the model lies in e.g. furniture, decor, lighting etc
+// and then apply some tags to the user data; this is because different categories of models behaves differently
+//
+export async function applyCategoryTags(url: string, object: THREE.Object3D) {
+  object.userData.tags = object.userData.tags || [];
+
+  const lowerUrl = url.toLowerCase();
+
+  // Folder-based default tags
+  if (lowerUrl.includes('lights')) {
+    object.userData.tags.push('light');
+  } else if (lowerUrl.includes('furniture')) {
+    object.userData.tags.push('furniture');
+  } else if (lowerUrl.includes('decor')) {
+    object.userData.tags.push('decor');
+  } else if (lowerUrl.includes('wall-art')) {
+    object.userData.tags.push('wall-art');
+  }
+
+    // Check if model is inside its own subfolder
+    const match = url.match(/([^/]+)\/\1\.glb$/i); // matches furniture/bed3/bed3.glb
+    if (!match) return; // skip meta load if not in dedicated folder
+  
+    const jsonUrl = url.replace(/\.glb$/i, '.meta.json');
+  
+
+  // Now try to fetch a matching JSON metadata file
+  try {
+    const response = await fetch(jsonUrl);
+    if (response.ok) {
+      const meta: ModelTags = await response.json();
+
+      const currentTags = new Set(object.userData.tags);
+
+      // Apply additions
+      if (Array.isArray(meta.addTags)) {
+        for (const tag of meta.addTags) currentTags.add(tag);
+      }
+
+      // Apply removals
+      if (Array.isArray(meta.removeTags)) {
+        for (const tag of meta.removeTags) currentTags.delete(tag);
+      }
+
+      object.userData.tags = Array.from(currentTags);
+    }
+  } catch (err) {
+    // Failing to load meta.json is okay — not all models need it
+    console.warn(`[Meta Tags] No meta.json found or failed for ${url}`);
+  }
+}
+
+function saveOriginalLightProperties(model: THREE.Object3D) {
+  if (!model.userData.tags?.includes('light')) return;
+
+  const map = new Map();
+  model.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((material) => {
+        if (material instanceof THREE.MeshStandardMaterial) {
+          map.set(material, {
+            color: material.emissive.clone(),
+            intensity: material.emissiveIntensity,
+          });
+        }
+      });
+    }
+  });
+  originalEmissiveRef.current = map;
+}
+
+function restoreOriginalLightProperties() {
+  originalEmissiveRef.current.forEach(({ color, intensity }, material) => {
+    material.emissive.copy(color);
+    material.emissiveIntensity = intensity;
+  });
+}

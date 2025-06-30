@@ -43,12 +43,27 @@ const initialModels: Model[] = [
       secondary: "#ff0000",
       tertiary: "#ff0000"
     },
-    position: [0, 0, -4],
+    position: [0, 0, -6],
   },
   {
     id: uuidv4(),
-    url: "/assets/BookShelfBasic.glb",
-    position: [0, 0, -6],
+    url: "/assets/lights/ShadeLampBasic.glb",
+    position: [0, 0, 0],
+  },
+  {
+    id: uuidv4(),
+    url: "/assets/lights/WallLampBasic.glb",
+    position: [0, 0, 6],
+  },
+  {
+    id: uuidv4(),
+    url: "/assets/lights/WallLamp.glb",
+    position: [4, 0, 0],
+  },
+  {
+    id: uuidv4(),
+    url: "/assets/lights/WallLampPoles.glb",
+    position: [-4, 0, 0],
   },
 ];
 
@@ -189,7 +204,7 @@ export default function Editor() {
                   onModelRefUpdate={getModelRefUpdateHandler(model.id)}
                   onGroupRefUpdate={getGroupRefUpdateHandler(model.id)}
                 />
-              ))}
+                ))}
               {orbitControlsRef.current && (
                 <CameraController
                   controlsRef={orbitControlsRef}
@@ -201,18 +216,18 @@ export default function Editor() {
           </Canvas>
 
           {/* adding in a little note at the top left corner of canvas to let users know that they can seleect an object */}
-          <aside className="absolute top-2 left-2 z-20 pointer-events-none select-none bg-black/30 text-white font-semibold text-sm rounded-lg px-3 py-1 shadow-lg max-w-xs leading-tight">
+          <aside className="absolute top-2 left-2 z-60 pointer-events-none select-none bg-black/30 text-white font-semibold text-sm rounded-lg px-3 py-1 shadow-lg max-w-xs leading-tight">
             <p>* To select an object please double click it *</p>
           </aside>
         </article>
 
         {/* furnitur button and ui*/}
-        <AddModelButton show={showAddModelTab} className={"absolute top-4 left-4 z-10"}
+        <AddModelButton show={showAddModelTab} className={"absolute top-4 left-4 z-60"}
          toggle = {()=> setShowAddModelTab(p => !p)} onAddModel={handleAddModel}/>
 
         {/* Top right lighting button */}
         <LightingButton show = {showLightingPanel} toggle={() => setShowLightingPanel(p => !p)} config={lightingConfig} 
-        onChange={setLightingConfig} className="absolute top-4 right-4 z-10"/>
+        onChange={setLightingConfig} className="absolute top-4 right-4 z-60"/>
 
         {/* Editor Panel */}
         <AnimatePresence>{/* animate the panel coming in from the side */}
@@ -223,7 +238,7 @@ export default function Editor() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
-              className={`z-10 bg-white
+              className={`z-60 bg-white
                 w-full h-[30vh] mt-2 
                 absolute bottom-0 lg:top-0 lg:right-0 lg:bottom-auto lg:h-full lg:w-1/2 lg:mt-0`}
             >
