@@ -253,19 +253,18 @@ export function getObjectSizeDifference(objectRef: React.RefObject<THREE.Object3
 }
 
 
-// This function will just center the pivot of an object horizontally so that it can be rotated as expected.
+// This function will just center the pivot of an object in all axis(gives consistent rotation and collision)
 // it retuns a new group with the model centered.
 //
-export function centerPivotHorizontal(object: THREE.Object3D) {
+export function centerPivot(object: THREE.Object3D) {
   // get bounding box and center the pivot based on that bounding box.
   const box = new THREE.Box3().setFromObject(object);
   const center = new THREE.Vector3();
   const pivotGroup = new THREE.Group();
   box.getCenter(center);
 
-  // Shift horizontally only (X and Z), leave Y unchanged
-  const centerXZ = new THREE.Vector3(center.x, 0, center.z);
-  object.position.sub(centerXZ);
+  // Center the pivot group at the center of the bounding box
+  object.position.sub(center);
   pivotGroup.add(object);
   // Deep copy userData from the object to the pivot group
   // (assuming userData is a simple object without functions or circular references)

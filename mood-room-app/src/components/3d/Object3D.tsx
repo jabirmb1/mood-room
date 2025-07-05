@@ -7,7 +7,7 @@ import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
 import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivotHorizontal, getObjectSizeDifference, applyCategoryTags } from "@/utils/object3D";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, getObjectSizeDifference, applyCategoryTags } from "@/utils/object3D";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
@@ -22,6 +22,7 @@ type Object3DProps = {
   colourPalette?: ColourPalette;// colour palette to apply to the model
   position?: [number, number, number];// position of the model in the scene
   isSelected: boolean;// boolean flag to check if current model is the selected one or not.
+  isColliding?: boolean;// if this object is inside an illegal collision state, e.g. inside a wall or floor.
   editingMode: 'edit' | 'move';//what mode the object is in, e.g. edit means that side panel will show to change the object's properties
   // e.g. size, colour, rotation etc, 'move' will instead show a floating panel which will help user's to translate object.
   setSelectedId: (id: string | null) => void;// this will be used for the object to select and unselect itself.
@@ -37,7 +38,7 @@ type Object3DProps = {
 
 
 
-export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, editingMode = 'edit', 
+export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, isColliding=false, editingMode = 'edit', 
   setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onPositionChange, onDelete, onModelRefUpdate, onGroupRefUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
@@ -47,7 +48,7 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   const clonedScene = useMemo(() => {
     if (!scene) return null;
     const cloned = cloneModel(scene);
-    const centered = centerPivotHorizontal(cloned);
+    const centered = centerPivot(cloned);
   
     centered.scale.set(globalScale, globalScale, globalScale); // on first load, load it into global scale
     centered.userData.baseScale = globalScale; // record what the current size is.
@@ -157,6 +158,21 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     model.scale.set(base * scaleFactor, base * scaleFactor, base * scaleFactor);
   
   }, [hovered, mode, modelRef.current?.userData.baseScale]);
+
+   //This use effect temporarily turns the object into red if it is colliding with another object.
+   useEffect(() => {
+    if (!modelRef.current) return;
+    if (isColliding) {
+      modelRef.current.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.material.color.set(0xff0000); // red for illegal
+        }
+      });
+    } else {
+      applyColourPalette(modelRef.current, colourPalette); // reset colourpalette to what it was before.
+    }
+  }, [isColliding]);
+  
   
 
   {/* The code below just shows the bounding box for the model }

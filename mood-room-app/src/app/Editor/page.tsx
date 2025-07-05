@@ -1,17 +1,16 @@
-// editor page where u can customize it all
+// editor page where u can customise it all
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import MainWalls from '@/components/MainWalls';
 import { Object3D } from '@/components/3d/Object3D';
 import { CameraController } from '@/components/CameraController';
 import { v4 as uuidv4 } from 'uuid';
-import { defaultCameraPosition } from '@/utils/const';
+import { defaultCameraPosition, wallHeight, wallThickness } from '@/utils/const';
 import { ObjectEditorPanel } from '@/components/ObjectEditorPanel/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useModelRefs } from '@/hooks/useModelRefs';
+import { useModel} from '@/hooks/useModel';
 import * as THREE from "three";
 import { LightIntensityTransition } from '@/components/LightIntensityTransition';
 import { AddModelButton } from '@/components/AddModelMenu/AddModelButton';
@@ -19,25 +18,16 @@ import { ModelItem } from '@/components/AddModelMenu/AddModelTab';
 import { LightingButton } from '@/components/LightingPanel/LightingButton';
 import { LightingConfig } from '@/components/LightingPanel/LightingPanel';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import RoomFoundation from '@/components/RoomFoundation';
+import { RoomContext } from '../contexts/RoomContext';
+import { Model } from '@/types/types';
 
-// model type.
-type Model = {
-  id: string;
-  url: string;
-  colourPalette?: {
-    primary?: string;
-    secondary?: string;
-    tertiary?: string;
-  };
-  position: [number, number, number];
-  scale?: [number, number, number];
-};
 
 //place holder array of models until adding/ deletion of object functionality is added.
 const initialModels: Model[] = [
   {
     id: uuidv4(),
-    url: "/assets/Tvold.glb",
+    url: "/assets/furniture/Tvold.glb",
     colourPalette: {
       primary: "#0ff0ff",
       secondary: "#ff0000",
@@ -45,34 +35,40 @@ const initialModels: Model[] = [
     },
     position: [0, 0, -6],
   },
-  {
+ /* {
     id: uuidv4(),
     url: "/assets/lights/ShadeLampBasic.glb",
     position: [0, 0, 0],
-  },
+  }, */
   {
     id: uuidv4(),
     url: "/assets/lights/WallLampBasic.glb",
-    position: [0, 0, 6],
+    position: [0, 2, 6],
   },
   {
     id: uuidv4(),
     url: "/assets/lights/WallLamp.glb",
-    position: [4, 0, 0],
+    position: [4, 2, 0],
   },
   {
     id: uuidv4(),
     url: "/assets/lights/WallLampPoles.glb",
-    position: [-4, 0, 0],
+    position: [-4, 2, 0],
   },
 ];
 
 export default function Editor() {
+
+   // State to hold floor & wall objects returned from RoomFoundation
+   const floorRef = useRef<THREE.Object3D>(null);
+
+   
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
-  const {modelRefs, getGroupRefUpdateHandler, getModelRefUpdateHandler } = useModelRefs();
+  const { models, setModels, modelRefs, collisionMap, getModelRefUpdateHandler, getGroupRefUpdateHandler, handlePositionChange, 
+    deleteModel} = useModel(initialModels, floorRef, []);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
-  const [models, setModels] = useState(() => initialModels);// array of current/ active models.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not, needed for orbital controls
   const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if the user wants to show model's editor panel
   //or instead show a floating panel so they can move model around.
@@ -95,20 +91,14 @@ export default function Editor() {
   // dialog right before model deletetion is open or not.
   
 
-  // getting the selected model's group and model refs:
-  const selectedModelRef = selectedId ? modelRefs.current[selectedId] : null;
+  // getting the selected model's model refs:
+  const selectedModelRef = selectedId ? modelRefs.current[selectedId] ?? null : null;
 
   // creating some refs for the lighting:
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const directionalRef = useRef<THREE.DirectionalLight>(null);
 
-  // function to keep track of each model's position.
-  const handlePositionChange = useCallback((id: string, newPos: [number, number, number]) => {
-    setModels(prev =>
-      prev.map(model => model.id === id ? { ...model, position: newPos } : model)
-    );
-  }, []);
-
+  
   // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
   // and then change the selected ID.
   const handleSelect = useCallback((id: string | null) => {
@@ -159,10 +149,10 @@ export default function Editor() {
   }
 
   // function to delete the selected model
-  function deleteModel()
+  function handleDeleteModel()
   {
     if (!selectedId) return;
-    setModels((prev) => prev.filter((model) => model.id !== selectedId));
+    deleteModel(selectedId);
     setSelectedId(null);
   }
 
@@ -173,47 +163,51 @@ export default function Editor() {
       <div className="w-full h-[80vh] mt-4 flex flex-col lg:flex-row relative">
         {/* Canvas Section */}
         <article className={`relative flex-1 ${isPopupOpen && editingMode === 'edit' ? 'lg:w-1/2' : 'w-full'}`}>
-          <Canvas
-            shadows
-            camera={{ position: defaultCameraPosition, fov: 50 }}
-            className={`canvas-container h-full w-full bg-gray-200 z-50
-             ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
-              {/* if object if being hovered over change cursor into a grab */}
-              <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
-              <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
-              <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
-              <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
-              <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
-              <MainWalls />
-              {models.map((model) => (
-                <Object3D
-                  key={model.id}
-                  id={model.id}
-                  url={model.url}
-                  position={model.position}
-                  colourPalette={model.colourPalette}
-                  mode="edit"
-                  isSelected={selectedId === model.id}
-                  editingMode={editingMode}
-                  setSelectedId={handleSelect}
-                  setEditingMode={setEditingMode}
-                  setIsHoveringObject={setIsHoveringObject}
-                  onDragging={setDragging}
-                  onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
-                  onDelete={() => setIsDeleteDialogOpen(true)}
-                  onModelRefUpdate={getModelRefUpdateHandler(model.id)}
-                  onGroupRefUpdate={getGroupRefUpdateHandler(model.id)}
-                />
-                ))}
-              {orbitControlsRef.current && (
-                <CameraController
-                  controlsRef={orbitControlsRef}
-                  targetRef={selectedModelRef && isPopupOpen ? selectedModelRef : null}
-                  resetPosition={defaultCameraPosition}
-                  showSpotlight={true}
-                />
-              )}
-          </Canvas>
+        
+          <RoomContext.Provider value={{ floorRef: floorRef, wallHeight: wallHeight, wallThickness: wallThickness}}>
+            <Canvas
+              shadows
+              camera={{ position: defaultCameraPosition, fov: 50 }}
+              className={`canvas-container h-full w-full bg-gray-200 z-50
+              ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
+                {/* if object if being hovered over change cursor into a grab */}
+                <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
+                <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
+                <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
+                <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
+                <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
+                <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}}/>
+                {models.map((model) => (
+                  <Object3D
+                    key={model.id}
+                    id={model.id}
+                    url={model.url}
+                    position={model.position}
+                    colourPalette={model.colourPalette}
+                    mode="edit"
+                    isSelected={selectedId === model.id}
+                    isColliding={collisionMap[model.id] || false}
+                    editingMode={editingMode}
+                    setSelectedId={handleSelect}
+                    setEditingMode={setEditingMode}
+                    setIsHoveringObject={setIsHoveringObject}
+                    onDragging={setDragging}
+                    onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
+                    onDelete={() => setIsDeleteDialogOpen(true)}
+                    onModelRefUpdate={getModelRefUpdateHandler(model.id)}
+                    onGroupRefUpdate={getGroupRefUpdateHandler(model.id)}
+                  />
+                  ))}
+                {orbitControlsRef.current && (
+                  <CameraController
+                    controlsRef={orbitControlsRef}
+                    targetRef={selectedModelRef && isPopupOpen ? selectedModelRef : null}
+                    resetPosition={defaultCameraPosition}
+                    showSpotlight={true}
+                  />
+                )}
+            </Canvas>
+          </RoomContext.Provider>
 
           {/* adding in a little note at the top left corner of canvas to let users know that they can seleect an object */}
           <aside className="absolute top-2 left-2 z-60 pointer-events-none select-none bg-black/30 text-white font-semibold text-sm rounded-lg px-3 py-1 shadow-lg max-w-xs leading-tight">
@@ -265,7 +259,7 @@ export default function Editor() {
         cancelText="Cancel"
         cancelColour="bg-gray-200 text-black"
         onConfirm={() => {
-          deleteModel();
+          handleDeleteModel();
           setIsDeleteDialogOpen(false);
         }}
         onCancel={() => setIsDeleteDialogOpen(false)}

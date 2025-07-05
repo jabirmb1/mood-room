@@ -1,6 +1,9 @@
 import { useRef, useState, useCallback } from "react";
 import * as THREE from "three";
 import { useThree, ThreeEvent } from "@react-three/fiber";// we use this library to get current camera and canvas details set up by react three fibre.
+import { clampObjectToRoom, snapToSurface } from "@/utils/collision";
+import { useRoomContext } from "@/app/contexts/RoomContext";
+import { useModel } from "./useModel";
 /* This hook is used to easily drag and drop any objects which call upon it */
 
 type UseDragControlsProps =  {
@@ -44,11 +47,10 @@ function handlePointerDown( e: ThreeEvent<PointerEvent>, ref: React.RefObject<TH
   
 // This function is called as we drag an object.
 //
-function handlePointerMove(e: ThreeEvent<PointerEvent>, ref: React.RefObject<THREE.Object3D>, plane: React.MutableRefObject<THREE.Plane>, 
+function handlePointerMove(e: ThreeEvent<PointerEvent>, ref: React.RefObject<THREE.Object3D>, floorRef: React.RefObject<THREE.Object3D>, plane: React.MutableRefObject<THREE.Plane>, 
     dragOffset: React.MutableRefObject<THREE.Vector3>,dragging: boolean, isHorizontalMode: boolean, onChange?: (newPos: [number, number, number]) => void) {
 
     if (!dragging || !ref.current) return;
-
     const ray = e.ray;
     const intersection = new THREE.Vector3();
 
@@ -60,9 +62,13 @@ function handlePointerMove(e: ThreeEvent<PointerEvent>, ref: React.RefObject<THR
         // update object's position to new position
         // Apply axis constraint
         const lockedPos: [number, number, number] = isHorizontalMode? [newPos.x, oldPos.y, newPos.z] : [oldPos.x, newPos.y, oldPos.z];
-
         ref.current.position.set(...lockedPos);
-        onChange?.(lockedPos);
+
+        // snap object vertically.
+        snapToSurface(ref.current, floorRef.current, )
+        const clampedPos = clampObjectToRoom(ref.current, floorRef.current);
+        ref.current.position.set(...clampedPos);
+        onChange?.(clampedPos);
     }
 }
 
@@ -81,6 +87,7 @@ function handlePointerUp( setDragging: (v: boolean) => void, dragging: boolean, 
     const [dragging, setDragging] = useState(false);
     const plane = useRef(new THREE.Plane());
     const dragOffset = useRef(new THREE.Vector3());
+    const { floorRef } = useRoomContext();
   
     // we use useCallback to stop recreating functions every render and instead just use the old ones (improves efficiency).
     return {
@@ -89,7 +96,7 @@ function handlePointerUp( setDragging: (v: boolean) => void, dragging: boolean, 
           [objectRef, camera, plane, dragOffset, setDragging, enabled, onStart]
         ),
         onPointerMove: useCallback(
-          (e) => handlePointerMove(e, objectRef, plane, dragOffset, dragging, isHorizontalMode, onChange),
+          (e) => handlePointerMove(e, objectRef, floorRef, plane, dragOffset, dragging, isHorizontalMode, onChange),
           [objectRef, plane, dragOffset, dragging, isHorizontalMode, onChange]
         ),
         onPointerUp: useCallback(

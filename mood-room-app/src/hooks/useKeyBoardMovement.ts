@@ -3,6 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { moveObject } from "@/utils/object3D";
 import { globalScale } from "@/utils/const";
+import { useRoomContext } from "@/app/contexts/RoomContext";
+import { clampObjectToRoom } from "@/utils/collision";
 
 /*** This hook is used to move an object via keybaord controls *********/
 
@@ -16,6 +18,7 @@ export function useKeyboardMovement({ref, enabled, isHorizontalMode, onChange}: 
   
     // Track which keys are pressed
   const keysPressed = useRef<Record<string, boolean>>({});
+  const {floorRef} = useRoomContext();
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -63,8 +66,19 @@ export function useKeyboardMovement({ref, enabled, isHorizontalMode, onChange}: 
    
 
     if (delta.some((v) => v !== 0)) {// if one or more of the values is not 0, i.e there has been a change in position 
-        // in one or more of the axis, then we simply move the object to the new position.
-      moveObject(ref, delta, onChange);
+      // Calculate new position
+      const newPos = new THREE.Vector3().copy(ref.current.position).add(new THREE.Vector3(...delta));
+
+      // Temporarily set position to newPos to clamp it
+      ref.current.position.copy(newPos);
+
+      // Clamp inside room bounds
+      const clampedPos = clampObjectToRoom(ref.current, floorRef.current);
+
+      // Update position with clamped values
+      ref.current.position.set(...clampedPos);
+
+      onChange?.(clampedPos);
     }
   });
 }
