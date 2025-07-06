@@ -294,6 +294,7 @@ export async function applyCategoryTags(url: string, object: THREE.Object3D) {
   // Folder-based default tags
   if (lowerUrl.includes('lights')) {
     object.userData.tags.push('light');
+    object.userData.tags.push('decor');
   } else if (lowerUrl.includes('furniture')) {
     object.userData.tags.push('furniture');
   } else if (lowerUrl.includes('decor')) {

@@ -65,8 +65,8 @@ export default function Editor() {
    
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
-  const { models, setModels, modelRefs, collisionMap, getModelRefUpdateHandler, getGroupRefUpdateHandler, handlePositionChange, 
-    deleteModel} = useModel(initialModels, floorRef, []);
+  const { models, setModels, modelRefs, areModelRefsReady, collisionMap, getModelRefUpdateHandler, getGroupRefUpdateHandler, handlePositionChange, 
+    deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not, needed for orbital controls
@@ -97,8 +97,18 @@ export default function Editor() {
   // creating some refs for the lighting:
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const directionalRef = useRef<THREE.DirectionalLight>(null);
+  const [hasRunOnce, setHasRunOnce] = useState<boolean>(false);// flag to check if a function has run once or not, used to prevent multiple updates
 
   
+  // function to validate all object's collisions on load:
+  //
+  useEffect(() => {
+    console.log('model refs' +areModelRefsReady,'did it run once yet?'+ hasRunOnce)
+    if (areModelRefsReady) updateCollisionMap();// TO DO: for some reason hasRunOnce does not work.
+    setHasRunOnce(true);
+    console.log("hello");
+  }, [areModelRefsReady]);
+
   // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
   // and then change the selected ID.
   const handleSelect = useCallback((id: string | null) => {

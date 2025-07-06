@@ -3,6 +3,7 @@
 import { collisionSpecificTags, wallHeight, wallThickness } from "./const"
 import * as THREE from "three";
 import { calculateObjectBoxSize } from "./object3D";
+import { col } from "framer-motion/client";
 
 type CollisionRules = {// the different rules of collision that an object may follow.
     mustTouchGround?: boolean;
@@ -11,6 +12,22 @@ type CollisionRules = {// the different rules of collision that an object may fo
     mustBeOnWall?: boolean;
 }
 type CollisionTag = typeof collisionSpecificTags[number];// a specific object's collision tag e.g. 'decor', 'furniture' 'wall-art' etc.
+
+type SceneObjectRole = "model" | "floor" | "wall";// role of a specific object and what it is.
+
+type SceneObject = {// an object inside our room scene
+  role: SceneObjectRole;
+  object: THREE.Object3D;
+};
+
+type CheckOptions = {
+  collision?: boolean;
+  snapping?: boolean;
+  stacking?: boolean;
+  snapThreshold?: number;
+  stackThreshold?: number;
+  searchRadius?: number; // for spatial pruning
+};
 
 const collisionRules: Record<CollisionTag, CollisionRules> = {
     furniture: {
@@ -51,25 +68,22 @@ function isTouchingGround( object: THREE.Object3D, floor: THREE.Object3D): boole
     return touching;
 }
   
-//This function checks if the object is on top of a surface (room floor or surface of a furniture object.)
+//This function checks if the object is on top of a surface (room floor or surface of another object.)
 //
-function isOnSurface(  object: THREE.Object3D,  surfaces: THREE.Object3D[]): boolean {
+function isOnSurface(  object: THREE.Object3D,  surface: THREE.Object3D): boolean {
     const objectBox = calculateObjectBoxSize(object).box;
     const objectBottom = objectBox.min.y;
-  
-    for (const surface of surfaces) {
-      const surfaceBox = new THREE.Box3().setFromObject(surface);
-      // Check horizontal overlap (x, z)
-      const overlapX = objectBox.min.x < surfaceBox.max.x && objectBox.max.x > surfaceBox.min.x;
-      const overlapZ = objectBox.min.z < surfaceBox.max.z && objectBox.max.z > surfaceBox.min.z;
+    const surfaceBox = new THREE.Box3().setFromObject(surface);
+    // Check horizontal overlap (x, z)
+    const overlapX = objectBox.min.x < surfaceBox.max.x && objectBox.max.x > surfaceBox.min.x;
+    const overlapZ = objectBox.min.z < surfaceBox.max.z && objectBox.max.z > surfaceBox.min.z;
   
       // Check vertical proximity (bottom of object close to top of surface)
       if (overlapX && overlapZ) {
-        if (Math.abs(objectBottom - surfaceBox.max.y) < wallThickness) {
+        if (Math.abs(objectBottom - surfaceBox.max.y) <= wallThickness) {
           return true;
         }
       }
-    }
   
     return false;
 }
@@ -225,47 +239,38 @@ export function clampObjectToRoom(object: THREE.Object3D, floor: THREE.Object3D)
   
 // This function checks that if an object is stacking on another objext, returns a boolean.
 //
-function isStacking( object: THREE.Object3D, others: THREE.Object3D[], threshold = 0.01): boolean {
-    const objBox = calculateObjectBoxSize(object).box;
+function isStacking( object: THREE.Object3D, otherObject: THREE.Object3D, threshold = 0.01): boolean {
+    const objBox = calculateObjectBoxSize(object).box;  
+    const otherBox = calculateObjectBoxSize(otherObject).box;
   
-    for (const other of others) {
-      if (other === object) continue;// skip current object.
+    // Check horizontal overlap (x,z)
+    const overlapX = objBox.min.x < otherBox.max.x && objBox.max.x > otherBox.min.x;
+    const overlapZ =   objBox.min.z < otherBox.max.z && objBox.max.z > otherBox.min.z;
   
-      const otherBox = calculateObjectBoxSize(other).box;
-  
-      // Check horizontal overlap (x,z)
-      const overlapX = objBox.min.x < otherBox.max.x && objBox.max.x > otherBox.min.x;
-      const overlapZ =   objBox.min.z < otherBox.max.z && objBox.max.z > otherBox.min.z;
-  
-      if (overlapX && overlapZ) {
-        // Check vertical stacking overlap (obj bottom < other top)
-        if (objBox.min.y < otherBox.max.y + threshold && objBox.max.y > otherBox.min.y - threshold) {
-          return true; // stacking collision
-        }
+    if (overlapX && overlapZ) {
+      // Check vertical stacking overlap (obj bottom < other top)
+      if (objBox.min.y < otherBox.max.y + threshold && objBox.max.y > otherBox.min.y - threshold) {
+        return true; // stacking collision
       }
     }
-  
-    return false;
-  }
+  return false;
+}
 
 //This function is just a general collision test, and checks if an object is inside another object or not.
 //
-function hasCollisionWithOtherObjects(object: THREE.Object3D, otherObjects: THREE.Object3D[]): boolean {
+function hasCollisionWithOtherObject(object: THREE.Object3D, otherObject: THREE.Object3D): boolean {
     const objectBox = calculateObjectBoxSize(object).box;
-
-    for (const other of otherObjects) {
-      if (other === object) continue;// skip current object.
-  
-      const otherBox = calculateObjectBoxSize(other).box;
+    const otherBox = calculateObjectBoxSize(otherObject).box;
   
       // Check full 3D box intersection
       if (objectBox.intersectsBox(otherBox)) {
         return true;
       }
-    }
+      return false;
+ }
   
-    return false;
-  }
+
+  
 
 //This function is used to snap an object to it's nearest surface (so user's don't have to be accurate in the y axis when placing 
 // down objects)
@@ -349,6 +354,38 @@ function mergeCollisionRules(tags: string[]): CollisionRules {
   return base;
 }
 
+// This function will be used to iterate through all objects in a given array once; and do the collision checks based on the rules
+//This function will check if object is inside another object, is stacking on another object, is on a surface.
+//
+function checkObjectCollisions( object: THREE.Object3D,  otherObjects: THREE.Object3D[],  floor: THREE.Object3D,  checkStacking: boolean = false,  checkOnSurface: boolean = false, threshold = wallThickness){
+
+  let collides = false;
+  let stacking = false;
+  let onSurface = false;
+  for (const other of otherObjects) {
+    if (other === object) continue; // skip self
+
+    if (!collides && hasCollisionWithOtherObject(object, other))
+      collides = true;
+
+    if (!stacking && checkStacking && isStacking(object, other, 0.1)){
+      stacking = true; // stacking collision
+    }
+
+    if (!onSurface && checkOnSurface && isOnSurface(object, other)) {
+      onSurface = true;// object is on a surface.
+    }
+  }
+
+  // do an additional is on surface check with the floor itself.
+  if (!onSurface && checkOnSurface && isOnSurface(object, floor)) {
+      onSurface = true;// object is on a surface.
+  }
+
+  console.log(' is it on surface?', onSurface)
+  return {collides, stacking, onSurface}
+}
+
 /**
  * Main function to validate if an object placement follows the collision rules
  * @param object Object3D being checked
@@ -362,50 +399,46 @@ export function validateObjectPlacement(
   object: THREE.Object3D,
   floor: THREE.Object3D,
   walls: THREE.Object3D[],
-  otherObjects: THREE.Object3D[]
+  otherObjects: THREE.Object3D[],
+  logWarnings: boolean = false,
 ): boolean {
   const rules = mergeCollisionRules(object.userData.tags);
 
   // 1. Check inside room boundaries
   if (!isInsideRoom(object, floor)) {
-    console.warn("Object is outside room boundaries");
+    if (logWarnings) console.warn("Object is outside room boundaries");
     return false;
   }
 
   // 2. mustTouchGround: object bottom near floor top
   if (rules.mustTouchGround && !isTouchingGround(object, floor)) {
-    console.warn("Object must touch the ground (floor)");
+    if (logWarnings) console.warn("Object must touch the ground (floor)");
     return false;
   }
 
-    // 3. mustBeOnSurface: object on floor or other surfaces (e.g. furniture)
-    if (rules.mustBeOnSurface) {
-      // surfaces are floor + furniture objects that can act as surfaces
-      const surfaces = [floor, ...otherObjects];
-      if (!isOnSurface(object, surfaces)) {
-        console.warn("Object must be on a surface");
-        return false;
-      }
-    }
-
-  // 4. mustBeOnWall: object is touching any wall
+  
+  // 3. mustBeOnWall: object is touching any wall
   if (rules.mustBeOnWall && !isOnWall(object, walls)) {
-    console.warn("Object must be on a wall");
+    if (logWarnings) console.warn("Object must be on a wall");
     return false;
-  }
-
-  // 5. disallowStacking: no vertical overlaps with other objects
-  if (rules.disallowStacking && isStacking(object, otherObjects)) {
-    console.warn("Object stacking is disallowed");
-    return false;
-  }
-
-  // 6. Disallow general collisions/clipping with any other objects
-  if (hasCollisionWithOtherObjects(object, otherObjects)) {
-      console.warn("Object intersects with another object");
-      return false;
   }
   
+  //4. some more general collision checks with other objects (stacking, surface, collisions)
+  const { collides, stacking, onSurface } = 
+  checkObjectCollisions( object, otherObjects, floor, rules.disallowStacking, rules.mustBeOnSurface && !rules.mustTouchGround,);
+
+  if (collides || stacking || !onSurface) {
+    console.log("Collision checks:", { collides, stacking, onSurface });
+    if (logWarnings) {
+      if (collides) console.warn("Object collides with another object");
+      if (stacking) console.warn("Object is stacking on another object");
+      if (!onSurface) console.warn("Object must be on a surface");
+    }
+    return false; // any of these conditions failed
+  }
   // If all rules passed
   return true;
 }
+
+// surface, stacking, collisions with other objects all can just be in one single function; to prevent going through
+// array multiple times per check.

@@ -10,6 +10,7 @@ type useModelReturn = {
   models: Model[];
   groupRefs: React.RefObject<Record<string, React.RefObject<THREE.Object3D> | null>>;// a record of all group refs
   modelRefs: React.RefObject<Record<string, React.RefObject<THREE.Object3D> | null>>;// a record of all model refs.
+  areModelRefsReady: boolean; // a boolean to check if all model refs are ready.
   collisionMap: Record<string, boolean>;
   setModels: React.Dispatch<React.SetStateAction<Model[]>>;
   getGroupRefUpdateHandler: (id: string) => (ref: React.RefObject<THREE.Object3D> | null) => void;
@@ -25,7 +26,7 @@ export function useModel (initialModels: Model[] = [], floorRef: React.RefObject
   const groupRefs = useRef<Record<string, React.RefObject<THREE.Object3D> | null>>({});
   const modelRefs = useRef<Record<string, React.RefObject<THREE.Object3D> | null>>({});
   const [collisionMap, setCollisionMap] = useState<Record<string, boolean>>({});
-
+  const areModelRefsReady = models.every(model => modelRefs.current[model.id]?.current);// an inistial check to see if any initial models are ready.
 
   // Returns a callback to update the group ref for a given id
   const getGroupRefUpdateHandler = useCallback(
@@ -50,7 +51,8 @@ export function useModel (initialModels: Model[] = [], floorRef: React.RefObject
       setModels(prev => prev.map(model =>
         model.id === id ? { ...model, position: newPos } : model
       ));
-      updateCollisionMap();
+      setTimeout(() => {  updateCollisionSingle(id)}, 100);// for a single object; throttle the update to avoid performance issues.
+      // as it will change positions a lot
     }, []);
   
    // function to delete the selected model
@@ -65,7 +67,7 @@ export function useModel (initialModels: Model[] = [], floorRef: React.RefObject
   }, []);
   
   //This function will allow us to update the collision map efficiently.
-  const updateCollisionMap = useCallback(() => {
+  const updateCollisionMap = useCallback((selectedModelId?: string) => {
     const newMap: Record<string, boolean> = {};
 
     for (const model of models) {
@@ -80,13 +82,28 @@ export function useModel (initialModels: Model[] = [], floorRef: React.RefObject
         .map(([_, ref]) => ref?.current)
         .filter((obj): obj is THREE.Object3D => !!obj);
 
-      const isValid = validateObjectPlacement(object, floorRef.current, walls, otherObjects);
+      const isValid = validateObjectPlacement(object, floorRef.current, walls, otherObjects, model.id === selectedModelId);// only 
+      // log warnings for the selected model if it is being updated.
       newMap[model.id] = !isValid;
     }
 
     setCollisionMap(newMap);
   }, [models, walls, floorRef]);
 
-  return {models, groupRefs, modelRefs, collisionMap, 
+  //This function is used to only validate the collision map for a single model; much more efficient.
+  function updateCollisionSingle(id: string) {
+    const object = modelRefs.current[id]?.current;
+    if (!object) return;
+  
+    const otherObjects = Object.entries(modelRefs.current)
+      .filter(([otherId]) => otherId !== id)
+      .map(([_, ref]) => ref?.current)
+      .filter((obj): obj is THREE.Object3D => !!obj);
+  
+    const isValid = validateObjectPlacement(object, floorRef.current, walls, otherObjects, true);
+    setCollisionMap(prev => ({ ...prev, [id]: !isValid }));
+  }
+
+  return {models, groupRefs, modelRefs,areModelRefsReady, collisionMap, 
     setModels, getGroupRefUpdateHandler, getModelRefUpdateHandler, updateCollisionMap, handlePositionChange, deleteModel};
 }
