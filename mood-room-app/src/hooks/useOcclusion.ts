@@ -71,7 +71,7 @@ function isDescendantOf(object: THREE.Object3D, parent: THREE.Object3D): boolean
 //
 function findOccluderRoot(hit: THREE.Intersection, occluders: THREE.Object3D[]): THREE.Object3D {
   let obj = hit.object;
-  while (obj.parent && !occluders.includes(obj)) {
+  while (obj.parent && !occluders.some(o => o.uuid === obj.uuid)) {// compare by uuid for better accuracy.
     obj = obj.parent;
   }
   return obj;
@@ -127,7 +127,7 @@ function resetObject(obj: THREE.Object3D, makeInvisible: boolean): void {
 // be more accurate. It also uses throttling to increase performance.
 //
 export function useOcclusionTransparency({targetRef, potentialOccluders, opacity = 0.2, throttleMs = 100, makeInvisible = false, sampleCount = 12,}: UseOcclusionTransparencyProps) {
-  const { camera } = useThree();// current camera that is being used.
+  const { camera, scene } = useThree();// current camera that is being used.
   const raycaster = useRef(new THREE.Raycaster());// the raycaster that we will use to fire rays.
   const modifiedObjectsRef = useRef<Set<THREE.Object3D>>(new Set());// keeps track of which objects are transparent/ invisible at a given time.
   const visibilityStability = useRef<Map<THREE.Object3D, number>>(new Map());// keeps track of for how many frames an occluder has been an occluder
@@ -162,28 +162,42 @@ export function useOcclusionTransparency({targetRef, potentialOccluders, opacity
 
     // every frame keep track of occluders; and do raycasting.
     const { box } = calculateObjectBoxSize(target);
-    const faceSamples = getFrontalSamplePoints(box, camera, sampleCount);
+    const center = box.getCenter(new THREE.Vector3());
+    const frontalPoints = getFrontalSamplePoints(box, camera, sampleCount);// get frontal sample points from the target object to the camera, works for 90% of cases.
+    const faceSamples = [center, ...frontalPoints];// also fire rays from center to avoid edge cases where object is right up against 
+    // another object, results in rays bieng fired from within other object. leads to false negatives.
     const occluderHitsThisFrame = new Set<THREE.Object3D>();
 
     for (const point of faceSamples) {
-      const dir = new THREE.Vector3().subVectors(camera.position, point).normalize();
-      raycaster.current.set(point, dir);
+      const directions: [THREE.Vector3, THREE.Vector3, number][] = [
+        // array containing, direction, origin, length of raycast. We will fire rays in both directions for more accuracy.
+        //(currently only fireing one ray, but if accuracy becomes issue; fire both directions and reduce sample count)
 
-      const intersects = raycaster.current.intersectObjects(potentialOccluders, true);
-      const distToTarget = point.distanceTo(camera.position);
+        //NOTE: is performance becomes an issue for phones or weak devices, reduce sample count and not include the camera to target ray.
+        [new THREE.Vector3().subVectors(camera.position, point).normalize(), point.clone(), point.distanceTo(camera.position)],// target to camera
+       // [new THREE.Vector3().subVectors(point, camera.position).normalize(), camera.position, camera.position.distanceTo(point)],// camera to target
+      ];
+      for (let [dir, origin, maxDist] of directions) {
+        const offsetDistance = 0.01;// offset the distance behind to avoid hitting the target object itself.
+        origin = origin.clone().add(dir.clone().multiplyScalar(offsetDistance)); // offset origin a bit
+        raycaster.current.set(origin, dir);
+        const intersects = raycaster.current.intersectObjects(potentialOccluders, true);
+        for (const hit of intersects) {
+          if (['LineSegments', 'Line'].includes(hit.object.type)) continue;// skip lines and line segments as they are not occluders. (background helper geometry that's not visible)
 
-      for (const hit of intersects) {
-        // if the ray hit the target object (or it's child), we continue as we don't want to set the target invisible/ transparent.
-        if (isDescendantOf(hit.object, target)) continue;
-        
-        // if the object's hit distance is less than distance from target object to camera; it means that it is between the
-        // points; and hence it is an occluder.
-        if (hit.distance < distToTarget) {
-          const rootOccluder = findOccluderRoot(hit, potentialOccluders);
-          occluderHitsThisFrame.add(rootOccluder);
+          // if the ray hit the target object (or it's child), we continue as we don't want to set the target invisible/ transparent.
+          if (isDescendantOf(hit.object, target)) continue;
+          
+          // if the object's hit distance is less than distance from target object to camera; it means that it is between the
+          // points; and hence it is an occluder.
+          if (hit.distance < maxDist) {
+            const rootOccluder = findOccluderRoot(hit, potentialOccluders);
+            if (potentialOccluders.some(o => o.uuid === rootOccluder.uuid)) {
+              occluderHitsThisFrame.add(rootOccluder);
+            }          
+          }
         }
       }
-    }
 
     // for each of the potential occluders we need to check if they are currently occludingl and if they are, for how long
     // (e.g. how many frames).
@@ -209,5 +223,5 @@ export function useOcclusionTransparency({targetRef, potentialOccluders, opacity
         modifiedObjectsRef.current.delete(obj);
       }
     });
-  });
+  }});
 }
