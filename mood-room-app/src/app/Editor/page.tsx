@@ -211,6 +211,7 @@ export default function Editor() {
                   {orbitControlsRef.current && (
                     <CameraController
                       controlsRef={orbitControlsRef}
+                      rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
                       targetRef={selectedModelRef && isPopupOpen ? selectedModelRef : null}
                       resetPosition={defaultCameraPosition}
                       showSpotlight={true}
