@@ -9,4 +9,11 @@ export type Model = {
     };
     position: [number, number, number];
     scale?: [number, number, number];
+    rotation?: [number, number, number];
+
+    transform?: {// optional transform data for model during editing page (used to keep transform data in sync with the model)
+      position: [number, number, number];
+      rotation: [number, number, number];
+      scale: [number, number, number];
+    };
   };

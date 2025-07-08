@@ -21,7 +21,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import RoomFoundation from '@/components/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
-
+import { Physics, RigidBody } from '@react-three/rapier';
 
 //place holder array of models until adding/ deletion of object functionality is added.
 const initialModels: Model[] = [
@@ -65,7 +65,7 @@ export default function Editor() {
    
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
-  const { models, setModels, modelRefs, areModelRefsReady, collisionMap, getModelRefUpdateHandler, getGroupRefUpdateHandler, handlePositionChange, 
+  const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, refreshRigidBody, areModelRefsReady, collisionMap, getModelRefUpdateHandler, getRigidBodyRefUpdateHandler, 
     deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
@@ -103,7 +103,6 @@ export default function Editor() {
   // function to validate all object's collisions on load:
   //
   useEffect(() => {
-    console.log('model refs' +areModelRefsReady,'did it run once yet?'+ hasRunOnce)
     if (areModelRefsReady) updateCollisionMap();// TO DO: for some reason hasRunOnce does not work.
     setHasRunOnce(true);
     console.log("hello");
@@ -151,9 +150,6 @@ export default function Editor() {
       position: [3, 3, 3],
       scale: [1, 1, 1]
     };
-  
-    console.log("Adding furniture:", newModel);
-  
     setModels(prev => [...prev, newModel]);
     setShowAddModelTab(false); // optional: close the tab
   }
@@ -180,42 +176,47 @@ export default function Editor() {
               camera={{ position: defaultCameraPosition, fov: 50 }}
               className={`canvas-container h-full w-full bg-gray-200 z-50
               ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
-                {/* if object if being hovered over change cursor into a grab */}
-                <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
-                <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
-                <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
-                <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
-                <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
-                <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}}/>
-                {models.map((model) => (
-                  <Object3D
-                    key={model.id}
-                    id={model.id}
-                    url={model.url}
-                    position={model.position}
-                    colourPalette={model.colourPalette}
-                    mode="edit"
-                    isSelected={selectedId === model.id}
-                    isColliding={collisionMap[model.id] || false}
-                    editingMode={editingMode}
-                    setSelectedId={handleSelect}
-                    setEditingMode={setEditingMode}
-                    setIsHoveringObject={setIsHoveringObject}
-                    onDragging={setDragging}
-                    onPositionChange={(newPos) => handlePositionChange(model.id, newPos)}
-                    onDelete={() => setIsDeleteDialogOpen(true)}
-                    onModelRefUpdate={getModelRefUpdateHandler(model.id)}
-                    onGroupRefUpdate={getGroupRefUpdateHandler(model.id)}
-                  />
-                  ))}
-                {orbitControlsRef.current && (
-                  <CameraController
-                    controlsRef={orbitControlsRef}
-                    targetRef={selectedModelRef && isPopupOpen ? selectedModelRef : null}
-                    resetPosition={defaultCameraPosition}
-                    showSpotlight={true}
-                  />
-                )}
+                <Physics debug timestep = 'manual'  gravity={[0, 0, 0]}>{/* using rapier physics engine to handle collisions (no physics)*/}
+                  {/* if object if being hovered over change cursor into a grab */}
+                  <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
+                  <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
+                  <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
+                  <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
+                  <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
+                  <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}}/>
+                
+                  {models.map((model) => (
+                     <RigidBody  ref={getRigidBodyRefUpdateHandler(model.id)} key={`${model.id}-${rigidBodyVersions[model.id] ?? 0}`}
+                      type = 'kinematicPosition' colliders = 'hull' position={model.position}>
+                    {/* Object3D is a component that will render the 3D model and handle all the logic for it */}
+                      <Object3D
+                        id={model.id}
+                        url={model.url}
+                        rigidBodyRef={rigidBodyRefs.current[model.id]}
+                        position={model.position}
+                        colourPalette={model.colourPalette}
+                        mode="edit"
+                        isSelected={selectedId === model.id}
+                        isColliding={collisionMap[model.id] || false}
+                        editingMode={editingMode}
+                        setSelectedId={handleSelect}
+                        setEditingMode={setEditingMode}
+                        setIsHoveringObject={setIsHoveringObject}
+                        onDragging={setDragging}
+                        onDelete={() => setIsDeleteDialogOpen(true)}
+                        onModelRefUpdate={getModelRefUpdateHandler(model.id)}
+                      />
+                    </RigidBody>
+                    ))}
+                  {orbitControlsRef.current && (
+                    <CameraController
+                      controlsRef={orbitControlsRef}
+                      targetRef={selectedModelRef && isPopupOpen ? selectedModelRef : null}
+                      resetPosition={defaultCameraPosition}
+                      showSpotlight={true}
+                    />
+                  )}
+                </Physics>
             </Canvas>
           </RoomContext.Provider>
 
@@ -247,8 +248,10 @@ export default function Editor() {
                 absolute bottom-0 lg:top-0 lg:right-0 lg:bottom-auto lg:h-full lg:w-1/2 lg:mt-0`}
             >
               <ObjectEditorPanel
+                rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
                 objectRef={selectedModelRef}
                 objectId={selectedId}
+                refreshRigidBody={refreshRigidBody}
                 onClose={() => setSelectedId(null)}
                 onDelete = {() => setIsDeleteDialogOpen(true)}
                 setMode={setEditingMode}

@@ -200,19 +200,6 @@ export function applyHoverEffect(
       }
   }
 
-// This function will be used to move the object from the current position (an alternative to just dragging e.g. keyboard presses)
-// UI buttons etc
-//
-export function moveObject(ref: React.RefObject<THREE.Object3D>, newPos: [number, number, number],  onChange: (newPos: [number, number, number]) => void)
-{
-  if (!ref.current) return;
-
-  const pos = ref.current.position;
-  pos.set(pos.x + newPos[0], pos.y + newPos[1], pos.z + newPos[2]);
-  onChange([pos.x, pos.y, pos.z]);// pass the change up to parent component for rerender.
-}
-
-
 
 // This function calculates the bounding box and maximum dimension of a 3D object.
 //
@@ -334,32 +321,4 @@ export async function applyCategoryTags(url: string, object: THREE.Object3D) {
     // Failing to load meta.json is okay — not all models need it
     console.warn(`[Meta Tags] No meta.json found or failed for ${url}`);
   }
-}
-
-function saveOriginalLightProperties(model: THREE.Object3D) {
-  if (!model.userData.tags?.includes('light')) return;
-
-  const map = new Map();
-  model.traverse((child) => {
-    if ((child as THREE.Mesh).isMesh) {
-      const mesh = child as THREE.Mesh;
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      materials.forEach((material) => {
-        if (material instanceof THREE.MeshStandardMaterial) {
-          map.set(material, {
-            color: material.emissive.clone(),
-            intensity: material.emissiveIntensity,
-          });
-        }
-      });
-    }
-  });
-  originalEmissiveRef.current = map;
-}
-
-function restoreOriginalLightProperties() {
-  originalEmissiveRef.current.forEach(({ color, intensity }, material) => {
-    material.emissive.copy(color);
-    material.emissiveIntensity = intensity;
-  });
 }

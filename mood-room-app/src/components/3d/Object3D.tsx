@@ -7,8 +7,9 @@ import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
 import { globalScale } from "@/utils/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, getObjectSizeDifference, applyCategoryTags } from "@/utils/object3D";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/object3D";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
+import { RapierRigidBody } from "@react-three/rapier";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
  * , change it's position and size.
@@ -18,6 +19,7 @@ import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 type Object3DProps = {
   url: string;// URL to the 3D model file
   id: string// unique id of the object.
+  rigidBodyRef?: React.RefObject<RapierRigidBody | null>;// reference to the rigid body of the object, used for physics and movement.
   mode: "edit" | "view";// if user can edit the model or just view it
   colourPalette?: ColourPalette;// colour palette to apply to the model
   position?: [number, number, number];// position of the model in the scene
@@ -29,20 +31,16 @@ type Object3DProps = {
   setEditingMode: (mode: 'edit' | 'move') => void;// if object should show it's panel or it is being moved.
   setIsHoveringObject?: (hover: boolean) => void;// if this object is currently being hovered or not.
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
-  onPositionChange: (newPos: [number, number, number]) => void// function to run when the object's positon changes.
   onDelete: ()=> void;// function to delete this object.
-  onModelRefUpdate?: (ref: React.RefObject<THREE.Object3D>) => void;// a callback to explicitly expose the object's internal modelRef to parent.
-  onGroupRefUpdate?: (ref: React.RefObject<THREE.Object3D>)=> void;// a callback to explicitly expose this component's interal group ref to parent.
-
+  onModelRefUpdate?: (ref: React.RefObject<THREE.Object3D | null> | null) => void;// a callback to explicitly expose the object's internal modelRef to parent.
 };
 
 
-
-export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], isSelected = false, isColliding=false, editingMode = 'edit', 
-  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onPositionChange, onDelete, onModelRefUpdate, onGroupRefUpdate}: Object3DProps) {
+// TO DO: make position be used as default for object placement in viewer only mode so e.g. position = [num, num, num] or null(for editing)
+export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], isSelected = false, isColliding=false, editingMode = 'edit', 
+  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onDelete, onModelRefUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
-
 // we clone the model and also the material to make it fully independent of other models
   // (allows us to place multiple of same model if needed)
   const clonedScene = useMemo(() => {
@@ -53,16 +51,12 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     centered.scale.set(globalScale, globalScale, globalScale); // on first load, load it into global scale
     centered.userData.baseScale = globalScale; // record what the current size is.
     // apply tags to the object during load:
-    applyCategoryTags(url, centered)
-    console.log(centered.userData)
-  
+    applyCategoryTags(url, centered);
     return centered;
   }, [scene]);
-  
 
 
   const modelRef = useRef<THREE.Object3D>(null)// reference to change model's colour, size and rotation
-  const groupRef = useRef<THREE.Object3D>(null)// reference needed to change model's position (including the floating UI's position)
   const [hovered, setHovered] = useState(false);
   const [isHorizontalMode, setIsHorizontalMode] = useState(true); 
 
@@ -70,30 +64,18 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
   // to normalise models.
   const currentScale = modelRef.current?.scale.x ?? globalScale;
   // add in the dragging logic:
-  const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({objectRef: groupRef,
+
+
+  const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({rigidBodyRef: rigidBodyRef ?? null, objectRef: modelRef,
     enabled: mode === "edit" && editingMode === 'move' && isSelected ,
     isHorizontalMode: isHorizontalMode,
     onStart: () => onDragging(true),
-    onEnd: () => onDragging(false),
-    onChange: onPositionChange,
+    onEnd: () => {onDragging(false)},
   });
 
   // add in movement logic:
-  useKeyboardMovement({ref: groupRef, enabled: isSelected && mode === 'edit' && editingMode === 'move',
-    isHorizontalMode: isHorizontalMode, onChange: onPositionChange});
-
-  
-  // if the parent page/ component wants the internal group ref (e.g. for camera animations), pass it to them now.
-  useEffect(()=> {
-    if (onGroupRefUpdate)// parent wants to access this object's group ref
-    {
-      onGroupRefUpdate(groupRef)
-    }
-    // clean up when unmounting:
-    return () => {
-      if (onGroupRefUpdate) onGroupRefUpdate(null);
-    };
-  }, [onGroupRefUpdate])
+  useKeyboardMovement({rigidBodyRef: rigidBodyRef ?? null, modelRef: modelRef, enabled: isSelected && mode === 'edit' && editingMode === 'move',
+    isHorizontalMode: isHorizontalMode});
 
   // if parent page wants the internal model ref, pass it to them.
   useEffect(() => {
@@ -117,29 +99,6 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
       applyColourPalette(modelRef.current, colourPalette);
     }
   }, [colourPalette]);
-
- 
-  /* prints out material names of the models as they are loaded up 
- useEffect(() => {
-    if (!clonedScene) return;
-  
-    const materialNames = new Set<string>();
-  
-    clonedScene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mat = (child as THREE.Mesh).material;
-        if (Array.isArray(mat)) {
-          mat.forEach((m) => materialNames.add(m.name));
-        } else if (mat) {
-          materialNames.add(mat.name);
-        }
-      }
-    });
-  
-    console.log(`[${id}] Loaded materials:`, Array.from(materialNames));
-  }, [clonedScene, id]); 
-  */
-  
 
   // add in a hovered effect if user is in edit mode and hovers over model
   useEffect(() => {
@@ -171,78 +130,53 @@ export function Object3D({ url, id, mode, colourPalette, position = [0, 0, 0], i
     } else {
       applyColourPalette(modelRef.current, colourPalette); // reset colourpalette to what it was before.
     }
-  }, [isColliding]);
-  
-  
-
-  {/* The code below just shows the bounding box for the model }
-  useEffect(() => {
-    if (!modelRef.current) return;
-  
-    const helper = new THREE.BoxHelper(modelRef.current, 0xffff00);
-    groupRef.current?.add(helper);
-  
-    return () => {
-      groupRef.current?.remove(helper);
-    };
-  }, [modelRef.current]);
-   */}
-
-   
+  }, [isColliding]);   
   
   return (
     <>
-      <group ref = {groupRef} position={position}>
-          {/****
-           * code below just shows us the pivot of each model, uncomment this to visualise it
-           {isSelected && (
-        <axesHelper args={[4]} /> // size 0.5 or tweak as needed
-      )} */}
-
         {(isSelected && mode === 'edit' && editingMode === 'move') &&(
           // default into starting with horizontal mode whenever we open the panel.
-          <ObjectFloatingPanel  onClose={() => {setSelectedId(null); 
+          <ObjectFloatingPanel modelRef={modelRef} onClose={() => {setSelectedId(null); 
               setEditingMode('edit')}} isHorizontalMode = {isHorizontalMode} setIsHorizontalMode = {setIsHorizontalMode} setMode={setEditingMode} onDelete = {onDelete}/>
         )}
 
 
        {/* adding in an extra safeguard to only show the model when it is fully loaded / not null */}
        {clonedScene && (
-          <primitive
-            ref={modelRef}
-            object={clonedScene}
-            castShadow = {true}
-            recieveShadow = {true}
-            onDoubleClick={(e: ThreeEvent<MouseEvent>) => {// we use double click to select an object to prevent accidental selections.
-              e.stopPropagation();
-              if (mode === 'edit') {
-                if (editingMode === 'move') {// this prevents locking, e.g. object1 in movde mode but we click object 2, 
-                  // would have been stuck in move mode and could not render anything.
-                  setEditingMode('edit'); // reset to edit when switching
-                }
-                setSelectedId(id);
+        <primitive
+          ref={modelRef}
+          object={clonedScene}
+          castShadow = {true}
+          recieveShadow = {true}
+          onDoubleClick={(e: ThreeEvent<MouseEvent>) => {// we use double click to select an object to prevent accidental selections.
+            e.stopPropagation();
+            if (mode === 'edit') {
+              if (editingMode === 'move') {// this prevents locking, e.g. object1 in movde mode but we click object 2, 
+                // would have been stuck in move mode and could not render anything.
+                setEditingMode('edit'); // reset to edit when switching
               }
-            }}
-            onPointerOver={(e: ThreeEvent<PointerEvent>) => {
-              e.stopPropagation();
-              if (mode === "edit") {
-                setHovered(true);
-                setIsHoveringObject?.(true);// notify parent that an object is being hovered
-              }
-            }}
-            onPointerOut={(e: ThreeEvent<PointerEvent>) => {
-              e.stopPropagation();
-              if (mode === "edit"){
-                setHovered(false);
-                setIsHoveringObject?.(false);// object has stopped being hovered.
-              } 
-            }}
-            // passing in the functions from the hook so we can drag the object around.
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}/>
+              setSelectedId(id);
+            }
+          }}
+          onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+            e.stopPropagation();
+            if (mode === "edit") {
+              setHovered(true);
+              setIsHoveringObject?.(true);// notify parent that an object is being hovered
+            }
+          }}
+          onPointerOut={(e: ThreeEvent<PointerEvent>) => {
+            e.stopPropagation();
+            if (mode === "edit"){
+              setHovered(false);
+              setIsHoveringObject?.(false);// object has stopped being hovered.
+            } 
+          }}
+          // passing in the functions from the hook so we can drag the object around.
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}/>
         )}
-      </group>
-      </>
-  );
-}
+      
+    </>)
+}  

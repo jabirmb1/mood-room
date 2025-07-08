@@ -3,7 +3,6 @@
 import { collisionSpecificTags, wallHeight, wallThickness } from "./const"
 import * as THREE from "three";
 import { calculateObjectBoxSize } from "./object3D";
-import { col } from "framer-motion/client";
 
 type CollisionRules = {// the different rules of collision that an object may follow.
     mustTouchGround?: boolean;
@@ -215,27 +214,25 @@ export function isInsideRoom(object: THREE.Object3D, floor: THREE.Object3D): boo
   return roomBox.containsBox(objectBox);
 }
 
-// clamps object inside room so that it can't go out
+// returns a position which clamps objects to room.
 //
-export function clampObjectToRoom(object: THREE.Object3D, floor: THREE.Object3D): [ number, number, number ] {
-  const objectBox = calculateObjectBoxSize(object).box;
+export function getClampedPos(modelRef: THREE.Object3D,newPosition: THREE.Vector3,floor: THREE.Object3D): [number, number, number] {
+  const objectBox = calculateObjectBoxSize(modelRef).box;
   const objectSize = new THREE.Vector3();
   objectBox.getSize(objectSize);
 
   const roomBox = getRoomBounds(floor, wallHeight);
-  // Compute min/max allowed positions for object.position so object fits fully inside room
+   // Compute min/max allowed positions for object.position so object fits fully inside room
   const minPos = roomBox.min.clone().add(objectSize.clone().multiplyScalar(0.5));
   const maxPos = roomBox.max.clone().sub(objectSize.clone().multiplyScalar(0.5));
 
-
-  const clamped = object.position.clone();
+  const clamped = newPosition.clone();
   clamped.x = THREE.MathUtils.clamp(clamped.x, minPos.x, maxPos.x);
-  clamped.y = THREE.MathUtils.clamp( clamped.y, minPos.y, maxPos.y);
+  clamped.y = THREE.MathUtils.clamp(clamped.y, minPos.y, maxPos.y);
   clamped.z = THREE.MathUtils.clamp(clamped.z, minPos.z, maxPos.z);
-
-  object.position.copy(clamped);
   return [clamped.x, clamped.y, clamped.z];
 }
+
   
 // This function checks that if an object is stacking on another objext, returns a boolean.
 //
@@ -428,7 +425,6 @@ export function validateObjectPlacement(
   checkObjectCollisions( object, otherObjects, floor, rules.disallowStacking, rules.mustBeOnSurface && !rules.mustTouchGround,);
 
   if (collides || stacking || !onSurface) {
-    console.log("Collision checks:", { collides, stacking, onSurface });
     if (logWarnings) {
       if (collides) console.warn("Object collides with another object");
       if (stacking) console.warn("Object is stacking on another object");

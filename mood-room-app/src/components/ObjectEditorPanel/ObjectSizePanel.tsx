@@ -9,15 +9,33 @@ import { globalScale } from "@/utils/const";
 type ObjectScalePanelProps = {
   objectRef: React.RefObject<THREE.Object3D>;
   objectId: string;
+  refreshRigidBody:  (id: string) => void;// a function to change the rigid body of an object when needed.
 };
 
-export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) {
+export function ObjectSizePanel({ objectRef, objectId, refreshRigidBody}: ObjectScalePanelProps) {
   const [sizePercentage, setSizePercentage] = useState(() => getObjectSizeDifference(objectRef));
+  const [initialised, setInitialised] = useState(false);
+  const initialSize = sizePercentage;
 
   // Update slider value when objectId changes (so that it can link up to the new object)
   useEffect(() => {
     setSizePercentage(getObjectSizeDifference(objectRef));
   }, [objectId]);
+
+  useEffect(() => {
+    setInitialised(true);
+  
+    return () => {
+      console.log('Unmounting ObjectSizePanel');
+      console.log('Initial size:', initialSize);
+      console.log('Current size percentage:', sizePercentage);
+     //  refreshRigidBody(objectId); // Run on unmount if size changed
+       // function results in  a lot of errors e.g. rust null pointer erros; can't use keybaord, cant move etc etc etc.
+        console.log('hello mount');
+
+    };
+  }, []);
+  
 
   // Apply the new scale to the model
   useEffect(() => {

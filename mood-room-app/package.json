@@ -12,6 +12,7 @@
     "@radix-ui/react-dialog": "^1.1.14",
     "@react-three/drei": "^10.1.2",
     "@react-three/fiber": "^9.1.2",
+    "@react-three/rapier": "^2.1.0",
     "framer-motion": "^12.18.1",
     "leva": "^0.10.0",
     "lucide-react": "^0.522.0",

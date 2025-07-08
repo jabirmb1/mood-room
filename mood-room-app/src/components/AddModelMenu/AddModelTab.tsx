@@ -1,7 +1,6 @@
 // adding new furniture tab
 
 'use client';
-
 import { useState } from "react";
 import { motion } from 'framer-motion';
 import { FurnitureCategory } from './FurnitureCategory';
@@ -55,7 +54,7 @@ const MODEL_ITEMS: ModelItem[] = [
   },
 ];
 
-console.log('Furniture items loaded:', MODEL_ITEMS); //remove later
+//console.log('Furniture items loaded:', MODEL_ITEMS); //remove later
 
 export function AddModelTab({ onAddModel }: AddModelTabProps) {
   const [searchValue, setSearchValue] = useState<string>('');
