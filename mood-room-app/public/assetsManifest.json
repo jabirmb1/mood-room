@@ -1,0 +1,74 @@
+[
+  {
+    "name": "armchair",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/armchair.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  },
+  {
+    "name": "bed",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/bed.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  },
+  {
+    "name": "BookShelf",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/BookShelf.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  },
+  {
+    "name": "BookshelfBasic",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/BookshelfBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  },
+  {
+    "name": "NormTable",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/NormTable.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  },
+  {
+    "name": "sofa",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/sofa.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  },
+  {
+    "name": "TVold",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/TVold.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  },
+  {
+    "name": "wallart",
+    "category": [
+      "All",
+      "Wallart"
+    ],
+    "path": "/assets/Wallart/wallart.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg"
+  }
+]

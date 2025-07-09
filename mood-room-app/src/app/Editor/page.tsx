@@ -36,7 +36,7 @@ type Model = {
 const initialModels: Model[] = [
   {
     id: uuidv4(),
-    url: "/assets/Tvold.glb",
+    url: "/assets/Furniture/Tvold.glb",
     colourPalette: {
       primary: "#0ff0ff",
       secondary: "#ff0000",
@@ -46,7 +46,7 @@ const initialModels: Model[] = [
   },
   {
     id: uuidv4(),
-    url: "/assets/BookShelfBasic.glb",
+    url: "/assets/Furniture/BookShelfBasic.glb",
     position: [0, 0, -6],
   },
 ];

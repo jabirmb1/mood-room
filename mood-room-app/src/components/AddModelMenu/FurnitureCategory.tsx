@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ModelItem } from './AddModelTab';
-import { ChevronDownIcon } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+
 
 interface FurnitureCategoryProps {
   items: ModelItem[];
@@ -11,27 +12,33 @@ interface FurnitureCategoryProps {
 const CATEGORIES = [
   { key: 'All', label: 'All' },
   { key: 'Furniture', label: 'Furniture' },
-  { key: 'Wall Art', label: 'Wall Art' },
+  { key: 'Wallart', label: 'Wall Art' },
   { key: 'Lights', label: 'Lights' },
+  { key: 'Decor', label: 'Decor' }
 ];
+
 
 export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCategoryProps) {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const menuRef = React.useRef<HTMLDivElement>(null); // why we need it? because we need to close the dropdown when we click outside of it
 
-  // Filtering logic- upper and lower case considered
+
+  // Filtering logic - handles both string and array categories
   const filteredItems = items.filter(item => {
-    const matchesCategory = activeCategory === 'All' || (item.category && item.category.toLowerCase() === activeCategory.toLowerCase());
+    const itemCategories = Array.isArray(item.category) ? item.category : [item.category || 'All'];
+    const matchesCategory = activeCategory === 'All' || itemCategories.includes(activeCategory);
     const matchesSearch = !searchValue.trim() || item.name.toLowerCase().includes(searchValue.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
 
   // update the parent component with the filtered items
   useEffect(() => {
     onSelect(filteredItems, activeCategory);
     // eslint-disable-next-line
   }, [filteredItems.length, activeCategory, searchValue]);
+
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -50,6 +57,7 @@ export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCat
     };
   }, [menuOpen]);
 
+
   return (
     <div className="flex flex-col items-center justify-center mb-4 mt-2 gap-2">
         <div className="relative inline-block text-center" ref={menuRef}>
@@ -61,7 +69,7 @@ export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCat
                 aria-haspopup="true"
                 onClick={() => setMenuOpen(open => !open)}
             >
-                {activeCategory} <ChevronDownIcon className="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />
+                {activeCategory} <ChevronDown className="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />
             </button>
           {menuOpen && (
             <div
@@ -96,3 +104,5 @@ export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCat
     </div>
   );
 }
+
+
