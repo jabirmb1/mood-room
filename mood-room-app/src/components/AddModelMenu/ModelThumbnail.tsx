@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { div } from 'framer-motion/client';
+import { SharedCanvas } from './SharedCanvas';
 
 interface ModelThumbnailProps {
   path: string;             // path to .glb
@@ -17,7 +18,9 @@ interface ModelThumbnailProps {
   thumbnail: string;   // path to .png/.jpg
 }
 
-function ModelPreview({ path, isHovered }: { path: string; isHovered: boolean }) {
+
+// displaye 3d object when we hover
+export function ModelPreview({ path, isHovered }: { path: string; isHovered: boolean }) {
   const group = useRef<THREE.Group>(null);
   console.log("Path being passed:", path);
 
@@ -46,7 +49,7 @@ function ModelPreview({ path, isHovered }: { path: string; isHovered: boolean })
   return <primitive object={scene} ref={group} />;
 }
 
-
+// display static image and 3d object when we hover
 export function ModelThumbnail({ path, name, thumbnail }: ModelThumbnailProps) {
   const [hoveredModel, setHoveredModel] = useState<{
     path: string;
@@ -56,18 +59,26 @@ export function ModelThumbnail({ path, name, thumbnail }: ModelThumbnailProps) {
   const imgSrc = thumbnail || path.replace(/\.glb$/, '.png');
 
   const [isHovered, setIsHovered] = useState(false);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverActive = useRef(false);
+
+  // what happens when mouse enters the thumbnail
   const handleMouseEnter = (model: { path: string; id: string }) => {
+    hoverActive.current = true;
     hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredModel(model); // only set after 3 seconds
-      console.log("Model being hovered:", model);
-      setIsHovered(true);
-    }, 3000);
+      if (hoverActive.current) {
+        setHoveredModel(model); // only set after 2 seconds
+        console.log("Model being hovered:", model);
+        setIsHovered(true);
+      }
+    }, 2000);
   };
   
+  // what happens when mouse leaves the thumbnail
   const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
+    hoverActive.current = false;
+    if (hoverTimeoutRef.current !== null) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
@@ -82,38 +93,22 @@ export function ModelThumbnail({ path, name, thumbnail }: ModelThumbnailProps) {
       onMouseLeave={handleMouseLeave}
     >
       {/* static image */}
-      <img
-        src={imgSrc}
-        alt={name}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${hoveredModel?.id === name ? 'opacity-0' : 'opacity-100'}`}
-        onError={(e) => {
-          e.currentTarget.onerror = null;
-          e.currentTarget.src = '/placeholder-thumbnail.jpg';
-        }}
-      />  
-
+      {!isHovered && (
+        <img
+          src={imgSrc}
+          alt={name}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${hoveredModel?.id === name ? 'opacity-0' : 'opacity-100'}`}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder-thumbnail.jpg';
+          }}
+        />  
+      )}
       {/* 3D preview */}
       {hoveredModel && isHovered &&  (
-        <Suspense
-          fallback={<div className="absolute inset-0 flex items-center justify-center">Loading…</div>}
-        >
-          <Canvas
-            className="absolute inset-0"
-            camera={{ position: [0, 0, 5], fov: 50 }}
-            gl={{ antialias: true, alpha: true }}
-            frameloop="always"
-          >
-            {/* ✅ This sets the background color of the 3D scene */}
-            <color attach="background" args={['black']} /> {/* Tailwind red-500 */}
-
-
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[2, 2, 2]} intensity={1} />
-            <ModelPreview path={hoveredModel.path} isHovered={isHovered} />
-            
-          </Canvas>
-        </Suspense>
+       <SharedCanvas path={hoveredModel.path} isVisible={isHovered} position={{ top: 0, left: 0 }} />
       )}
     </div>
   );
 }
+
