@@ -12,7 +12,7 @@ import { RapierRigidBody } from '@react-three/rapier';
 
 type CameraControllerProps = {
   controlsRef?: React.RefObject<any>; // reference to a controller e.g. Orbital controls (we need to disable them during animation)
-  rigidBodyRef: React.RefObject<RapierRigidBody | null>; // reference to a rigid body of the object that we are zooming towards
+  rigidBodyRef: React.RefObject<RapierRigidBody | null> | null; // reference to a rigid body of the object that we are zooming towards
   targetRef: React.RefObject<THREE.Object3D> | null; // reference to the target object that the camera will be zooming towards
   resetPosition?: [number, number, number]; // where does camera reset after animation finishes.
   showSpotlight?: boolean;
@@ -49,6 +49,16 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
   useOcclusionTransparency({targetRef:targetRef, potentialOccluders:potentialOccluders, makeInvisible:true, sampleCount:15, throttleMs:50})
   // test out throttling speed for 250 objects; might need to increase it
 
+   // clean up the lights unmount.
+   useEffect(() => {
+    return () => {
+      if (spotlightRef.current) scene.remove(spotlightRef.current);
+      if (spotlightTarget.current) scene.remove(spotlightTarget.current);
+      if (directionalLightRef.current) scene.remove(directionalLightRef.current);
+      if (directionalLightTarget.current) scene.remove(directionalLightTarget.current);
+    };
+  }, []);
+  
   // once the controller is not null, set it the flag to true so that we can start calling it's functions.
   useEffect(() => {
     if (controlsRef?.current && !controlsReady) {
@@ -80,9 +90,9 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
 
   // Setup spotlight when needed
   useEffect(() => {
-    if (!controlsReady || !targetRef?.current || !showSpotlight || !rigidBodyRef?.current) return;
+    if (!controlsReady || !targetRef?.current || !showSpotlight) return;
 
-    const { desiredCameraPos, desiredLookAt } = computeCameraTargetPositions(rigidBodyRef.current, targetRef.current, resetPosition, 0, 0);
+    const { desiredCameraPos, desiredLookAt } = computeCameraTargetPositions(rigidBodyRef?.current?? null, targetRef.current, resetPosition, 0, 0);
 
     const { maxDim } = calculateObjectBoxSize(targetRef.current);
     const radius = maxDim * 0.75;
@@ -99,8 +109,8 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
 
   // Setup directional light when needed
   useEffect(() => {
-    if (!controlsReady || !targetRef?.current || !rigidBodyRef?.current || !showDirectionLight) return;
-    const { desiredCameraPos, desiredLookAt } = computeCameraTargetPositions(rigidBodyRef.current, targetRef.current, resetPosition, 0, 0);
+    if (!controlsReady || !targetRef?.current || !showDirectionLight) return;
+    const { desiredCameraPos, desiredLookAt } = computeCameraTargetPositions(rigidBodyRef?.current?? null, targetRef.current, resetPosition, 0, 0);
     const { maxDim } = calculateObjectBoxSize(targetRef.current);
 
     // Example directional light position: slightly above and in front of object

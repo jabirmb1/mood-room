@@ -7,7 +7,7 @@ import { OrbitControls } from '@react-three/drei';
 import { Object3D } from '@/components/3d/Object3D';
 import { CameraController } from '@/components/CameraController';
 import { v4 as uuidv4 } from 'uuid';
-import { defaultCameraPosition, wallHeight, wallThickness } from '@/utils/const';
+import { defaultCameraPosition, globalScale, wallHeight, wallThickness } from '@/utils/const';
 import { ObjectEditorPanel } from '@/components/ObjectEditorPanel/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useModel} from '@/hooks/useModel';
@@ -39,7 +39,7 @@ const initialModels: Model[] = [
     id: uuidv4(),
     url: "/assets/lights/ShadeLampBasic.glb",
     position: [0, 0, 0],
-  }, */
+  }, 
   {
     id: uuidv4(),
     url: "/assets/lights/WallLampBasic.glb",
@@ -54,7 +54,7 @@ const initialModels: Model[] = [
     id: uuidv4(),
     url: "/assets/lights/WallLampPoles.glb",
     position: [-4, 2, 0],
-  },
+  }, */
 ];
 
 export default function Editor() {
@@ -65,7 +65,7 @@ export default function Editor() {
    
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
-  const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, refreshRigidBody, areModelRefsReady, collisionMap, getModelRefUpdateHandler, getRigidBodyRefUpdateHandler, 
+  const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelRefUpdateHandler, getRigidBodyRefUpdateHandler, 
     deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
@@ -103,8 +103,7 @@ export default function Editor() {
   // function to validate all object's collisions on load:
   //
   useEffect(() => {
-    if (areModelRefsReady) updateCollisionMap();// TO DO: for some reason hasRunOnce does not work.
-    setHasRunOnce(true);
+    if (areModelRefsReady)
     console.log("hello");
   }, [areModelRefsReady]);
 
@@ -176,7 +175,7 @@ export default function Editor() {
               camera={{ position: defaultCameraPosition, fov: 50 }}
               className={`canvas-container h-full w-full bg-gray-200 z-50
               ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
-                <Physics debug timestep = 'manual'  gravity={[0, 0, 0]}>{/* using rapier physics engine to handle collisions (no physics)*/}
+                <Physics debug gravity={[0, 0, 0]}>{/* using rapier physics engine to handle collisions (no physics)*/}
                   {/* if object if being hovered over change cursor into a grab */}
                   <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
                   <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
@@ -187,13 +186,13 @@ export default function Editor() {
                 
                   {models.map((model) => (
                      <RigidBody  ref={getRigidBodyRefUpdateHandler(model.id)} key={`${model.id}-${rigidBodyVersions[model.id] ?? 0}`}
-                      type = 'kinematicPosition' colliders = 'hull' position={model.position}>
+                      type = 'kinematicPosition' colliders = 'hull' position={model.position ?? [0, 0, 0]} rotation={model.rotation ?? [0, 0, 0]}>
                     {/* Object3D is a component that will render the 3D model and handle all the logic for it */}
                       <Object3D
                         id={model.id}
                         url={model.url}
                         rigidBodyRef={rigidBodyRefs.current[model.id]}
-                        position={model.position}
+                        scale={model.scale ?? [globalScale, globalScale, globalScale]}
                         colourPalette={model.colourPalette}
                         mode="edit"
                         isSelected={selectedId === model.id}
@@ -205,10 +204,11 @@ export default function Editor() {
                         onDragging={setDragging}
                         onDelete={() => setIsDeleteDialogOpen(true)}
                         onModelRefUpdate={getModelRefUpdateHandler(model.id)}
+                        updateModelInformation={updateModelInformation}
                       />
                     </RigidBody>
                     ))}
-                  {orbitControlsRef.current && (
+                  {orbitControlsRef.current &&(
                     <CameraController
                       controlsRef={orbitControlsRef}
                       rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
@@ -252,7 +252,7 @@ export default function Editor() {
                 rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
                 objectRef={selectedModelRef}
                 objectId={selectedId}
-                refreshRigidBody={refreshRigidBody}
+                updateModelInformation={updateModelInformation}
                 onClose={() => setSelectedId(null)}
                 onDelete = {() => setIsDeleteDialogOpen(true)}
                 setMode={setEditingMode}

@@ -1,6 +1,6 @@
 'use client';
 import { useGLTF} from "@react-three/drei";
-import { useEffect, useState, useRef, useMemo} from "react";
+import { useEffect, useState, useRef, useMemo, useLayoutEffect} from "react";
 import { useDragControls } from "@/hooks/useDragControls";
 import {ThreeEvent } from "@react-three/fiber";
 import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
@@ -10,6 +10,7 @@ import * as THREE from "three";
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/object3D";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
+import { Model } from "@/types/types";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
  * , change it's position and size.
@@ -23,6 +24,8 @@ type Object3DProps = {
   mode: "edit" | "view";// if user can edit the model or just view it
   colourPalette?: ColourPalette;// colour palette to apply to the model
   position?: [number, number, number];// position of the model in the scene
+  scale: [number, number, number];// model's size
+  rotation?: [number, number, number]// model's rotation.
   isSelected: boolean;// boolean flag to check if current model is the selected one or not.
   isColliding?: boolean;// if this object is inside an illegal collision state, e.g. inside a wall or floor.
   editingMode: 'edit' | 'move';//what mode the object is in, e.g. edit means that side panel will show to change the object's properties
@@ -30,15 +33,16 @@ type Object3DProps = {
   setSelectedId: (id: string | null) => void;// this will be used for the object to select and unselect itself.
   setEditingMode: (mode: 'edit' | 'move') => void;// if object should show it's panel or it is being moved.
   setIsHoveringObject?: (hover: boolean) => void;// if this object is currently being hovered or not.
+  updateModelInformation: (id: string, updates: Partial<Model>) => void;
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
   onDelete: ()=> void;// function to delete this object.
-  onModelRefUpdate?: (ref: React.RefObject<THREE.Object3D | null> | null) => void;// a callback to explicitly expose the object's internal modelRef to parent.
+  onModelRefUpdate?: (ref: React.RefObject<THREE.Object3D> | null) => void;// a callback to explicitly expose the object's internal modelRef to parent.
 };
 
 
 // TO DO: make position be used as default for object placement in viewer only mode so e.g. position = [num, num, num] or null(for editing)
-export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], isSelected = false, isColliding=false, editingMode = 'edit', 
-  setSelectedId, setEditingMode, setIsHoveringObject, onDragging, onDelete, onModelRefUpdate}: Object3DProps) {
+export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, isSelected = false, isColliding=false, editingMode = 'edit', 
+  setSelectedId, setEditingMode, setIsHoveringObject, updateModelInformation, onDragging, onDelete, onModelRefUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
 // we clone the model and also the material to make it fully independent of other models
@@ -47,14 +51,21 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     if (!scene) return null;
     const cloned = cloneModel(scene);
     const centered = centerPivot(cloned);
-  
-    centered.scale.set(globalScale, globalScale, globalScale); // on first load, load it into global scale
-    centered.userData.baseScale = globalScale; // record what the current size is.
+    centered.userData.baseScale = scale[0]; // record what the current size is.
     // apply tags to the object during load:
     applyCategoryTags(url, centered);
     return centered;
   }, [scene]);
 
+  /*useEffect(() => {
+    if (!scene) return;
+    const cloned = cloneModel(scene);
+    const centered = centerPivot(cloned);
+    centered.userData.baseScale = scale[0];
+    applyCategoryTags(url, centered);
+    setClonedScene(centered);
+  }, [scene]); */
+  
 
   const modelRef = useRef<THREE.Object3D>(null)// reference to change model's colour, size and rotation
   const [hovered, setHovered] = useState(false);
@@ -80,7 +91,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   // if parent page wants the internal model ref, pass it to them.
   useEffect(() => {
     if (onModelRefUpdate) {
-      onModelRefUpdate(modelRef);// passing the object itself.
+      onModelRefUpdate(modelRef as React.RefObject<THREE.Object3D>);// passing the object itself.
     }
     return () => {
       if (onModelRefUpdate) onModelRefUpdate(null);
@@ -113,12 +124,13 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     const model = modelRef.current;
     const scaleFactor = hovered && mode === 'edit' ? 1.20 : 1.0;
   
-    const base = model.userData.baseScale ?? globalScale;
+    const base = model.userData.baseScale ?? scale[0];
     model.scale.set(base * scaleFactor, base * scaleFactor, base * scaleFactor);
   
   }, [hovered, mode, modelRef.current?.userData.baseScale]);
 
    //This use effect temporarily turns the object into red if it is colliding with another object.
+   /*
    useEffect(() => {
     if (!modelRef.current) return;
     if (isColliding) {
@@ -130,14 +142,15 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     } else {
       applyColourPalette(modelRef.current, colourPalette); // reset colourpalette to what it was before.
     }
-  }, [isColliding]);   
+  }, [isColliding]);   */
   
   return (
     <>
         {(isSelected && mode === 'edit' && editingMode === 'move') &&(
           // default into starting with horizontal mode whenever we open the panel.
-          <ObjectFloatingPanel modelRef={modelRef} onClose={() => {setSelectedId(null); 
-              setEditingMode('edit')}} isHorizontalMode = {isHorizontalMode} setIsHorizontalMode = {setIsHorizontalMode} setMode={setEditingMode} onDelete = {onDelete}/>
+          <ObjectFloatingPanel modelId={id} rigidBodyRef={rigidBodyRef?? null} modelRef={modelRef} onClose={() => {setSelectedId(null); 
+              setEditingMode('edit')}} isHorizontalMode = {isHorizontalMode} setIsHorizontalMode = {setIsHorizontalMode}
+               setMode={setEditingMode}  updateModelInformation = {updateModelInformation} onDelete = {onDelete}/>
         )}
 
 
@@ -146,18 +159,17 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
         <primitive
           ref={modelRef}
           object={clonedScene}
+          position={position}
+          scale= {scale}
+          rotation = {rotation}
           castShadow = {true}
           recieveShadow = {true}
-          onDoubleClick={(e: ThreeEvent<MouseEvent>) => {// we use double click to select an object to prevent accidental selections.
+          onDoubleClick={(e: ThreeEvent<PointerEvent>) => {
             e.stopPropagation();
-            if (mode === 'edit') {
-              if (editingMode === 'move') {// this prevents locking, e.g. object1 in movde mode but we click object 2, 
-                // would have been stuck in move mode and could not render anything.
-                setEditingMode('edit'); // reset to edit when switching
-              }
-              setSelectedId(id);
-            }
+            setEditingMode('edit');
+            setSelectedId(id);
           }}
+          
           onPointerOver={(e: ThreeEvent<PointerEvent>) => {
             e.stopPropagation();
             if (mode === "edit") {

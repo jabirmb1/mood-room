@@ -7,22 +7,20 @@ import { RapierRigidBody } from '@react-three/rapier';
 // This function just computes and returns the final position of where the camera should stop at, given an object.
 // if no object is present, then it will just reset the camera.
 
-export function computeCameraTargetPositions(rigidBody: RapierRigidBody | null, object: THREE.Object3D | null,resetPosition: [number, number, number],
+export function computeCameraTargetPositions( rigidBody: RapierRigidBody | null, object: THREE.Object3D | null,resetPosition: [number, number, number],
    cameraXOffset: number = 0, zoomOffset: number = 0) {
   const desiredCameraPos = new THREE.Vector3();
   const desiredLookAt = new THREE.Vector3();
 
   if (object && rigidBody) {
-     // Get world position and rotation from the rigid body.
-     const rot = rigidBody.rotation();    // { x, y, z, w }
- 
-     const quaternion = new THREE.Quaternion(rot.x, rot.y, rot.z, rot.w);
-
-     
      // grab the box dimension so we can calculate the distance.
     const { center, maxDim } = calculateObjectBoxSize(object);
     const margin = 1.5; // margin so that the object fits nicely in view.
     const distance = (maxDim * margin) + zoomOffset;// add in the zoom offset here to move back camera if needed
+
+      // Get the rigid body's rotation as a THREE.Quaternion
+      const bodyRotation = rigidBody.rotation(); 
+      const quaternion = new THREE.Quaternion( bodyRotation.x,  bodyRotation.y, bodyRotation.z,  bodyRotation.w);
 
     // Vector from object to camera (forward direction) (i.e camera always faces object's front)
     const front = new THREE.Vector3(0, 0, 1)
@@ -44,6 +42,7 @@ export function computeCameraTargetPositions(rigidBody: RapierRigidBody | null, 
     desiredCameraPos.addScaledVector(right, cameraXOffset);
     desiredLookAt.copy(center).addScaledVector(right, cameraXOffset);
   } else {
+    console.log('hello world');
     desiredCameraPos.set(...resetPosition);
     desiredLookAt.set(0, 0, 0);
   }

@@ -32,7 +32,7 @@ export function setRigidBodyRotation( body: RapierRigidBody | null, rotation: { 
     const y = THREE.MathUtils.degToRad(rotation.y ?? 0);
     const z = THREE.MathUtils.degToRad(rotation.z ?? 0);
   
-    const euler = new THREE.Euler(x, y, z);
+    const euler = new THREE.Euler(x, y, z, 'YXZ');
     const quat = new THREE.Quaternion().setFromEuler(euler);
   
     body.setRotation(quat, true);
