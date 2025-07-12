@@ -69,6 +69,8 @@ export default function Editor() {
     deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
+   // getting the selected model's model refs:
+   const [selectedModelRef, setSelectedModelRef] = useState<THREE.Group | null>(null);// using a usestate now since models will now remount due to rigid bodies.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not, needed for orbital controls
   const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if the user wants to show model's editor panel
   //or instead show a floating panel so they can move model around.
@@ -90,10 +92,6 @@ export default function Editor() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);// boolean flag keeping track if
   // dialog right before model deletetion is open or not.
   
-
-  // getting the selected model's model refs:
-  const selectedModelRef = selectedId ? modelRefs.current[selectedId] ?? null : null;
-
   // creating some refs for the lighting:
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const directionalRef = useRef<THREE.DirectionalLight>(null);
@@ -102,10 +100,19 @@ export default function Editor() {
   
   // function to validate all object's collisions on load:
   //
-  useEffect(() => {
+  /*useEffect(() => {
     if (areModelRefsReady)
     console.log("hello");
-  }, [areModelRefsReady]);
+  }, [areModelRefsReady]); */
+
+  // function to update selectedModelRef to be as up to date as possible:
+  useEffect(() => {
+    if (selectedId && modelRefs.current[selectedId]) {
+      setSelectedModelRef(modelRefs.current[selectedId]);
+    } else {
+      setSelectedModelRef(null);
+    }
+  }, [selectedId, modelRefs.current, /* or a version state that changes on ref updates */]);
 
   // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
   // and then change the selected ID.

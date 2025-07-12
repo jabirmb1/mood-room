@@ -36,7 +36,8 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
           new THREE.Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
         );
         rotation = { x: euler.x, y: euler.y, z: euler.z };// storing rotation in radians.
-      } else {
+      } 
+      else {
         rotation = object.rotation;
       }
 

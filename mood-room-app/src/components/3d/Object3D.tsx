@@ -1,6 +1,6 @@
 'use client';
 import { useGLTF} from "@react-three/drei";
-import { useEffect, useState, useRef, useMemo, useLayoutEffect} from "react";
+import { useEffect, useState, useRef, useMemo} from "react";
 import { useDragControls } from "@/hooks/useDragControls";
 import {ThreeEvent } from "@react-three/fiber";
 import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
@@ -57,16 +57,6 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     return centered;
   }, [scene]);
 
-  /*useEffect(() => {
-    if (!scene) return;
-    const cloned = cloneModel(scene);
-    const centered = centerPivot(cloned);
-    centered.userData.baseScale = scale[0];
-    applyCategoryTags(url, centered);
-    setClonedScene(centered);
-  }, [scene]); */
-  
-
   const modelRef = useRef<THREE.Object3D>(null)// reference to change model's colour, size and rotation
   const [hovered, setHovered] = useState(false);
   const [isHorizontalMode, setIsHorizontalMode] = useState(true); 
@@ -90,13 +80,13 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
 
   // if parent page wants the internal model ref, pass it to them.
   useEffect(() => {
-    if (onModelRefUpdate) {
-      onModelRefUpdate(modelRef as React.RefObject<THREE.Object3D>);// passing the object itself.
+    if (modelRef.current && onModelRefUpdate) {
+      onModelRefUpdate(modelRef as React.RefObject<THREE.Object3D>);
     }
     return () => {
       if (onModelRefUpdate) onModelRefUpdate(null);
     };
-  }, [onModelRefUpdate]);
+  }, [clonedScene, isSelected]);
 
   // add in a custom colour palette to model if user has specfied one.
   useEffect(() => {
@@ -110,6 +100,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
       applyColourPalette(modelRef.current, colourPalette);
     }
   }, [colourPalette]);
+  
 
   // add in a hovered effect if user is in edit mode and hovers over model
   useEffect(() => {
