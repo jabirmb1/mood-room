@@ -7,7 +7,7 @@ import { Grid } from '@react-three/drei';
 import { wallHeight, wallThickness, roomSize } from '@/utils/const';
 
 type RoomFoundationProps = {
-  onFloorReady?: (objects: THREE.Object3D[]) => void;
+  onFloorReady?: (objects: THREE.Object3D) => void;// if the floor instance is ready or not.
 }
 export default function RoomFoundation({ onFloorReady }: RoomFoundationProps) {
   const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);

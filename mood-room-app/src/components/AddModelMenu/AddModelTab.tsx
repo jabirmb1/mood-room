@@ -7,17 +7,17 @@ import { FurnitureCategory } from './FurnitureCategory';
 
 // used to definbe shape and properties of furniture
 export interface ModelItem {
-  id: string;
+  id: string;//  id of the model item.
   name: string; // add name aswell
   url: string;
   thumbnail: string; //need to create one for all funriture
-  colourPalette: {
+  colourPalette: {// default colour palette of the model Item.
     primary: string;
     secondary: string;
     tertiary: string;
   };
-  position: [number, number, number];
-  category?: string;
+  position: [number, number, number];// where to place model.
+  category?: string;// what category it is.
 }
 
 interface AddModelTabProps {

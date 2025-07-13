@@ -1,3 +1,4 @@
+import { modelMaterialNames } from "@/utils/const";
 // model type.
 export type Model = {
     id: string;
@@ -17,3 +18,6 @@ export type Model = {
       scale: [number, number, number];
     };
   };
+
+  // colour type (e.g. primary; secondary and tertiary)
+  export type MaterialColourType = typeof modelMaterialNames[number];

@@ -7,14 +7,16 @@ import { Model } from "@/types/types";
 import { getObjectMaterialMap } from "@/utils/object3D";
 import { RapierRigidBody } from "@react-three/rapier";
 
+/******** This panel will be used to change the properties of an object e.g. it's rotation; size; colour scheme etc. ********/
+
 type ObjectEditorPanelProps = {
   rigidBodyRef:React.RefObject<RapierRigidBody | null>;// ref to object's rigid body, has objects current pos and rotation, size etc.
-  objectRef: React.RefObject<THREE.Object3D> | null;// which oject that this panel relates to/ is linked up with
+  objectRef: React.RefObject<THREE.Object3D | null>;// which oject that this panel relates to/ is linked up with
   objectId: string;// Id of the linked up object
   updateModelInformation: (id: string, updates: Partial<Model>) => void;
   onClose: () => void;// function to run when this panel closes
   onDelete: () => void;// function to delete selected object.
-  setMode: (mode: string) => void;// setting an object's mode from e.g. 'edit' to 'move' and vice versa
+  setMode: (mode: 'edit' | 'move') => void;// setting an object's mode from e.g. 'edit' to 'move' and vice versa
 };
 
 export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModelInformation, onClose, onDelete, setMode }: ObjectEditorPanelProps) {

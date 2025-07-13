@@ -8,7 +8,7 @@ import { getPosition, setPosition } from "@/utils/rapierHelpers";
 /* This hook is used to easily drag and drop any objects which call upon it */
 
 type UseDragControlsProps =  {
-    rigidBodyRef: React.RefObject<RapierRigidBody | null> | null;
+    rigidBodyRef: React.RefObject<RapierRigidBody | null>;// the reference to a rapier rigid body.
     objectRef: React.RefObject<THREE.Object3D | null>// which object that it is reffering to.
     enabled: boolean;// when to enable drag controls
     isHorizontalMode: boolean// whether we want to drag it vertically or horizontally.
@@ -52,7 +52,7 @@ function handlePointerDown( e: ThreeEvent<PointerEvent>, rigidBodyRef: React.Ref
 // This function is called as we drag an object.
 //
 function handlePointerMove(e: ThreeEvent<PointerEvent>,   rigidBodyRef: React.RefObject<RapierRigidBody | null> | null, 
-  objectRef: React.RefObject<THREE.Object3D | null>, floorRef: React.RefObject<THREE.Object3D>, 
+  objectRef: React.RefObject<THREE.Object3D | null>, floorRef: React.RefObject<THREE.Object3D | null>, 
   plane: React.RefObject<THREE.Plane>,  dragOffset: React.RefObject<THREE.Vector3>,
   dragging: boolean, isHorizontalMode: boolean){
   

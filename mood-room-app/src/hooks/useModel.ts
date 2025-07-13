@@ -8,44 +8,48 @@ import { RapierRigidBody } from "@react-three/rapier";
  *  indivisual refs (both group and model refs) and also if each model are collidig or not.
  */
 type useModelReturn = {
-  models: Model[];
-  modelRefs: React.RefObject<Record<string, React.RefObject<THREE.Object3D> | null>>;// a record of all model refs.
+  models: Model[];// array which stores all current models in the scene.
+  modelRefs: React.RefObject<Record<string, React.RefObject<THREE.Object3D | null>>>;// a record of all model refs.
   rigidBodyVersions: Record<string, number>;// a record of all rigid body verions (0 or 1); used to refresh/ reconstruct a rigid body on command.
-  rigidBodyRefs: React.RefObject<Record<string, React.RefObject<RapierRigidBody | null> | null>>;
+  rigidBodyRefs: React.RefObject<Record<string, React.RefObject<RapierRigidBody | null>>>;// a record of all rigid bodies for the selected models.
   areModelRefsReady: boolean; // a boolean to check if all model refs are ready.
-  collisionMap: Record<string, boolean>;
-  setModels: React.Dispatch<React.SetStateAction<Model[]>>;
-  getModelRefUpdateHandler: (id: string) => (ref: React.RefObject<THREE.Object3D> | null) => void;
-  getRigidBodyRefUpdateHandler: (id: string) => (ref: RapierRigidBody | null) => void;
-  refreshRigidBody: (id: string) => void;
-  updateModelInformation: (id: string, updates: Partial<Model>) => void;
-  updateCollisionMap: () => void;
-  deleteModel: (id: string) => void;
+  collisionMap: Record<string, boolean>;// a map which says if each model is in an illegal collider or not.
+  setModels: React.Dispatch<React.SetStateAction<Model[]>>;// function to change the models array.
+  getModelInstanceUpdateHandler: (id: string) => (ref: THREE.Object3D | null) => void;// function to update a model's instance within the record.
+  getRigidBodyInstanceUpdateHandler: (id: string) => (ref: RapierRigidBody | null) => void; // function to update a rigid bodie's instance within the record.
+  refreshRigidBody: (id: string) => void;// functiont to refresh. remount a rigid body.
+  updateModelInformation: (id: string, updates: Partial<Model>) => void;// function to save a specific model information to the array of models.
+ // updateCollisionMap: () => void;
+  deleteModel: (id: string) => void;// function to delete a model from the array of models.
 };
 
-export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject<THREE.Object3D>, walls: THREE.Object3D[]): useModelReturn {
+export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject<THREE.Object3D | null>, walls: THREE.Object3D[]): useModelReturn {
   const [models, setModels] = useState<Model[]>(initialModels);
-  const modelRefs = useRef<Record<string, React.RefObject<THREE.Object3D> | null>>({});
-  const rigidBodyRefs = useRef<Record<string, React.RefObject<RapierRigidBody | null> | null>>({});
+  const modelRefs = useRef<Record<string, React.RefObject<THREE.Object3D | null>>>({});
+  const rigidBodyRefs = useRef<Record<string, React.RefObject<RapierRigidBody | null>>>({});
   const [rigidBodyVersions, setRigidBodyVersions] = useState<Record<string, number>>({});
   const [collisionMap, setCollisionMap] = useState<Record<string, boolean>>({});
   const areModelRefsReady = models.every(model => modelRefs.current[model.id]?.current);;// an initial check to see if any initial models are ready.
 
   // Returns a callback to update the model ref for a given id
-  const getModelRefUpdateHandler = useCallback(
-    (id: string) => (ref: React.RefObject<THREE.Object3D> | null) => {
-      if (ref && ref.current){
-         modelRefs.current[id] = ref;
-      }
-      else if (ref === null){
+  const getModelInstanceUpdateHandler = useCallback(
+    (id: string) => (instance: THREE.Object3D | null) => {
+      if (instance) {
+        // If there's no ref object yet for this id, create one
+        if (!modelRefs.current[id]) {
+          modelRefs.current[id] = { current: null };
+        }
+        modelRefs.current[id]!.current = instance;
+      } else {
+        // Instance is null, remove the ref
         delete modelRefs.current[id];
       }
-      // do nothing when ref.current is null; it's a loading state.
     },
-    []);
+    []
+  );
 
   // Returns a callback to update the rigid body ref for a given id
-  const getRigidBodyRefUpdateHandler = useCallback(
+  const getRigidBodyInstanceUpdateHandler = useCallback(
     (id: string) => (instance: RapierRigidBody | null) => {
       if (instance) {
         // if there is no current rigid body, set it to null
@@ -123,7 +127,7 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
   }, []);
 
   //This function will allow us to update the collision map efficiently.
-  const updateCollisionMap = useCallback((selectedModelId?: string) => {
+  /*const updateCollisionMap = useCallback((selectedModelId?: string) => {
     const newMap: Record<string, boolean> = {};
 
     for (const model of models) {
@@ -138,16 +142,16 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
         .map(([_, ref]) => ref?.current)
         .filter((obj): obj is THREE.Object3D => !!obj);
 
-      const isValid = validateObjectPlacement(object, floorRef.current, walls, otherObjects, model.id === selectedModelId);// only 
+      const isValid = validateObjectPlacement(object, floorRef?.current, walls, otherObjects, model.id === selectedModelId);// only 
       // log warnings for the selected model if it is being updated.
       newMap[model.id] = !isValid;
     }
 
     setCollisionMap(newMap);
-  }, [models, walls, floorRef]);
+  }, [models, walls, floorRef]); */
 
   //This function is used to only validate the collision map for a single model; much more efficient.
-  function updateCollisionSingle(id: string) {
+ /* function updateCollisionSingle(id: string) {
     const object = modelRefs.current[id]?.current;
     if (!object) return;
   
@@ -157,9 +161,9 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
       .filter((obj): obj is THREE.Object3D => !!obj);
   
     const isValid = validateObjectPlacement(object, floorRef.current, walls, otherObjects, true);
-    setCollisionMap(prev => ({ ...prev, [id]: !isValid }));
-  }
+    setCollisionMap(prev => ({ ...prev, [id]: !isValid })); 
+  } */
 
   return {models,modelRefs, rigidBodyRefs,rigidBodyVersions, areModelRefsReady, collisionMap,
-    setModels, getModelRefUpdateHandler, getRigidBodyRefUpdateHandler, refreshRigidBody,updateModelInformation,  updateCollisionMap, deleteModel,};
+    setModels, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, refreshRigidBody,updateModelInformation, deleteModel,};
 }

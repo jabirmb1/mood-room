@@ -9,14 +9,16 @@ import { useDevice } from '@/hooks/useIsDevice';
 import { createSpotLight, createDirectionalLight } from '@/utils/lights'; // make sure both imported
 import { useOcclusionTransparency } from '@/hooks/useOcclusion';
 import { RapierRigidBody } from '@react-three/rapier';
-
+/************ This component wil be used to control the camera to zoom in and out of a selected object, and to
+ * optionally, alsow allow background lighting to the selected object to make it stand out more.
+ */
 type CameraControllerProps = {
   controlsRef?: React.RefObject<any>; // reference to a controller e.g. Orbital controls (we need to disable them during animation)
-  rigidBodyRef: React.RefObject<RapierRigidBody | null> | null; // reference to a rigid body of the object that we are zooming towards
-  targetRef: React.RefObject<THREE.Object3D> | null; // reference to the target object that the camera will be zooming towards
+  rigidBodyRef: React.RefObject<RapierRigidBody | null>; // reference to a rigid body of the object that we are zooming towards
+  targetRef: React.RefObject<THREE.Object3D | null>; // reference to the target object that the camera will be zooming towards
   resetPosition?: [number, number, number]; // where does camera reset after animation finishes.
-  showSpotlight?: boolean;
-  showDirectionLight?: boolean;
+  showSpotlight?: boolean;// should the camera controller show a spotlight on selelected object.
+  showDirectionLight?: boolean;// should camera controller show a direction light on selected object.
 };
 
 // This component will be used to smoothly go in and out of a selected object.
@@ -154,14 +156,14 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
   return (
     <>
     {/*  stop showing the lights when object is no longer selected  or if we specified that we don't need them in props*/}
-      {targetRef && showSpotlight && spotlightRef.current && (
+      {targetRef.current && showSpotlight && spotlightRef.current && (
         <>
           <primitive object={spotlightRef.current} />
           <primitive object={spotlightTarget.current} />
         </>
       )}
 
-      {targetRef && showDirectionLight && directionalLightRef.current && (
+      {targetRef.current && showDirectionLight && directionalLightRef.current && (
         <>
           <primitive object={directionalLightRef.current} />
           <primitive object={directionalLightTarget.current} />

@@ -1,17 +1,18 @@
 import { Model } from "@/types/types";
 import { Billboard, Html } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import { RapierRigidBody } from "@react-three/rapier";
-import { useEffect} from "react";
+import { useEffect, useState} from "react";
 import * as THREE from "three";
 /*This component will be used to provide the user different options and flexability when they are trying to move the object,
 This panel will float on top of the object when in move mode */
 
 type ObjectFloatingPanelProps = {
-  modelId: string
-  rigidBodyRef:React.RefObject<RapierRigidBody | null> | null;// ref to object's rigid body, has objects current pos and rotation, size etc.
+  modelId: string// id of the model that this panel is linked to.
+  rigidBodyRef:React.RefObject<RapierRigidBody | null>;// ref to object's rigid body, has objects current pos and rotation, size etc.
   modelRef: React.RefObject<THREE.Object3D | null>; // ref of object so we know what position it is at.
   isHorizontalMode: boolean;// whether the object is in horizontal movement mode or not.
-  onClose: () => void;
+  onClose: () => void;// function to run once this panel closes.
   setIsHorizontalMode: React.Dispatch<React.SetStateAction<boolean>>;// a function to toggle between horizontal and vertical movement modes.
   setMode: (mode: 'edit' | 'move') => void;// a function to change the editing mode of the object.
   updateModelInformation: (id: string, updates: Partial<Model>) => void;
@@ -19,6 +20,15 @@ type ObjectFloatingPanelProps = {
 };
 
 export function ObjectFloatingPanel({modelId,  rigidBodyRef, modelRef,  isHorizontalMode,  onClose,  setIsHorizontalMode, setMode, updateModelInformation, onDelete,}: ObjectFloatingPanelProps) {
+  const [floatingPos, setFloatingPos] = useState(new THREE.Vector3());
+  
+  // always put panel above the object.
+  useFrame(() => {
+    const model = modelRef.current;
+    if (model) {
+      setFloatingPos(model.position.clone().add(new THREE.Vector3(0, 2, 0)));
+    }
+  });
   // On unmount, update model with the final position data
    useEffect(() => {
      return () => {
@@ -56,7 +66,7 @@ export function ObjectFloatingPanel({modelId,  rigidBodyRef, modelRef,  isHorizo
 
   return (
     //  use drei's billbaord to make the panel always follow the camera ans act as a 2-d hud on top of object 
-    <Billboard position={modelRef?.current?.position.clone().add(new THREE.Vector3(0, 2, 0))}  lockX={false} lockY={false}  lockZ={false}>
+    <Billboard position={floatingPos}  lockX={false} lockY={false}  lockZ={false}>
         {/* using Html so we can create a floating bar on top of object when in move mode */}
       <Html center distanceFactor={8} transform>
         <aside className="bg-white p-2 rounded shadow flex gap-2">

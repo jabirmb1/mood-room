@@ -216,7 +216,8 @@ export function isInsideRoom(object: THREE.Object3D, floor: THREE.Object3D): boo
 
 // returns a position which clamps objects to room.
 //
-export function getClampedPos(modelRef: THREE.Object3D,newPosition: THREE.Vector3,floor: THREE.Object3D): [number, number, number] {
+export function getClampedPos(modelRef: THREE.Object3D,newPosition: THREE.Vector3,floor: THREE.Object3D | null): [number, number, number] {
+  if (!floor) return [0, 0, 0];// if floor doesn't exist for our bounding calulcation; just return the default pos.
   const objectBox = calculateObjectBoxSize(modelRef).box;
   const objectSize = new THREE.Vector3();
   objectBox.getSize(objectSize);

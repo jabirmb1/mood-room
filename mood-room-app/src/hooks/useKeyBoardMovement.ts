@@ -10,7 +10,7 @@ import { getPosition, setPosition } from "@/utils/rapierHelpers";
 /*** This hook is used to move an object via keybaord controls *********/
 
 type useKeyboardMovementProps = {
-  rigidBodyRef: React.RefObject<RapierRigidBody | null> | null;// reference of the rigid body (contains pos)
+  rigidBodyRef: React.RefObject<RapierRigidBody | null>;// reference of the rigid body (contains pos)
   modelRef: React.RefObject<THREE.Object3D | null>; // which object to move.
   enabled: boolean;// represents when to allow keyboard controls to be active
   isHorizontalMode: boolean;// if object is in horizontal movement or vertical.

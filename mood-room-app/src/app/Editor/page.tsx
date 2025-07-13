@@ -1,9 +1,10 @@
 // editor page where u can customise it all
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls as DreiOrbitControls } from '@react-three/drei'; // the actual react component for orbital controls.
+import { OrbitControls } from 'three-stdlib'; // instance class (used as a type)
 import { Object3D } from '@/components/3d/Object3D';
 import { CameraController } from '@/components/CameraController';
 import { v4 as uuidv4 } from 'uuid';
@@ -59,22 +60,22 @@ const initialModels: Model[] = [
 
 export default function Editor() {
 
-   // State to hold floor & wall objects returned from RoomFoundation
-   const floorRef = useRef<THREE.Object3D>(null);
-
+   // State to hold floor returned from RoomFoundation
+   const floorRef = useRef<THREE.Object3D | null>(null);
    
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
-  const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelRefUpdateHandler, getRigidBodyRefUpdateHandler, 
-    deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
+  const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, 
+    deleteModel} = useModel(initialModels, floorRef, []);
 
+  const emptyRef = React.useRef<THREE.Object3D | null>(null);// a default empty ref.
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
    // getting the selected model's model refs:
-   const [selectedModelRef, setSelectedModelRef] = useState<THREE.Group | null>(null);// using a usestate now since models will now remount due to rigid bodies.
+  const [selectedModelRef, setSelectedModelRef] =useState<React.RefObject<THREE.Object3D | null> | null>(null);;// using a usestate now since models will now remount due to rigid bodies.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not, needed for orbital controls
   const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if the user wants to show model's editor panel
   //or instead show a floating panel so they can move model around.
-  const orbitControlsRef = useRef<typeof OrbitControls | null>(null);//reference of the orbital controls tag (
+  const orbitControlsRef = useRef<OrbitControls>(null);//reference of the orbital controls tag (
   // used so that we can disable/ enable it from child components e.g. camera movement.)
   const isPopupOpen = (selectedId !== null && editingMode === 'edit');// if the editor panel is open or not.
   const [isHoveringObject, setIsHoveringObject] = useState(false);// tracks if any object is being hovered over.
@@ -112,7 +113,7 @@ export default function Editor() {
     } else {
       setSelectedModelRef(null);
     }
-  }, [selectedId, modelRefs.current, /* or a version state that changes on ref updates */]);
+  }, [selectedId, modelRefs.current]);
 
   // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
   // and then change the selected ID.
@@ -147,7 +148,7 @@ export default function Editor() {
   }, [isPopupOpen]);
   
   
-
+  // function to add in a new model.
   function handleAddModel(model: Omit<ModelItem, 'thumbnail'>): void {
     const newModel: Model = {
       id: uuidv4(),
@@ -188,11 +189,11 @@ export default function Editor() {
                   <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
                   <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
                   <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
-                  <OrbitControls enabled={!isDragging} ref={orbitControlsRef} />
+                  <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />
                   <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}}/>
                 
                   {models.map((model) => (
-                     <RigidBody  ref={getRigidBodyRefUpdateHandler(model.id)} key={`${model.id}-${rigidBodyVersions[model.id] ?? 0}`}
+                     <RigidBody  ref={getRigidBodyInstanceUpdateHandler(model.id)} key={`${model.id}-${rigidBodyVersions[model.id] ?? 0}`}
                       type = 'kinematicPosition' colliders = 'hull' position={model.position ?? [0, 0, 0]} rotation={model.rotation ?? [0, 0, 0]}>
                     {/* Object3D is a component that will render the 3D model and handle all the logic for it */}
                       <Object3D
@@ -210,7 +211,7 @@ export default function Editor() {
                         setIsHoveringObject={setIsHoveringObject}
                         onDragging={setDragging}
                         onDelete={() => setIsDeleteDialogOpen(true)}
-                        onModelRefUpdate={getModelRefUpdateHandler(model.id)}
+                        onModelUpdate={getModelInstanceUpdateHandler(model.id)}
                         updateModelInformation={updateModelInformation}
                       />
                     </RigidBody>
@@ -219,7 +220,7 @@ export default function Editor() {
                     <CameraController
                       controlsRef={orbitControlsRef}
                       rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
-                      targetRef={selectedModelRef && isPopupOpen ? selectedModelRef : null}
+                      targetRef={selectedModelRef && isPopupOpen ? selectedModelRef : emptyRef}
                       resetPosition={defaultCameraPosition}
                       showSpotlight={true}
                     />
@@ -257,7 +258,7 @@ export default function Editor() {
             >
               <ObjectEditorPanel
                 rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
-                objectRef={selectedModelRef}
+                objectRef={selectedModelRef ?? emptyRef}
                 objectId={selectedId}
                 updateModelInformation={updateModelInformation}
                 onClose={() => setSelectedId(null)}

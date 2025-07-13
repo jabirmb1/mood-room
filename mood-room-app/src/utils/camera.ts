@@ -41,8 +41,8 @@ export function computeCameraTargetPositions( rigidBody: RapierRigidBody | null,
     // (e.g. looking at object from an angle)
     desiredCameraPos.addScaledVector(right, cameraXOffset);
     desiredLookAt.copy(center).addScaledVector(right, cameraXOffset);
-  } else {
-    console.log('hello world');
+  } 
+  else {
     desiredCameraPos.set(...resetPosition);
     desiredLookAt.set(0, 0, 0);
   }

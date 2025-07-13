@@ -2,9 +2,10 @@
 
 // This component is a colour button used as part of the colour wheel for the editor panel.
 import {useEffect, useRef} from 'react';
+import { MaterialColourType } from '@/types/types';
 
 type ColourButtonProps = {
-  type: 'primary' | 'secondary' | 'tertiary';// if the button relates to the primary, secondary or tertary part of model.
+  type: MaterialColourType ;// if the button relates to the primary, secondary or tertary part of model.
   isActive: boolean;// enabled/ disabled.
   isAvailable: boolean;// if the model has e.g. a tertairy part to change colour with (and this button is a teriarty type.)
   colour: string;// what colour to display.

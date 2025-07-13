@@ -1,6 +1,7 @@
 // This file contains all logic that relates to the model and how to change it.
 import * as THREE from "three";
 import { globalScale, modelMaterialNames } from "./const";
+import { MaterialColourType } from "@/types/types";
 
 // declaring types here:
 export type ColourPalette = {
@@ -57,16 +58,16 @@ export function cloneModel(scene: THREE.Object3D) {
 // This function will return an object's colour map given the reference of an object
 // a colour map just stores what colour palette an object is using and at what parts:
 //
-export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>): {
-  materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial[]>>; // current mapping of object's different parts to different colours
+export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D | null>): {
+  materialMap: Partial<Record<MaterialColourType, THREE.MeshStandardMaterial[]>>; // current mapping of object's different parts to different colours
   currentcolours: Partial<MaterialcolourMap>;// current colours that the model is using.
   initialcolours: Partial<MaterialcolourMap>; // what the default colours of the object was (e.g. before user changed them)
-  availableTypes: Set<'primary' | 'secondary' | 'tertiary'>;// if object has primary, secondary or tertiary.
+  availableTypes: Set<MaterialColourType>;// if object has primary, secondary or tertiary.
 } {
   const obj = objectRef.current;
-  const materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial[]>> = {};// using an array for each category
+  const materialMap: Partial<Record<MaterialColourType, THREE.MeshStandardMaterial[]>> = {};// using an array for each category
   // as e.g. a model may have multiple primaries that needs to be grouped together.
-  const availableTypes = new Set<'primary' | 'secondary' | 'tertiary'>();
+  const availableTypes = new Set<MaterialColourType>();
   const currentcolours: Partial<MaterialcolourMap> = {};
   const initialcolours: Partial<MaterialcolourMap> =
     (obj?.userData?.initialcolours as MaterialcolourMap) ?? {};// grab the inital model colours from the user data (if it doesn't exist, get empty array)
@@ -138,7 +139,7 @@ export function applyColourPalette(model: THREE.Object3D, colourPalette?: Colour
 // This function resets an object's colour palette.
 // it also returns the inital colours in case if it is needed
 //
-export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D>) {
+export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D | null>) {
   const object = objectRef.current;
   if (!object) return;
   // grab the inital colours from the user daata if they exist.
@@ -227,7 +228,7 @@ export function getObjectRotation(objectRef:  React.RefObject<THREE.Object3D>)
 // Returns the object's scale difference as a percentage
 // precondtion: model uses uniform scaling
 //
-export function getObjectSizeDifference(objectRef: React.RefObject<THREE.Object3D>) {
+export function getObjectSizeDifference(objectRef: React.RefObject<THREE.Object3D | null>) {
   const model = objectRef.current;
   if (model) {
     const current = model.userData.baseScale ?? model.scale.x; // fall back to scale if no base
@@ -264,7 +265,7 @@ export function centerPivot(object: THREE.Object3D) {
 // will both be turned into just primary. we pass in the name that we want to compare and also an array of valid basenames to compare with.
 // returs undefined if basename does not exist.
 //
-export function getBaseMaterialName<T extends string>(name: string, validBaseNames: T[]): T | undefined {
+export function getBaseMaterialName<T extends string>(name: string, validBaseNames: readonly T[]): T | undefined {
   const base = name.split('.')[0];
   return validBaseNames.includes(base as T) ? (base as T) : undefined;
 }

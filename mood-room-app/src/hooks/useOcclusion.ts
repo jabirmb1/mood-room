@@ -6,7 +6,7 @@ import { calculateObjectBoxSize } from '@/utils/object3D';
 /****  This hook is used to make objects between target object and camera be invisible/ trasnparent via raycasting****/
 
 type UseOcclusionTransparencyProps = {
-  targetRef: React.RefObject<THREE.Object3D>;// reference of the target object that the camera must see and not get obscured.
+  targetRef: React.RefObject<THREE.Object3D | null>;// reference of the target object that the camera must see and not get obscured.
   potentialOccluders: THREE.Object3D[];// a list of potential three js objects that can obscure the target e.g. objects; walls etc.
   opacity?: number;// if we want to make objects transparent, what opacity to set them with.
   throttleMs?: number;// throttling speed.
@@ -80,24 +80,24 @@ function findOccluderRoot(hit: THREE.Intersection, occluders: THREE.Object3D[]):
 // This function will get an object and traverse it's childrent to make it transparent; it will need to be passed a target opacity.
 //
 function makeTransparent(obj: THREE.Object3D, opacity: number): void {
-  obj.traverse((child: any) => {
-    if (child.material) {
-      const mats = Array.isArray(child.material) ? child.material : [child.material];
-      mats.forEach((mat) => {
-        if (!mat.transparent || mat.opacity !== opacity) {
+  obj.traverse((child) => {
+    if ((child as THREE.Mesh).material) {
+      const mesh = child as THREE.Mesh;
+      const materials = Array.isArray(mesh.material) ? mesh.material: [mesh.material];
+
+        materials.forEach((mat) => {
           mat.transparent = true;
           mat.opacity = opacity;
           mat.depthWrite = false;
           mat.needsUpdate = true;
-        }
-      });
+        });
     }
   });
 }
 
 // This function wil just take an object and set it's visible status to false
 function makeInvisibleFunc(obj: THREE.Object3D): void {
-  obj.traverse((child: any) => {
+  obj.traverse((child) => {
     child.visible = false;
   });
 }
@@ -106,10 +106,14 @@ function makeInvisibleFunc(obj: THREE.Object3D): void {
 // (needs to be passed a boolean of whether or not object is visible or not)
 //
 function resetObject(obj: THREE.Object3D, makeInvisible: boolean): void {
-  obj.traverse((child: any) => {
-    if (child.material && !makeInvisible) {
-      const mats = Array.isArray(child.material) ? child.material : [child.material];
-      mats.forEach((mat) => {
+  obj.traverse((child) => {
+    if ((child as THREE.Mesh).material && !makeInvisible) {
+       const mesh = child as THREE.Mesh;
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+
+      materials.forEach((mat) => {
         mat.transparent = false;
         mat.opacity = 1;
         mat.depthWrite = true;

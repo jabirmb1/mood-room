@@ -36,15 +36,16 @@ type Object3DProps = {
   updateModelInformation: (id: string, updates: Partial<Model>) => void;
   onDragging: (dragging: boolean) => void// this will just notify the parent if this object is currently being dragged or not.
   onDelete: ()=> void;// function to delete this object.
-  onModelRefUpdate?: (ref: React.RefObject<THREE.Object3D> | null) => void;// a callback to explicitly expose the object's internal modelRef to parent.
+  onModelUpdate?: (instance: THREE.Object3D | null) => void;// a callback to explicitly expose the object's internal instance to parent.
 };
 
 
 // TO DO: make position be used as default for object placement in viewer only mode so e.g. position = [num, num, num] or null(for editing)
 export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, isSelected = false, isColliding=false, editingMode = 'edit', 
-  setSelectedId, setEditingMode, setIsHoveringObject, updateModelInformation, onDragging, onDelete, onModelRefUpdate}: Object3DProps) {
+  setSelectedId, setEditingMode, setIsHoveringObject, updateModelInformation, onDragging, onDelete, onModelUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
+  const defaultRigidBodyRef = useRef<RapierRigidBody | null>(null);// in case rigid body is undefined.
 // we clone the model and also the material to make it fully independent of other models
   // (allows us to place multiple of same model if needed)
   const clonedScene = useMemo(() => {
@@ -67,7 +68,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   // add in the dragging logic:
 
 
-  const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({rigidBodyRef: rigidBodyRef ?? null, objectRef: modelRef,
+  const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, objectRef: modelRef,
     enabled: mode === "edit" && editingMode === 'move' && isSelected ,
     isHorizontalMode: isHorizontalMode,
     onStart: () => onDragging(true),
@@ -75,16 +76,16 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   });
 
   // add in movement logic:
-  useKeyboardMovement({rigidBodyRef: rigidBodyRef ?? null, modelRef: modelRef, enabled: isSelected && mode === 'edit' && editingMode === 'move',
+  useKeyboardMovement({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, modelRef: modelRef, enabled: isSelected && mode === 'edit' && editingMode === 'move',
     isHorizontalMode: isHorizontalMode});
 
   // if parent page wants the internal model ref, pass it to them.
   useEffect(() => {
-    if (modelRef.current && onModelRefUpdate) {
-      onModelRefUpdate(modelRef as React.RefObject<THREE.Object3D>);
+    if (modelRef.current && onModelUpdate) {
+      onModelUpdate(modelRef.current);
     }
     return () => {
-      if (onModelRefUpdate) onModelRefUpdate(null);
+      if (onModelUpdate) onModelUpdate(null);
     };
   }, [clonedScene, isSelected]);
 
@@ -137,9 +138,9 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   
   return (
     <>
-        {(isSelected && mode === 'edit' && editingMode === 'move') &&(
+        {(isSelected && mode === 'edit' && editingMode === 'move' && rigidBodyRef) &&(
           // default into starting with horizontal mode whenever we open the panel.
-          <ObjectFloatingPanel modelId={id} rigidBodyRef={rigidBodyRef?? null} modelRef={modelRef} onClose={() => {setSelectedId(null); 
+          <ObjectFloatingPanel modelId={id} rigidBodyRef={rigidBodyRef} modelRef={modelRef} onClose={() => {setSelectedId(null); 
               setEditingMode('edit')}} isHorizontalMode = {isHorizontalMode} setIsHorizontalMode = {setIsHorizontalMode}
                setMode={setEditingMode}  updateModelInformation = {updateModelInformation} onDelete = {onDelete}/>
         )}
