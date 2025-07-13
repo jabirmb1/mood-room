@@ -6,7 +6,7 @@
       "Furniture"
     ],
     "path": "/assets/Furniture/armchair.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Furniture/armchair.png"
   },
   {
     "name": "bed",
@@ -15,7 +15,7 @@
       "Furniture"
     ],
     "path": "/assets/Furniture/bed.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Furniture/bed.png"
   },
   {
     "name": "BookShelf",
@@ -24,7 +24,7 @@
       "Furniture"
     ],
     "path": "/assets/Furniture/BookShelf.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Furniture/BookShelf.png"
   },
   {
     "name": "BookshelfBasic",
@@ -33,7 +33,7 @@
       "Furniture"
     ],
     "path": "/assets/Furniture/BookshelfBasic.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Furniture/BookshelfBasic.png"
   },
   {
     "name": "NormTable",
@@ -42,7 +42,7 @@
       "Furniture"
     ],
     "path": "/assets/Furniture/NormTable.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Furniture/NormTable.png"
   },
   {
     "name": "sofa",
@@ -51,7 +51,7 @@
       "Furniture"
     ],
     "path": "/assets/Furniture/sofa.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Furniture/sofa.png"
   },
   {
     "name": "TVold",
@@ -60,7 +60,7 @@
       "Furniture"
     ],
     "path": "/assets/Furniture/TVold.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Furniture/TVold.png"
   },
   {
     "name": "wallart",
@@ -69,6 +69,6 @@
       "Wallart"
     ],
     "path": "/assets/Wallart/wallart.glb",
-    "thumbnail": "/placeholder-thumbnail.jpg"
+    "thumbnail": "/assets/Thumbnails/Wallart/wallart.png"
   }
 ]

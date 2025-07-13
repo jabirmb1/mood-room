@@ -32,13 +32,13 @@ function walkDir(dir, baseUrl) {
   
   for (const file of files) {
     const fullPath = path.join(dir, file);
-    const relPath = path.relative(assetsRoot, fullPath).replace(/\\/g, '/');
+    const relPath = path.relative(assetsRoot, fullPath).replace(/\\/g, '/'); // keeps relative path e.g Categories/Furniture/bed.glb
     
     if (fs.statSync(fullPath).isDirectory()) {
       items.push(...walkDir(fullPath, baseUrl + '/' + file));
     } else if (file.endsWith('.glb')) {
-      const modelPath = '/assets/' + relPath;
-      const thumbnailPath = getThumbnailPath(modelPath);
+      const modelPath = '/assets/' + relPath; // e.g /assets/Categories/Furniture/bed.glb
+      const thumbnailPath = getThumbnailPath(modelPath); // e.g /assets/Thumbnails/Categories/Furniture/bed.png
       
       const folderName = path.dirname(relPath).split(path.sep)[0];
       items.push({

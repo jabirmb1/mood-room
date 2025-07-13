@@ -1,3 +1,5 @@
+// settin g catogary based on what folder furniture in
+
 import React, { useState, useEffect } from 'react';
 import { ModelItem } from './AddModelTab';
 import { ChevronDown } from 'lucide-react';
@@ -8,7 +10,7 @@ interface FurnitureCategoryProps {
   searchValue: string;
   onSelect: (filtered: ModelItem[], category: string) => void;
 }
-// 3 categories, objects will be in correspomnding folder in public/assets/Categories
+//4 categories, objects will be in correspomnding folder in public/assets/Categories
 const CATEGORIES = [
   { key: 'All', label: 'All' },
   { key: 'Furniture', label: 'Furniture' },
@@ -17,10 +19,10 @@ const CATEGORIES = [
   { key: 'Decor', label: 'Decor' }
 ];
 
-
+// dropdown menu for categories
 export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCategoryProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [activeCategory, setActiveCategory] = useState<string>('All'); // default category
+  const [menuOpen, setMenuOpen] = useState<boolean>(false); // dropdown state
   const menuRef = React.useRef<HTMLDivElement>(null); // why we need it? because we need to close the dropdown when we click outside of it
 
 
@@ -61,6 +63,7 @@ export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCat
   return (
     <div className="flex flex-col items-center justify-center mb-4 mt-2 gap-2">
         <div className="relative inline-block text-center" ref={menuRef}>
+          {/* dropdown button */}
             <button
                 type="button"
                 className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer "
@@ -71,6 +74,7 @@ export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCat
             >
                 {activeCategory} <ChevronDown className="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />
             </button>
+            {/* dropdown menu */}
           {menuOpen && (
             <div
               className="origin-top-right absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10"

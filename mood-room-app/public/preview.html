@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GLB Preview</title>
+  <style>
+    body { margin: 0; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const modelPath = urlParams.get('model');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(512, 512);
+    document.body.appendChild(renderer.domElement);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(5, 5, 5);
+    scene.add(light);
+
+    const loader = new GLTFLoader();
+    loader.load(modelPath, (gltf) => {
+      const object = gltf.scene;
+      scene.add(object);
+
+      const box = new THREE.Box3().setFromObject(object);
+      const size = box.getSize(new THREE.Vector3()).length();
+      const center = box.getCenter(new THREE.Vector3());
+
+      camera.position.set(center.x, center.y, size);
+      camera.lookAt(center);
+
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>
