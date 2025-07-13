@@ -1,33 +1,62 @@
-import { Html } from "@react-three/drei";
-import { useThree, useFrame } from "@react-three/fiber";
-import {useEffect, useRef} from 'react';
+import { Model } from "@/types/types";
+import { Billboard, Html } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { RapierRigidBody } from "@react-three/rapier";
+import { useEffect, useState} from "react";
 import * as THREE from "three";
-
-/* This component will be used to provide the user different options and flexability when they are trying to move the object,
+/*This component will be used to provide the user different options and flexability when they are trying to move the object,
 This panel will float on top of the object when in move mode */
 
 type ObjectFloatingPanelProps = {
-  onClose: ()=> void;// function to run when closing the panel and do some clean up.
-  isHorizontalMode: boolean
-  setIsHorizontalMode: React.Dispatch<React.SetStateAction<boolean>>;
-  setMode: (mode: string) => void;
-  onDelete: ()=> void// function to delete object.
-}
+  modelId: string// id of the model that this panel is linked to.
+  rigidBodyRef:React.RefObject<RapierRigidBody | null>;// ref to object's rigid body, has objects current pos and rotation, size etc.
+  modelRef: React.RefObject<THREE.Object3D | null>; // ref of object so we know what position it is at.
+  isHorizontalMode: boolean;// whether the object is in horizontal movement mode or not.
+  onClose: () => void;// function to run once this panel closes.
+  setIsHorizontalMode: React.Dispatch<React.SetStateAction<boolean>>;// a function to toggle between horizontal and vertical movement modes.
+  setMode: (mode: 'edit' | 'move') => void;// a function to change the editing mode of the object.
+  updateModelInformation: (id: string, updates: Partial<Model>) => void;
+  onDelete: () => void;// function to delete object
+};
 
-export function ObjectFloatingPanel({onClose, isHorizontalMode, setIsHorizontalMode, setMode, onDelete} : ObjectFloatingPanelProps )
-{
-  // we want the floating panel to always face camera to give it a 2-d hud feel, to do this we will manually rotate the panel
-  // to always be perpendicular to the camera's face.
-  const groupRef = useRef<THREE.Group>(null)
-  const {camera} = useThree()// get current camera from the canavas.
-
-  // On every frame, update group's quaternion to match camera's, so it faces exactly the camera (no depth)
+export function ObjectFloatingPanel({modelId,  rigidBodyRef, modelRef,  isHorizontalMode,  onClose,  setIsHorizontalMode, setMode, updateModelInformation, onDelete,}: ObjectFloatingPanelProps) {
+  const [floatingPos, setFloatingPos] = useState(new THREE.Vector3());
+  
+  // always put panel above the object.
   useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.quaternion.copy(camera.quaternion);
+    const model = modelRef.current;
+    if (model) {
+      setFloatingPos(model.position.clone().add(new THREE.Vector3(0, 2, 0)));
     }
   });
+  // On unmount, update model with the final position data
+   useEffect(() => {
+     return () => {
+       const object = modelRef.current;
+       if (!object) return;
+        // using rigid body for most accurate and up to date object pos.
+         const rigid = rigidBodyRef?.current;
 
+         // Add null checks and error handling
+         let position = { x: 0, y: 0, z: 0 };
+         
+         if (rigid && rigid.translation) {
+           // Safely get position from rigid body
+           const translation = rigid.translation();
+           position = { x: translation.x, y: translation.y, z: translation.z };
+         } 
+         else {
+           // Fallback to object transform if rigid body is unavailable
+           position = object.position;
+         }
+
+        // update model
+         updateModelInformation(modelId, {
+           position: [position.x, position.y, position.z], });
+       };
+   }, [modelRef, rigidBodyRef, modelId, updateModelInformation]);
+  
+  
   // clean up useEffect to make sure that when we first see the floating panel, it defaults into horizontal movement.
   useEffect(() => {
     return () => {
@@ -36,25 +65,21 @@ export function ObjectFloatingPanel({onClose, isHorizontalMode, setIsHorizontalM
   }, [setIsHorizontalMode]);
 
   return (
-    <>
-      <group ref={groupRef} position={[0, 1.2, 0]}>
+    //  use drei's billbaord to make the panel always follow the camera ans act as a 2-d hud on top of object 
+    <Billboard position={floatingPos}  lockX={false} lockY={false}  lockZ={false}>
         {/* using Html so we can create a floating bar on top of object when in move mode */}
-        <Html position={[0, 1.2, 0]} center distanceFactor={8} transform>
-          <aside className="bg-white p-2 rounded shadow flex gap-2">
-              <button onClick={() => setMode("edit")}>Edit</button>{/* if we set the mode into 'edit' then we can open editor menu */}
-
-              {/* This button just allows the user to move the model vertically or horizontally*/}
-              <button onClick={() => setIsHorizontalMode(prev => !prev)}>
-              {isHorizontalMode ? "Move Vertically" : "Move Horizontally"}
-            </button>
-            
-            <button onClick={onClose}>Close</button>
-
+      <Html center distanceFactor={8} transform>
+        <aside className="bg-white p-2 rounded shadow flex gap-2">
+          <button onClick={() => setMode("edit")}>Edit</button>{/* if we set the mode into 'edit' then we can open editor menu */}
+            {/* This button just allows the user to move the model vertically or horizontally*/}
+          <button onClick={() => setIsHorizontalMode((prev) => !prev)}>
+            {isHorizontalMode ? "Move Vertically" : "Move Horizontally"}
+          </button>
+          <button onClick={onClose}>Close</button>
             {/* button to delete object */}
-            <button onClick = {onDelete}>Delete</button>
-          </aside>
-        </Html>
-      </group>
-    </>
+          <button onClick={onDelete}>Delete</button>
+        </aside>
+      </Html>
+    </Billboard>
   );
 }

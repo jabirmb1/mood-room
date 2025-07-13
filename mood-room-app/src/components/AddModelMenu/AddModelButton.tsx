@@ -3,10 +3,10 @@ import { AddModelTab, ModelItem } from "./AddModelTab";
 
 /****** This button is used to add in models into the canvas **************/
 interface AddModelButtonProps {
-  show: boolean;
-  className?: string;
-  toggle: () => void;
-  onAddModel: (model: Omit<ModelItem, 'thumbnail'>) => void;
+  show: boolean;// should the button show up or not.
+  className?: string;// used for css.
+  toggle: () => void;// what to do when it is clicked.
+  onAddModel: (model: Omit<ModelItem, 'thumbnail'>) => void;// function to add a model to the scene.
 }
 
 export function AddModelButton({ show, className = '', toggle, onAddModel }: AddModelButtonProps) {

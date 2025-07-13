@@ -6,8 +6,10 @@ import * as THREE from 'three';
 import { getObjectMaterialMap, resetColourPalette} from '../../utils/object3D'
 import { ColourPickerControl } from '../ColourPickerControl';
 import './colourPicker.css';
+import { MaterialColourType } from '@/types/types';
+import { modelMaterialNames } from '@/utils/const';
 type ColourWheelProps = {
-  objectRef: React.RefObject<THREE.Object3D>; // reference of the object that this colour wheel is linked to.
+  objectRef: React.RefObject<THREE.Object3D | null>; // reference of the object that this colour wheel is linked to.
 };
 
 type MaterialcolourMap = {
@@ -17,13 +19,13 @@ type MaterialcolourMap = {
 };
 
 export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
-  const [activeColourType, setActiveColourType] = useState<'primary' | 'secondary' | 'tertiary'>('primary');
+  const [activeColourType, setActiveColourType] = useState<MaterialColourType>('primary');
 
-  const [colours, setColours] = useState<MaterialcolourMap|null>(null);// colour that the current material has on.
+  const [colours, setColours] = useState<Partial<MaterialcolourMap>|null>(null);// colour that the current material has on.
   const [colourText, setColourText] = useState<string>('');;// a text string that just says what current colour is.
 
-  const [materialMap, setMaterialMap] = useState<Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>>>({});
-  const [availableTypes, setAvailableTypes] = useState<Set<'primary' | 'secondary' | 'tertiary'>>(new Set());
+  const [materialMap, setMaterialMap] = useState<Partial<Record<MaterialColourType, THREE.MeshStandardMaterial[]>>>({});
+  const [availableTypes, setAvailableTypes] = useState<Set<MaterialColourType>>(new Set());
 
   // going through and travering the object figuring out which colours and parts does it have.
   useEffect(() => {
@@ -36,25 +38,33 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
     setColours(currentcolours);
 
     // Default to first available type
-    const firstAvailable = ['primary', 'secondary', 'tertiary'].find((type) => availableTypes.has(type));
+    const firstAvailable = (modelMaterialNames).find(
+      (type): type is MaterialColourType => availableTypes.has(type)
+    );
+    
     if (firstAvailable) {
       setActiveColourType(firstAvailable);
-      setColourText(currentcolours[firstAvailable])// initialise text input
-    }
+      setColourText(currentcolours[firstAvailable] ?? ''); // initialise the text input.
+    }    
   }, [objectRef]);
 
   // Apply colour to active material whenever it changes
   useEffect(() => {
-    const mat = materialMap[activeColourType];
-    if (mat) {
-      mat.color.set(colours[activeColourType]);
+    const mats = materialMap[activeColourType];
+    const newColour = colours?.[activeColourType];
+  
+    if (mats && newColour) {
+      for (const mat of mats) {// go through all e.g. 'primary' materials and give them the same colour
+        mat.color.set(newColour);
+        mat.needsUpdate = true;
+      }
     }
   }, [colours, activeColourType, materialMap]);
 
   // syncup the colour text to the current colour:
   useEffect(() => {
     if (colours) {
-      setColourText(colours[activeColourType]);
+      setColourText(colours[activeColourType] ?? '');
     }
   }, [activeColourType, colours]);
 
@@ -71,13 +81,13 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
 
         {/* colour buttons with labels */}
         <div  className="flex gap-4 mb-4">
-        {(['primary', 'secondary', 'tertiary'] as const).map((type) => (
+        {(modelMaterialNames).map((type) => (
           <ColourButton
             key={type}
             type={type}
             isActive={activeColourType === type}
             isAvailable={availableTypes.has(type)}
-            colour={colours[type]}
+            colour={colours[type] ?? 'transparent'}
             onClick={() => availableTypes.has(type) && setActiveColourType(type)}
           />
         ))}
@@ -90,7 +100,7 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
           <>
             <div className = "colour-picker-wrapper">
             <ColourPickerControl
-                value={colours[activeColourType]}
+                value={colours[activeColourType] ?? 'transparent'}
                 onChange={(newColour) => {
                   setColours((prev) => ({ ...prev, [activeColourType]: newColour }));
                 }}

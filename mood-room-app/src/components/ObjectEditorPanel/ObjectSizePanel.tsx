@@ -6,12 +6,13 @@ import { HorizontalSlider } from "../HorizontalSlider";
 import { getObjectSizeDifference } from "@/utils/object3D";
 import { globalScale } from "@/utils/const";
 
+/************** This panel will be used to change an object's size via buttons and a slider */
 type ObjectScalePanelProps = {
-  objectRef: React.RefObject<THREE.Object3D>;
-  objectId: string;
+  objectRef: React.RefObject<THREE.Object3D | null>;// reference of the object that will change in size.
+  objectId: string;// id of the object that will change in size.
 };
 
-export function ObjectSizePanel({ objectRef, objectId }: ObjectScalePanelProps) {
+export function ObjectSizePanel({ objectRef, objectId}: ObjectScalePanelProps) {
   const [sizePercentage, setSizePercentage] = useState(() => getObjectSizeDifference(objectRef));
 
   // Update slider value when objectId changes (so that it can link up to the new object)

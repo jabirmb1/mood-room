@@ -23,7 +23,7 @@ interface AddModelTabProps {
   onAddModel: (model: Omit<ModelItem, 'position'>) => void;
 }
 
-// displays models in a grid with search and category filters
+
 export function AddModelTab({ onAddModel }: AddModelTabProps) {
   const [modelItems, setModelItems] = useState<ModelItem[]>([]); // all models
   const [searchValue, setSearchValue] = useState<string>(''); // search value

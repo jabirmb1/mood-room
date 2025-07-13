@@ -1,33 +1,30 @@
 'use client'
 // This componentn will handle all the UI buttons sliders that can affect an object's rotation.
 import { useEffect, useState } from "react";
-import * as THREE from "three";
 import { HorizontalSlider } from "../HorizontalSlider"; 
-import { getObjectRotation } from "@/utils/object3D";
-import {normaliseDegrees} from "@/utils/rotation";
+import {getRigidBodyRotation, normaliseDegrees, setRigidBodyRotation} from "@/utils/rotation";
+import { RapierRigidBody } from "@react-three/rapier";
 
 type RotateComponentProps = {
-  objectRef: React.RefObject<THREE.Object3D>;// reference of the object that it is rotating
+  rigidBodyRef: React.RefObject<RapierRigidBody | null>, // reference of the rigid body of the object that we are rotating.
   objectId: string;// id of the object that it is rotating.
 };
 
-export function ObjectRotationPanel({ objectRef, objectId }: RotateComponentProps) {
-  const [rotation, setRotation] = useState(() => getObjectRotation(objectRef))// intialise the rotation to object's
+export function ObjectRotationPanel({ rigidBodyRef, objectId }: RotateComponentProps) {
+  const [rotation, setRotation] = useState(() => getRigidBodyRotation(rigidBodyRef).y);// intialise the rotation to object's
   // current rotation.
 
-  // Sync initial rotation from object on objectId change
-  useEffect(() => {
-    const model = objectRef.current;
-    if (model) {
-      setRotation(THREE.MathUtils.radToDeg(model.rotation.y));
-    }
+   // Sync initial rotation when objectId changes
+   useEffect(() => {
+    if (!rigidBodyRef.current) return;
+   setRotation(()=> getRigidBodyRotation(rigidBodyRef).y); // get the current rotation of the rigid body
   }, [objectId]);
 
-  // Apply rotation to model
+  // Apply rotation to rigid body whenever user changes the slider or clicks rotate buttons
   useEffect(() => {
-    const model = objectRef.current;
-    if (model) {
-      model.rotation.y = THREE.MathUtils.degToRad(rotation);
+    const body = rigidBodyRef.current;
+    if (body) {
+      setRigidBodyRotation(body, { y: rotation }); // apply the rotation to the rigid body
     }
   }, [rotation]);
 

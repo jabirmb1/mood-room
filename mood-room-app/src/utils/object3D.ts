@@ -1,6 +1,7 @@
 // This file contains all logic that relates to the model and how to change it.
 import * as THREE from "three";
 import { globalScale, modelMaterialNames } from "./const";
+import { MaterialColourType } from "@/types/types";
 
 // declaring types here:
 export type ColourPalette = {
@@ -14,6 +15,12 @@ type MaterialcolourMap = {
   secondary?: string;
   tertiary?: string;
 }
+
+// each model tag inside json folders must be in this format.
+export type ModelTags = {
+  addTags?: string[];
+  removeTags?: string[];
+};
 
 // This function fully clones a model including its material.
 //
@@ -51,26 +58,27 @@ export function cloneModel(scene: THREE.Object3D) {
 // This function will return an object's colour map given the reference of an object
 // a colour map just stores what colour palette an object is using and at what parts:
 //
-export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>): {
-  materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>>; // current mapping of object's different parts to different colours
+export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D | null>): {
+  materialMap: Partial<Record<MaterialColourType, THREE.MeshStandardMaterial[]>>; // current mapping of object's different parts to different colours
   currentcolours: Partial<MaterialcolourMap>;// current colours that the model is using.
   initialcolours: Partial<MaterialcolourMap>; // what the default colours of the object was (e.g. before user changed them)
-  availableTypes: Set<'primary' | 'secondary' | 'tertiary'>; // if object has primary, secondary or tertiary.
+  availableTypes: Set<MaterialColourType>;// if object has primary, secondary or tertiary.
 } {
   const obj = objectRef.current;
-  const materialMap: Partial<Record<'primary' | 'secondary' | 'tertiary', THREE.MeshStandardMaterial>> = {};
-  const availableTypes = new Set<'primary' | 'secondary' | 'tertiary'>();
+  const materialMap: Partial<Record<MaterialColourType, THREE.MeshStandardMaterial[]>> = {};// using an array for each category
+  // as e.g. a model may have multiple primaries that needs to be grouped together.
+  const availableTypes = new Set<MaterialColourType>();
   const currentcolours: Partial<MaterialcolourMap> = {};
   const initialcolours: Partial<MaterialcolourMap> =
-  (obj?.userData?.initialcolours as MaterialcolourMap) ?? {};// grab the inital model colours from the user data (if it doesn't exist, get empty array)
-  if (!obj) return { materialMap,currentcolours, initialcolours, availableTypes };
+    (obj?.userData?.initialcolours as MaterialcolourMap) ?? {};// grab the inital model colours from the user data (if it doesn't exist, get empty array)
+  if (!obj) return { materialMap, currentcolours, initialcolours, availableTypes };
 
   // check for cached meshes first (e.g. if model was cloned and stored cache)
   const meshes: THREE.Mesh[] = (obj as any).meshesWithMaterials ?? [];
 
   const targets = meshes.length > 0 ? meshes : [];
 
-  // fallback: traverse if no cache exists
+   // fallback: traverse if no cache exists
   if (targets.length === 0) {
     obj.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -79,14 +87,18 @@ export function getObjectMaterialMap(objectRef: React.RefObject<THREE.Object3D>)
     });
   }
 
-  // collect materials and their colours
+   // collect materials and their colours
   for (const mesh of targets) {
     const material = mesh.material as THREE.MeshStandardMaterial;
     if (!material) continue;
 
     const baseName = getBaseMaterialName(material.name, modelMaterialNames);
     if (baseName) {
-      materialMap[baseName] = material;
+      if (!materialMap[baseName]) {
+        materialMap[baseName] = [];
+      }
+      
+      materialMap[baseName]!.push(material);
       availableTypes.add(baseName);
       currentcolours[baseName] = `#${material.color.getHexString()}`;
     }
@@ -112,12 +124,14 @@ export function applyColourPalette(model: THREE.Object3D, colourPalette?: Colour
   // use material map utility to avoid redundant traversal
   const { materialMap } = getObjectMaterialMap({ current: model });
 
-  Object.entries(materialMap).forEach(([type, material]) => {
+  Object.entries(materialMap).forEach(([type, materials]) => {
     const key = type as keyof MaterialcolourMap;
     const colour = materialcolourMap[key];
-    if (colour) {
-      material.color.set(colour);
-      material.needsUpdate = true;
+    if (colour && materials) {
+      for (const mat of materials) {
+        mat.color.set(colour);
+        mat.needsUpdate = true;
+      }
     }
   });
 }
@@ -125,7 +139,7 @@ export function applyColourPalette(model: THREE.Object3D, colourPalette?: Colour
 // This function resets an object's colour palette.
 // it also returns the inital colours in case if it is needed
 //
-export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D>) {
+export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D | null>) {
   const object = objectRef.current;
   if (!object) return;
   // grab the inital colours from the user daata if they exist.
@@ -133,13 +147,17 @@ export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D>) {
   const { materialMap } = getObjectMaterialMap(objectRef);
 
   // go through all existing editable components and change their colour.
-  Object.entries(materialMap).forEach(([type, material]) => {
+  Object.entries(materialMap).forEach(([type, materials]) => {
     const key = type as keyof MaterialcolourMap;
-    if (initialcolours[key]) {
-      material.color.set(initialcolours[key]!);
-      material.needsUpdate = true;
+    const initialColour = initialcolours[key];
+    if (initialColour && materials) {
+      for (const mat of materials) {
+        mat.color.set(initialColour);
+        mat.needsUpdate = true;
+      }
     }
   });
+  
   return initialcolours;
 }
 
@@ -183,19 +201,6 @@ export function applyHoverEffect(
       }
   }
 
-// This function will be used to move the object from the current position (an alternative to just dragging e.g. keyboard presses)
-// UI buttons etc
-//
-export function moveObject(ref: React.RefObject<THREE.Object3D>, newPos: [number, number, number],  onChange: (newPos: [number, number, number]) => void)
-{
-  if (!ref.current) return;
-
-  const pos = ref.current.position;
-  pos.set(pos.x + newPos[0], pos.y + newPos[1], pos.z + newPos[2]);
-  onChange([pos.x, pos.y, pos.z]);// pass the change up to parent component for rerender.
-}
-
-
 
 // This function calculates the bounding box and maximum dimension of a 3D object.
 //
@@ -223,7 +228,7 @@ export function getObjectRotation(objectRef:  React.RefObject<THREE.Object3D>)
 // Returns the object's scale difference as a percentage
 // precondtion: model uses uniform scaling
 //
-export function getObjectSizeDifference(objectRef: React.RefObject<THREE.Object3D>) {
+export function getObjectSizeDifference(objectRef: React.RefObject<THREE.Object3D | null>) {
   const model = objectRef.current;
   if (model) {
     const current = model.userData.baseScale ?? model.scale.x; // fall back to scale if no base
@@ -236,19 +241,18 @@ export function getObjectSizeDifference(objectRef: React.RefObject<THREE.Object3
 }
 
 
-// This function will just center the pivot of an object horizontally so that it can be rotated as expected.
+// This function will just center the pivot of an object in all axis(gives consistent rotation and collision)
 // it retuns a new group with the model centered.
 //
-export function centerPivotHorizontal(object: THREE.Object3D) {
+export function centerPivot(object: THREE.Object3D) {
   // get bounding box and center the pivot based on that bounding box.
   const box = new THREE.Box3().setFromObject(object);
   const center = new THREE.Vector3();
   const pivotGroup = new THREE.Group();
   box.getCenter(center);
 
-  // Shift horizontally only (X and Z), leave Y unchanged
-  const centerXZ = new THREE.Vector3(center.x, 0, center.z);
-  object.position.sub(centerXZ);
+  // Center the pivot group at the center of the bounding box
+  object.position.sub(center);
   pivotGroup.add(object);
   // Deep copy userData from the object to the pivot group
   // (assuming userData is a simple object without functions or circular references)
@@ -261,8 +265,61 @@ export function centerPivotHorizontal(object: THREE.Object3D) {
 // will both be turned into just primary. we pass in the name that we want to compare and also an array of valid basenames to compare with.
 // returs undefined if basename does not exist.
 //
-export function getBaseMaterialName<T extends string>(name: string, validBaseNames: T[]): T | undefined {
+export function getBaseMaterialName<T extends string>(name: string, validBaseNames: readonly T[]): T | undefined {
   const base = name.split('.')[0];
   return validBaseNames.includes(base as T) ? (base as T) : undefined;
 }
 
+
+// This function will determine of which folder the model lies in e.g. furniture, decor, lighting etc
+// and then apply some tags to the user data; this is because different categories of models behaves differently
+//
+export async function applyCategoryTags(url: string, object: THREE.Object3D) {
+  object.userData.tags = object.userData.tags || [];
+
+  const lowerUrl = url.toLowerCase();
+
+  // Folder-based default tags
+  if (lowerUrl.includes('lights')) {
+    object.userData.tags.push('light');
+    object.userData.tags.push('decor');
+  } else if (lowerUrl.includes('furniture')) {
+    object.userData.tags.push('furniture');
+  } else if (lowerUrl.includes('decor')) {
+    object.userData.tags.push('decor');
+  } else if (lowerUrl.includes('wall-art')) {
+    object.userData.tags.push('wall-art');
+  }
+
+    // Check if model is inside its own subfolder
+    const match = url.match(/([^/]+)\/\1\.glb$/i); // matches furniture/bed3/bed3.glb
+    if (!match) return; // skip meta load if not in dedicated folder
+  
+    const jsonUrl = url.replace(/\.glb$/i, '.meta.json');
+  
+
+  // Now try to fetch a matching JSON metadata file
+  try {
+    const response = await fetch(jsonUrl);
+    if (response.ok) {
+      const meta: ModelTags = await response.json();
+
+      const currentTags = new Set(object.userData.tags);
+
+      // Apply additions
+      if (Array.isArray(meta.addTags)) {
+        for (const tag of meta.addTags) currentTags.add(tag);
+      }
+
+      // Apply removals
+      if (Array.isArray(meta.removeTags)) {
+        for (const tag of meta.removeTags) currentTags.delete(tag);
+      }
+
+      object.userData.tags = Array.from(currentTags);
+    }
+  } catch (err) {
+    // Failing to load meta.json is okay — not all models need it
+    console.warn(`[Meta Tags] No meta.json found or failed for ${url}`);
+  }
+}
