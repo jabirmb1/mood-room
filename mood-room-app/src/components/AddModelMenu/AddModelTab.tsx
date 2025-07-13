@@ -1,14 +1,10 @@
 // adding new furniture tab
-
-
 'use client';
-
 
 import { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
 import { FurnitureCategory } from './FurnitureCategory';
 import { ModelThumbnail } from "./ModelThumbnail";
-//import { ModelThumbnail } from "./ModelThumbnail";
 
 
 // used to define shape and properties of furniture
@@ -27,12 +23,13 @@ interface AddModelTabProps {
   onAddModel: (model: Omit<ModelItem, 'position'>) => void;
 }
 
-
+// displays models in a grid with search and category filters
 export function AddModelTab({ onAddModel }: AddModelTabProps) {
-  const [modelItems, setModelItems] = useState<ModelItem[]>([]);
-  const [searchValue, setSearchValue] = useState<string>('');
-  const [filteredItems, setFilteredItems] = useState<ModelItem[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [modelItems, setModelItems] = useState<ModelItem[]>([]); // all models
+  const [searchValue, setSearchValue] = useState<string>(''); // search value
+  const [filteredItems, setFilteredItems] = useState<ModelItem[]>([]); // filtered models
+  const [activeCategory, setActiveCategory] = useState<string>('all'); // active category
+  const [hoveredModel, setHoveredModel] = useState<string | null>(null); // hovered model
 
 
   // Fetch manifest for assets
@@ -70,15 +67,9 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
     setFilteredItems(filtered);
   }, [searchValue, activeCategory, modelItems]);
 
-
-
-
-
-
   return (
     <section className="flex flex-col rounded-lg h-[65vh]"> {/* h can be chamngerd depending on the canvas*/}
       <h1 className="text-xl font-bold text-center mb-3 mt-4">Add More Furniture</h1>
-
 
       {/*Search button by name*/}
       <input
@@ -98,7 +89,6 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
           setActiveCategory(category);
         }}
       />
-
 
       {/* Filter items based on search */}
       <div className="flex-1 overflow-y-auto p-2 ">
@@ -128,12 +118,17 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
                   damping: 10
                 }}
               >
-               
+                {/* thumbnail */}
                   <div className="aspect-square relative ">
-                  <ModelThumbnail path={item.path} name={item.name} thumbnail={item.thumbnail} />
-
-
+                  <ModelThumbnail
+                   path={item.path} 
+                   name={item.name} 
+                   thumbnail={item.thumbnail} 
+                   hoveredModel={hoveredModel }
+                   setHoveredModel={setHoveredModel}/>
                   </div>
+
+                {/* name */}
                   <div className="p-2">
                     <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
                   </div>

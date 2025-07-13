@@ -1,114 +1,131 @@
-// decides what the thumbnail is for a model
-// access from assetsManifest.json file the path to the thumbnail and object
-// 3d when hover and static when not hovered
-
+// stes model thumbnail depending on hover or not
 
 'use client';
 
-import { useState, useRef, Suspense, useEffect } from 'react';
+import { useState, useRef, Suspense, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
-import { div } from 'framer-motion/client';
-import { SharedCanvas } from './SharedCanvas';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { useInView } from 'react-intersection-observer';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 interface ModelThumbnailProps {
-  path: string;             // path to .glb
+  path: string;    // path to .glb
   name: string;
-  thumbnail: string;   // path to .png/.jpg
-}
+  thumbnail: string; // path to .png/.jpg
+  hoveredModel: string | null;
+  setHoveredModel: (model: string | null) => void;
+  }
 
-
-// displaye 3d object when we hover
-export function ModelPreview({ path, isHovered }: { path: string; isHovered: boolean }) {
+// display 3D object when we hover
+export function ModelPreview({gltf,isHovered}: {gltf: { scene: THREE.Group },isHovered: boolean}) {
   const group = useRef<THREE.Group>(null);
-  console.log("Path being passed:", path);
+  const scene = useMemo(() => gltf.scene.clone(), [gltf]); // clone the scene to avoid mutation since we are moving the group
+  console.log("Path being passed:", gltf.scene); // remove
 
-  const { scene } = useGLTF(path); // what this does is load the 3d model from the path
+  useEffect(() => {
+    const box = new THREE.Box3().setFromObject(scene); // can be adjusted when we have proper models
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
 
-  // simple auto-rotate when hovered
+    // move parent group to center the model
+    if (group.current) {
+      group.current.position.set(-center.x, -center.y, -center.z);
+    }
+
+    scene.scale.setScalar(1.5 / maxDim);
+  }, [scene]);
+
+  // rotate the model
   useFrame(() => {
     if (group.current && isHovered) {
-      group.current.rotation.y += 0.005;
+      group.current.rotation.y += 0.01;
+      console.log("Rotating…"); // REMOVE
+      console.log("isHovered?", isHovered);
+      console.log("group.current?", group.current);
     }
   });
 
-   // Center and scale model once after it's loaded
-   useEffect(() => {
-    if (scene) {
-      // Compute bounding box
-      const box = new THREE.Box3().setFromObject(scene);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      scene.position.set(-center.x, -center.y, -center.z);
-      scene.scale.setScalar(1.5 / maxDim);
-    }
-  }, [scene]);
-
-  return <primitive object={scene} ref={group} />;
+  // return the group with the model inside it
+  return (
+    <group ref={group}>
+      <primitive object={scene} />
+    </group>
+  );
 }
 
-// display static image and 3d object when we hover
-export function ModelThumbnail({ path, name, thumbnail }: ModelThumbnailProps) {
-  const [hoveredModel, setHoveredModel] = useState<{
-    path: string;
-    id: string;
-  } | null>(null);
+// display static image and 3D object when we hover
+export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHoveredModel }: ModelThumbnailProps) {
 
-  const imgSrc = thumbnail || path.replace(/\.glb$/, '.png');
+  const gltf = useLoader(GLTFLoader, path) as { scene: THREE.Group }; // load the model
 
-  const [isHovered, setIsHovered] = useState(false);
+  const imgSrc = thumbnail || path.replace(/\.glb$/, '.png'); // load the thumbnail
 
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hoverActive = useRef(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); 
 
-  // what happens when mouse enters the thumbnail
-  const handleMouseEnter = (model: { path: string; id: string }) => {
-    hoverActive.current = true;
+  const isHovered = hoveredModel === name; // check if the model is hovered
+
+  const { ref: group, inView } = useInView({ // check if the model is in view so we diplay for performance purposes
+    threshold: 0.1, // 10% of the model needs to be in view
+  });
+
+  const handleMouseEnter = () => {
     hoverTimeoutRef.current = setTimeout(() => {
-      if (hoverActive.current) {
-        setHoveredModel(model); // only set after 2 seconds
-        console.log("Model being hovered:", model);
-        setIsHovered(true);
-      }
-    }, 2000);
+      setHoveredModel(name);
+    }, 2000); // delay to ensure on purpose hover
   };
-  
-  // what happens when mouse leaves the thumbnail
+
   const handleMouseLeave = () => {
-    hoverActive.current = false;
-    if (hoverTimeoutRef.current !== null) {
+    if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
-    setHoveredModel(null); // reset immediately
-    setIsHovered(false);
+    setHoveredModel(null); // reset the hovered model when hop off
   };
 
   return (
     <div
-      className="relative w-full h-[30vh] w-[30vh] bg-gray-100 rounded overflow-hidden"
-      onMouseEnter={() => handleMouseEnter({ path, id: name })}
+      ref={group}
+      className="relative w-[100%] h-[100%] bg-gray-100 rounded overflow-hidden"
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {/* static image */}
-      {!isHovered && (
+      {!isHovered && inView && (
         <img
           src={imgSrc}
           alt={name}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${hoveredModel?.id === name ? 'opacity-0' : 'opacity-100'}`}
+          className="w-full h-full object-cover transition-opacity duration-300"
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = '/placeholder-thumbnail.jpg';
           }}
-        />  
+        />
       )}
+
       {/* 3D preview */}
-      {hoveredModel && isHovered &&  (
-       <SharedCanvas path={hoveredModel.path} isVisible={isHovered} position={{ top: 0, left: 0 }} />
+      {isHovered && inView && (
+        <div className="absolute inset-0">
+          <Suspense
+            fallback={ // for time due to loading
+              <div className="w-full h-full flex items-center justify-center">
+                Loading…
+              </div>
+            }
+          >
+            <Canvas
+              style={{ width: '100%', height: '100%' }}
+              camera={{ position: [0, 0, 5], fov: 50 }}
+              gl={{ antialias: true, alpha: true }}
+              frameloop="always" // always update the canvas ie rotation
+            >
+              <ambientLight intensity={0.5} />
+              <directionalLight position={[2, 2, 2]} intensity={1} />
+              <ModelPreview gltf={gltf} isHovered={isHovered} /> {/* display the model */}
+            </Canvas>
+          </Suspense>
+        </div>
       )}
     </div>
   );
 }
-
