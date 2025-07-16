@@ -3,7 +3,6 @@
 
 
 <!-- more reliable for pupeteer since it doesn't use modules or affect ES6 modules -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,46 +45,6 @@
       window.modelRendered = true;// signal to puppeteer that the model has been rendered
     });
     console.log('Model rendered:', window.modelRendered, modelUrl);
-
-    const modelRendered = false;
-    while (!modelRendered) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
   </script>
 </body>
 </html>
-
-
-<!-- 
-//less reliable for pupeteer since it uses modules
-// works withput dependency injection -->
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Preview</title>
-</head>
-<body>
-  <script type="module">
-    import * as THREE from 'https://cdn.skypack.dev/three@0.128.0';
-    import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.128.0/examples/jsm/loaders/GLTFLoader.js';
-    
-    const params = new URLSearchParams(window.location.search);
-    const category = params.get('category');
-    const file = params.get('file');
-    
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(512, 512);
-    document.body.appendChild(renderer.domElement);
-    
-    const loader = new GLTFLoader();
-    loader.load(`./assets/${category}/${file}`, (gltf) => {
-      scene.add(gltf.scene);
-      camera.position.z = 2;
-      renderer.render(scene, camera);
-    });
-  </script>
-</body>
-</html> -->
