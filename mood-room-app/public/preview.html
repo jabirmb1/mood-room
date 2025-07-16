@@ -1,45 +1,91 @@
+<!-- This uses pupetter a headless browser tto generate the model on a canvas which will be used 
+ by node code to take a screenshot for automated thumbnails -->
+
+
+<!-- more reliable for pupeteer since it doesn't use modules or affect ES6 modules -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>GLB Preview</title>
-  <style>
-    body { margin: 0; }
-    canvas { display: block; }
-  </style>
+  <title>Preview</title>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  
+  <script>
+ 
+    const scene = new THREE.Scene(); // create canvas
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000); // create camera
+    const renderer = new THREE.WebGLRenderer({ antialias: true }); // create renderer
+    renderer.setSize(512, 512); // set size
+    renderer.setClearColor("white"); // set background color
+    document.body.appendChild(renderer.domElement); // add renderer to dom
+
+    // LIGTHING
+    // Added ambient light for base illumination
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Soft white light
+    scene.add(ambientLight);
+    // Added a directional light for highlights and shading
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7.5);
+    scene.add(directionalLight);
+  
+    
+    const params = new URLSearchParams(window.location.search); // get query params
+    const modelUrl = params.get('model'); // get model url
+    const loader = new THREE.GLTFLoader(); // create loader
+    console.log('Trying to load model:', modelUrl);
+    loader.load(modelUrl, (gltf) => {
+      //model position
+      gltf.scene.position.set(0, 0, 0);// set model position
+      scene.add(gltf.scene);
+      camera.position.z = 2;// set camera position
+      renderer.render(scene, camera);
+      window.modelRendered = true;// signal to puppeteer that the model has been rendered
+    });
+    console.log('Model rendered:', window.modelRendered, modelUrl);
+
+    const modelRendered = false;
+    while (!modelRendered) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  </script>
+</body>
+</html>
+
+
+<!-- 
+//less reliable for pupeteer since it uses modules
+// works withput dependency injection -->
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Preview</title>
 </head>
 <body>
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const modelPath = urlParams.get('model');
-
+    import * as THREE from 'https://cdn.skypack.dev/three@0.128.0';
+    import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.128.0/examples/jsm/loaders/GLTFLoader.js';
+    
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get('category');
+    const file = params.get('file');
+    
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(512, 512);
     document.body.appendChild(renderer.domElement);
-
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
-    scene.add(light);
-
+    
     const loader = new GLTFLoader();
-    loader.load(modelPath, (gltf) => {
-      const object = gltf.scene;
-      scene.add(object);
-
-      const box = new THREE.Box3().setFromObject(object);
-      const size = box.getSize(new THREE.Vector3()).length();
-      const center = box.getCenter(new THREE.Vector3());
-
-      camera.position.set(center.x, center.y, size);
-      camera.lookAt(center);
-
+    loader.load(`./assets/${category}/${file}`, (gltf) => {
+      scene.add(gltf.scene);
+      camera.position.z = 2;
       renderer.render(scene, camera);
     });
   </script>
 </body>
-</html>
+</html> -->

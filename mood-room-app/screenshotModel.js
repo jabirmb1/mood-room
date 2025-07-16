@@ -1,4 +1,5 @@
-// generateThumbnail.js
+// Code is used to take screenshots of models in the mood room
+//
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
@@ -6,6 +7,7 @@ const puppeteer = require('puppeteer');
 const assetsRoot = path.join(__dirname, 'public', 'assets');
 const thumbnailsRoot = path.join(assetsRoot, 'Thumbnails');
 
+// generate thumbnail on preview.html
 async function generateThumbnail(browser, modelPath, thumbnailPath) {
   const page = await browser.newPage();
   const relativeModelPath = modelPath.replace(path.join(__dirname, 'public'), '').replace(/\\/g, '/');
@@ -15,12 +17,20 @@ async function generateThumbnail(browser, modelPath, thumbnailPath) {
 
   await page.goto(url);
   await new Promise(resolve => setTimeout(resolve, 2000));
-// Give time to render
 
-  await page.screenshot({ path: thumbnailPath });
+  // position and dimensions of the model and canvas
+  await page.screenshot({ 
+    path: thumbnailPath,
+  clip: {
+    x: 0,
+    y: 0,
+    width: 512,
+    height: 512
+  } });
   await page.close();
 }
 
+// walk through models directory and generate thumbnails
 function walkModels(dir) {
   let results = [];
   const files = fs.readdirSync(dir);
@@ -36,7 +46,7 @@ function walkModels(dir) {
 
   return results;
 }
-
+// launch puppeteer and generate thumbnails pass preview.html
 (async () => {
   const browser = await puppeteer.launch();
   const models = walkModels(assetsRoot);
@@ -59,6 +69,5 @@ function walkModels(dir) {
       console.log(`Thumbnail exists: ${thumbPath}`);
     }
   }
-
   await browser.close();
 })();

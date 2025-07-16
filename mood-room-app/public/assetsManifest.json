@@ -36,6 +36,15 @@
     "thumbnail": "/assets/Thumbnails/Furniture/BookshelfBasic.png"
   },
   {
+    "name": "BookStackBasic",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/BookStackBasic.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/BookStackBasic.png"
+  },
+  {
     "name": "NormTable",
     "category": [
       "All",
@@ -61,6 +70,42 @@
     ],
     "path": "/assets/Furniture/TVold.glb",
     "thumbnail": "/assets/Thumbnails/Furniture/TVold.png"
+  },
+  {
+    "name": "ShadeLampBasic",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/ShadeLampBasic.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/ShadeLampBasic.png"
+  },
+  {
+    "name": "WallLamp",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/WallLamp.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/WallLamp.png"
+  },
+  {
+    "name": "WallLampBasic",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/WallLampBasic.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/WallLampBasic.png"
+  },
+  {
+    "name": "WallLampPoles",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/WallLampPoles.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/WallLampPoles.png"
   },
   {
     "name": "wallart",
