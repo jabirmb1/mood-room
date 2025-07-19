@@ -19,7 +19,7 @@ type useModelReturn = {
   getRigidBodyInstanceUpdateHandler: (id: string) => (ref: RapierRigidBody | null) => void; // function to update a rigid bodie's instance within the record.
   refreshRigidBody: (id: string) => void;// functiont to refresh. remount a rigid body.
   updateModelInformation: (id: string, updates: Partial<Model>) => void;// function to save a specific model information to the array of models.
- // updateCollisionMap: () => void;
+  updateCollisionMap: (id: string, isColliding: boolean) => void;
   deleteModel: (id: string) => void;// function to delete a model from the array of models.
 };
 
@@ -164,6 +164,14 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     setCollisionMap(prev => ({ ...prev, [id]: !isValid })); 
   } */
 
+    const updateCollisionMap = useCallback((id: string, isColliding: boolean) => {
+      setCollisionMap(prev => ({
+        ...prev,
+        [id]: isColliding,
+      }));
+    }, []);
+    
+
   return {models,modelRefs, rigidBodyRefs,rigidBodyVersions, areModelRefsReady, collisionMap,
-    setModels, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, refreshRigidBody,updateModelInformation, deleteModel,};
+    setModels, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, refreshRigidBody,updateModelInformation, deleteModel, updateCollisionMap};
 }
