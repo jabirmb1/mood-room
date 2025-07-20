@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import { useThree, ThreeEvent } from "@react-three/fiber";// we use this library to get current camera and canvas details set up by react three fibre.
-import { getClampedPos, snapToSurface } from "@/utils/collision";
 import { useRoomContext } from "@/app/contexts/RoomContext";
-import { RapierRigidBody } from "@react-three/rapier";
-import { getPosition, setPosition } from "@/utils/rapierHelpers";
+import { RapierRigidBody, useRapier } from "@react-three/rapier";
+import { getPosition} from "@/utils/rapierHelpers";
+import { applyMovement } from "@/utils/movementEngine";
+import { Rapier, RapierWorld } from "@/types/types";
 /* This hook is used to easily drag and drop any objects which call upon it */
 
 type UseDragControlsProps =  {
@@ -23,8 +24,8 @@ type DragHandlers = {
 
 // This function will run when user clicks down on the object referenced by the passed in ref.
 //
-function handlePointerDown( e: ThreeEvent<PointerEvent>, rigidBodyRef: React.RefObject<RapierRigidBody | null> | null, 
-  plane: React.MutableRefObject<THREE.Plane>, dragOffset: React.MutableRefObject<THREE.Vector3>, 
+function handlePointerDown( e: ThreeEvent<PointerEvent>, rigidBodyRef: React.RefObject<RapierRigidBody | null>, 
+  plane: React.RefObject<THREE.Plane>, dragOffset: React. RefObject<THREE.Vector3>, 
   setDragging: (v: boolean) => void,enabled: boolean,isHorizontalMode: boolean,onStart?: () => void) {
 
   if (!enabled || !rigidBodyRef?.current) return;
@@ -51,8 +52,8 @@ function handlePointerDown( e: ThreeEvent<PointerEvent>, rigidBodyRef: React.Ref
   
 // This function is called as we drag an object.
 //
-function handlePointerMove(e: ThreeEvent<PointerEvent>,   rigidBodyRef: React.RefObject<RapierRigidBody | null> | null, 
-  objectRef: React.RefObject<THREE.Object3D | null>, floorRef: React.RefObject<THREE.Object3D | null>, 
+function handlePointerMove(e: ThreeEvent<PointerEvent>,   rigidBodyRef: React.RefObject<RapierRigidBody | null>, 
+  objectRef: React.RefObject<THREE.Object3D | null>,  world:RapierWorld, rapier: Rapier ,floorRef: React.RefObject<THREE.Object3D | null>, 
   plane: React.RefObject<THREE.Plane>,  dragOffset: React.RefObject<THREE.Vector3>,
   dragging: boolean, isHorizontalMode: boolean){
   
@@ -63,17 +64,14 @@ function handlePointerMove(e: ThreeEvent<PointerEvent>,   rigidBodyRef: React.Re
 
     if (ray.intersectPlane(plane.current, intersection)) {// if our ray interescts the dragging plane, it means that it is a draggable object
         const newPos = intersection.add(dragOffset.current);
-        const oldPos =  getPosition(rigidBodyRef.current);// we will need to keep track of old position in case if we want to disable
-        // vertical/ horizontal movement:
+        const currentPos = getPosition(rigidBodyRef.current);
+        const direction = newPos.clone().sub(currentPos);
+        const distance = direction.length();
 
-        // update object's position to new position
-        // Apply axis constraint
-        const lockedPos: [number, number, number] = isHorizontalMode? [newPos.x, oldPos.y, newPos.z] : [oldPos.x, newPos.y, oldPos.z];
-
-        // snap object vertically.
-       // snapToSurface(ref.current, floorRef.current, )
-       const clamped = getClampedPos(objectRef.current, new THREE.Vector3(...lockedPos), floorRef.current);
-       setPosition(rigidBodyRef.current, new THREE.Vector3(...clamped));
+        applyMovement({direction, distance,world, shape: new rapier.Ball(1),rotation: rigidBodyRef.current.rotation(),rigidBody: rigidBodyRef.current,
+          collider: rigidBodyRef.current.collider(0),  isHorizontal: isHorizontalMode,
+        });
+        
     }
 }
 
@@ -95,6 +93,7 @@ function handlePointerUp(e: ThreeEvent<PointerEvent>, setDragging: (v: boolean) 
     const plane = useRef(new THREE.Plane());
     const dragOffset = useRef(new THREE.Vector3());
     const { floorRef } = useRoomContext();
+    const {world, rapier} = useRapier()
 
     // Clean up dragging on global pointer up (failsafe for trackpads and touch devices)
     useEffect(() => {
@@ -114,7 +113,7 @@ function handlePointerUp(e: ThreeEvent<PointerEvent>, setDragging: (v: boolean) 
           [objectRef, camera, plane, dragOffset, setDragging, enabled, onStart]
         ),
         onPointerMove: useCallback(
-          (e) => handlePointerMove(e,rigidBodyRef, objectRef, floorRef, plane, dragOffset, dragging, isHorizontalMode),
+          (e) => handlePointerMove(e,rigidBodyRef, objectRef, world, rapier, floorRef, plane, dragOffset, dragging, isHorizontalMode),
           [objectRef, plane, dragOffset, dragging, isHorizontalMode]
         ),
         onPointerUp: useCallback(

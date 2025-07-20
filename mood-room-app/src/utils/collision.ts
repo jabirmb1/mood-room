@@ -3,6 +3,11 @@
 import { collisionSpecificTags, wallHeight, wallThickness } from "./const"
 import * as THREE from "three";
 import { calculateObjectBoxSize } from "./object3D";
+import { RapierRigidBody} from "@react-three/rapier";
+import type { Collider, Rotation} from "@dimforge/rapier3d-compat";
+import { setPosition } from "@/utils/rapierHelpers";
+import { RapierWorld } from "@/types/types";
+
 
 type CollisionRules = {// the different rules of collision that an object may follow.
     mustTouchGround?: boolean;
@@ -439,3 +444,117 @@ export function validateObjectPlacement(
 
 // surface, stacking, collisions with other objects all can just be in one single function; to prevent going through
 // array multiple times per check.
+
+/************** rapier rigid body collisions (will replace above collision logic soon) ********* */
+
+// This function is used  to cast a shape from selected object to the target destination to check if there will be any collisons
+// on the way;
+// returns a ColliderCastShapeHit object or null
+//
+export function tryCastMove(world: RapierWorld, origin: THREE.Vector3, rotation: Rotation, direction: THREE.Vector3, shape: any, distance: number,
+  margin: number,  collider: Collider, rigidBody: RapierRigidBody) {
+  return world.castShape( origin, rotation, direction, shape, distance + margin, 0.01, true, undefined,  undefined, collider,
+    rigidBody, undefined);
+}
+
+// Attempts a slide in a given direction and returns the new contact point and slide direction, or final position if movement succeeds
+function attemptSlide(world: RapierWorld, origin: THREE.Vector3, direction: THREE.Vector3, shape: any, rotation: Rotation,
+  distance: number, margin: number, collider: Collider, rigidBody: RapierRigidBody, isHorizontal: boolean
+): { contactPoint: THREE.Vector3; slideDirection: THREE.Vector3 } | THREE.Vector3 {
+  const hit = tryCastMove(world, origin, rotation, direction, shape, distance, margin, collider, rigidBody);
+
+  if (!hit) {
+    // No collision between orgin and target pos; so just return the target pos.
+    return origin.clone().add(direction.clone().multiplyScalar(distance));
+  }
+
+  // Calculate new contact point before collision
+  // try to get object as close to possible to target destination without colliding (e.g. stop right before collision.)
+  // margin is used so we never actually touch objects (in theory)
+  const allowedDist = Math.max(0, hit.time_of_impact * distance - margin);
+  const contactPoint = origin.clone().add(direction.clone().multiplyScalar(allowedDist));
+
+  // Project slide direction along the surface
+  const normal = new THREE.Vector3(hit.normal1.x, hit.normal1.y, hit.normal1.z);
+  const slideDirection = projectSlideDirection(direction, normal, isHorizontal);
+
+  return { contactPoint, slideDirection };
+}
+
+
+
+// Projects a movement direction onto a plane perpendicular to a collision normal.
+// This simulates sliding along a surface.
+export function projectSlideDirection(direction: THREE.Vector3, normal: THREE.Vector3, isHorizontal: boolean) {
+  const adjustedNormal = new THREE.Vector3(normal.x, isHorizontal ? 0 : normal.y, normal.z).normalize();// axis locking depending on what mode we are in.
+  const projected = direction.clone().sub(adjustedNormal.multiplyScalar(direction.dot(adjustedNormal)));
+  return projected.normalize();
+}
+
+// This function will be used to allow us to do sliding movement e.g. object is up against another object; but it can slide to other directions
+// allows for smoother movement.
+// if it lands on an illegal collision; it will try to slide up to 3 times.
+//
+export function handleSlidingMovement(world: RapierWorld, origin: THREE.Vector3, direction: THREE.Vector3, shape: any, rotation: Rotation,
+  distance: number, margin: number, collider: Collider, rigidBody: RapierRigidBody, isHorizontal: boolean): THREE.Vector3 | null {
+
+  // First attempt
+   const slideAttempt1 = attemptSlide(world, origin, direction, shape, rotation, distance, margin, collider, rigidBody, isHorizontal);
+   if (slideAttempt1 instanceof THREE.Vector3) return slideAttempt1;// return early if there was no collision
+   const { contactPoint, slideDirection: slide1 } = slideAttempt1;// otherwise prepare for second attempt.
+ 
+   // Second attempt from first contact point
+   const slideAttempt2 = attemptSlide(world, contactPoint, slide1, shape, rotation, distance * 0.5, margin, collider, rigidBody, isHorizontal);
+   if (slideAttempt2 instanceof THREE.Vector3) return slideAttempt2;// return early if there was no collision
+   const { contactPoint: contactPoint2, slideDirection: slide2 } = slideAttempt2;
+ 
+   // Third and final attempt
+   const hit3 = tryCastMove(world, contactPoint2, rotation, slide2, shape, distance * 0.25, margin, collider, rigidBody);
+ 
+   if (!hit3) {
+     return contactPoint2.clone().add(slide2.multiplyScalar(distance * 0.25));
+   }
+   return contactPoint2;
+ }
+
+//This function will be used attempt to nudge any intersecting objects out of a collisition state if it is any.
+//
+export function resolveDepenetration( world: RapierWorld, shape: any, cachedColliders: Collider[], initialPos: THREE.Vector3, rotation: Rotation,
+  isHorizontal: boolean, frameCount: number, debounceRate: number = 2, rigidBody: RapierRigidBody, collider: Collider, maxAttempts: number= 5) {
+  if (frameCount % debounceRate !== 0) return;
+
+  let pos = initialPos.clone();
+  let stillOverlapping = true;
+  let attempts = maxAttempts;// max 5 attempts.
+
+  while (stillOverlapping && attempts-- > 0) {
+    let overlap = false;
+
+    world.intersectionsWithShape(pos, rotation, shape,
+      (col) => {
+        if (col === collider) return true;// skip own collider and rigid body from the casting check.
+        overlap = true;
+        return false;
+      },
+      undefined, undefined, collider, rigidBody, undefined
+    );
+
+    if (!overlap) break;
+
+    // push it back from the normal point of contact.
+    let pushNormal = new THREE.Vector3(0, 0, 0);
+
+    cachedColliders.forEach((col) => {
+      if (col.shape.intersectsShape(col.translation(), collider.rotation(), shape, pos, rotation)) {
+        pushNormal.add(new THREE.Vector3(0, 1, 0)); // approximate upward nudge
+      }
+    });
+
+    if (isHorizontal) pushNormal.y = 0;// axis locking.
+    pushNormal.normalize();
+    pos.add(pushNormal.multiplyScalar(0.01));
+    setPosition(rigidBody, pos);
+  }
+
+  setPosition(rigidBody, pos);
+}

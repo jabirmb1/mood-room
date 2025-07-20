@@ -22,8 +22,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import RoomFoundation from '@/components/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
-import { CuboidCollider, Physics, RapierRigidBody, RigidBody } from '@react-three/rapier';
-import { onCollision } from '@/utils/collision';
+import { Physics, RigidBody } from '@react-three/rapier';
+
 
 //place holder array of models until adding/ deletion of object functionality is added.
 const initialModels: Model[] = [
@@ -187,7 +187,7 @@ export default function Editor() {
               camera={{ position: defaultCameraPosition, fov: 50 }}
               className={`canvas-container h-full w-full bg-gray-200 z-50
               ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
-                <Physics  gravity={[0, 0, 0]}>{/* using rapier physics engine to handle collisions (no physics)*/}
+                <Physics debug gravity={[0, 0, 0]}>{/* using rapier physics engine to handle collisions (no physics)*/}
                   {/* if object if being hovered over change cursor into a grab */}
                   <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
                   <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
@@ -196,39 +196,21 @@ export default function Editor() {
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />
                   <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}}/>
                 
-                  {models.map((model) => {
-                    const isSelectedAndMoving = editingMode === 'move' && selectedId === model.id// if object is currently in move mode and is also selected.
+                  {models.map((model) => 
+            
                     // (different than when selectedId changes on hover.)
-                    return(
+                    (
                       <RigidBody
                       ref={getRigidBodyInstanceUpdateHandler(model.id)}
                       key={`${model.id}-${rigidBodyVersions[model.id] ?? 0}`}
                       // if we want to allow objects to go into each other but mark as invalid (might seem smoother), just remove the collision map parts 
                       // within the type prop below (so it will malways be kinematic during move mode no matter if it collides or not.)
-                      type={isSelectedAndMoving && (collisionMap[model.id] == false || !collisionMap[model.id]) ? 'kinematicPosition' : 'dynamic'}
-                      gravityScale={0}
-                      lockRotations={true}
-                      mass={100000}
-                      linearDamping={isSelectedAndMoving ? 100 : 100}
-                      angularDamping={isSelectedAndMoving ? 100 : 100}
-                      enabledTranslations={isSelectedAndMoving ? [true, true, true] : [false, false, false]}
-                      enabledRotations={isSelectedAndMoving ? [true, true, true] : [false, false, false]}
+                      type={'kinematicPosition'}
                       colliders="hull"
                       position={model.position ?? [0, 0, 0]}
                       rotation={model.rotation ?? [0, 0, 0]}
-                     /* onCollisionEnter={({target})=>{onCollision(updateCollisionMap, modelRefs, model.id,rigidBodyRefs.current[model.id].current, target )}} */
-                   
-                     // in later iterations we will put the logic in a seperate function
-                     onCollisionEnter={()=>{
-                        updateCollisionMap(model.id, true);
-                        console.log(modelRefs.current[model.id].current?.userData)
-
-                        // ignore false positives and allow users to move again (e.g. just touching/ resting on each other)
-                        setTimeout(()=>{
-                          updateCollisionMap(model.id, false);
-                        }, 100) 
-                      }} 
-                      onCollisionExit={()=>{updateCollisionMap(model.id, false)}}
+                      onCollisionEnter={()=>updateCollisionMap(model.id, true)}
+                      onCollisionExit={()=>updateCollisionMap(model.id, false)}
                       >
                                      
                      {/* Your visual 3D model */}
@@ -251,10 +233,7 @@ export default function Editor() {
                        updateModelInformation={updateModelInformation}
                      />
                    </RigidBody>
-
-                   
-                   
-                    )})}
+                    ))}
 
                   {orbitControlsRef.current &&(
                     <CameraController
