@@ -24,6 +24,7 @@ import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
 import { Physics, RigidBody } from '@react-three/rapier';
 
+
 //place holder array of models until adding/ deletion of object functionality is added.
 const initialModels: Model[] = [
   {
@@ -34,13 +35,16 @@ const initialModels: Model[] = [
       secondary: "#ff0000",
       tertiary: "#ff0000"
     },
-    position: [0, 0, -6],
+    position: [0, 2, -5],
   },
- /* {
+  {
     id: uuidv4(),
     url: "/assets/lights/ShadeLampBasic.glb",
     position: [0, 0, 0],
-  }, 
+  },
+   
+ /* 
+ 
   {
     id: uuidv4(),
     url: "/assets/lights/WallLampBasic.glb",
@@ -66,7 +70,7 @@ export default function Editor() {
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
   const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, 
-    deleteModel} = useModel(initialModels, floorRef, []);
+    deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
 
   const emptyRef = React.useRef<THREE.Object3D | null>(null);// a default empty ref.
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
@@ -192,30 +196,45 @@ export default function Editor() {
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />
                   <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}}/>
                 
-                  {models.map((model) => (
-                     <RigidBody  ref={getRigidBodyInstanceUpdateHandler(model.id)} key={`${model.id}-${rigidBodyVersions[model.id] ?? 0}`}
-                      type = 'kinematicPosition' colliders = 'hull' position={model.position ?? [0, 0, 0]} rotation={model.rotation ?? [0, 0, 0]}>
-                    {/* Object3D is a component that will render the 3D model and handle all the logic for it */}
-                      <Object3D
-                        id={model.id}
-                        url={model.url}
-                        rigidBodyRef={rigidBodyRefs.current[model.id]}
-                        scale={model.scale ?? [globalScale, globalScale, globalScale]}
-                        colourPalette={model.colourPalette}
-                        mode="edit"
-                        isSelected={selectedId === model.id}
-                        isColliding={collisionMap[model.id] || false}
-                        editingMode={editingMode}
-                        setSelectedId={handleSelect}
-                        setEditingMode={setEditingMode}
-                        setIsHoveringObject={setIsHoveringObject}
-                        onDragging={setDragging}
-                        onDelete={() => setIsDeleteDialogOpen(true)}
-                        onModelUpdate={getModelInstanceUpdateHandler(model.id)}
-                        updateModelInformation={updateModelInformation}
-                      />
-                    </RigidBody>
+                  {models.map((model) => 
+            
+                    // (different than when selectedId changes on hover.)
+                    (
+                      <RigidBody
+                      ref={getRigidBodyInstanceUpdateHandler(model.id)}
+                      key={`${model.id}-${rigidBodyVersions[model.id] ?? 0}`}
+                      // if we want to allow objects to go into each other but mark as invalid (might seem smoother), just remove the collision map parts 
+                      // within the type prop below (so it will malways be kinematic during move mode no matter if it collides or not.)
+                      type={'kinematicPosition'}
+                      colliders="hull"
+                      position={model.position ?? [0, 0, 0]}
+                      rotation={model.rotation ?? [0, 0, 0]}
+                      onCollisionEnter={()=>updateCollisionMap(model.id, true)}
+                      onCollisionExit={()=>updateCollisionMap(model.id, false)}
+                      >
+                                     
+                     {/* Your visual 3D model */}
+                     <Object3D
+                       id={model.id}
+                       url={model.url}
+                       rigidBodyRef={rigidBodyRefs.current[model.id]}
+                       scale={model.scale ?? [globalScale, globalScale, globalScale]}
+                       colourPalette={model.colourPalette}
+                       mode="edit"
+                       isSelected={selectedId === model.id}
+                       isColliding={collisionMap[model.id] || false}
+                       editingMode={editingMode}
+                       setSelectedId={handleSelect}
+                       setEditingMode={setEditingMode}
+                       setIsHoveringObject={setIsHoveringObject}
+                       onDragging={setDragging}
+                       onDelete={() => setIsDeleteDialogOpen(true)}
+                       onModelUpdate={getModelInstanceUpdateHandler(model.id)}
+                       updateModelInformation={updateModelInformation}
+                     />
+                   </RigidBody>
                     ))}
+
                   {orbitControlsRef.current &&(
                     <CameraController
                       controlsRef={orbitControlsRef}

@@ -1,4 +1,5 @@
 import { modelMaterialNames } from "@/utils/const";
+import { useRapier } from "@react-three/rapier";
 // model type.
 export type Model = {
     id: string;
@@ -21,3 +22,19 @@ export type Model = {
 
   // colour type (e.g. primary; secondary and tertiary)
   export type MaterialColourType = typeof modelMaterialNames[number];
+
+  // type to define a rigid bodie's max and min bounds.
+export type RapierAABB = {
+  min: { x: number; y: number; z: number };
+  max: { x: number; y: number; z: number };
+};
+
+
+// create a type for the world wrapper from three/ rapier rather than raw world js type.
+
+// This gets the full type returned by the hook
+type UseRapierReturn = ReturnType<typeof useRapier>;
+
+// Extract the `world` type
+export type RapierWorld = UseRapierReturn["world"];
+export type Rapier = UseRapierReturn["rapier"];

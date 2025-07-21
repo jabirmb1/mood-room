@@ -69,14 +69,14 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
 
 
   const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, objectRef: modelRef,
-    enabled: mode === "edit" && editingMode === 'move' && isSelected ,
+    enabled: mode === "edit" && editingMode === 'move' && isSelected && !isColliding,
     isHorizontalMode: isHorizontalMode,
     onStart: () => onDragging(true),
     onEnd: () => {onDragging(false)},
   });
 
   // add in movement logic:
-  useKeyboardMovement({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, modelRef: modelRef, enabled: isSelected && mode === 'edit' && editingMode === 'move',
+  useKeyboardMovement({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, modelRef: modelRef, enabled: isSelected && mode === 'edit' && editingMode === 'move' && !isColliding,
     isHorizontalMode: isHorizontalMode});
 
   // if parent page wants the internal model ref, pass it to them.
@@ -101,6 +101,17 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
       applyColourPalette(modelRef.current, colourPalette);
     }
   }, [colourPalette]);
+
+  useEffect(()=> {
+    if (isColliding)
+    {
+      console.log('object is colliding; cant move')
+    }
+    else
+    {
+      console.log('object is not colliding')
+    }
+  },[isColliding])
   
 
   // add in a hovered effect if user is in edit mode and hovers over model
@@ -122,7 +133,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   }, [hovered, mode, modelRef.current?.userData.baseScale]);
 
    //This use effect temporarily turns the object into red if it is colliding with another object.
-   /*
+  
    useEffect(() => {
     if (!modelRef.current) return;
     if (isColliding) {
@@ -134,7 +145,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     } else {
       applyColourPalette(modelRef.current, colourPalette); // reset colourpalette to what it was before.
     }
-  }, [isColliding]);   */
+  }, [isColliding]);  
   
   return (
     <>
