@@ -17,3 +17,86 @@ input[type="range"]::-moz-range-thumb {
   background: #facc15;
   cursor: pointer;
 }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+html.dark{
+  background-color: black ;
+  color: white;
+}
+
+
+
+
+
+/* Polaroid Animations */
+@keyframes polaroidReflection {
+  0%, 100% { 
+    transform: translateX(-100px) rotate(45deg);
+    opacity: 0;
+  }
+  50% { 
+    transform: translateX(100px) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+@keyframes cornerGlint {
+  0% { 
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  100% { 
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+}
+
+/* Polaroid Utility Classes */
+.polaroid-surface {
+  background: linear-gradient(135deg, 
+    rgba(255,255,255,0.3) 0%, 
+    rgba(255,255,255,0.1) 25%,
+    transparent 50%,
+    rgba(255,255,255,0.05) 75%,
+    rgba(255,255,255,0.2) 100%
+  );
+  box-shadow: 
+    inset 0 1px 2px rgba(255,255,255,0.8),
+    inset 0 -1px 2px rgba(0,0,0,0.1),
+    0 8px 20px rgba(0,0,0,0.15);
+}
+
+.polaroid-reflection {
+  background: linear-gradient(45deg, 
+    transparent 0%, 
+    rgba(255,255,255,0.2) 30%,
+    rgba(255,255,255,0.4) 50%,
+    rgba(255,255,255,0.2) 70%,
+    transparent 100%
+  );
+  animation: polaroidReflection 4s ease-in-out infinite;
+}
+
+.polaroid-glint {
+  background: radial-gradient(circle at center, 
+    rgba(255,255,255,0.6) 0%,
+    rgba(255,255,255,0.3) 40%,
+    transparent 70%
+  );
+  animation: cornerGlint 3s ease-in-out infinite alternate;
+}
+
+.polaroid-texture {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(0,0,0,0.1) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(0,0,0,0.1) 1px, transparent 1px);
+  background-size: 4px 4px, 6px 6px;
+}
+
+.vintage-filter {
+  filter: sepia(25%) saturate(80%) brightness(98%) contrast(95%);
+}
