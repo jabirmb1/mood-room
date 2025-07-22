@@ -43,7 +43,8 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
   const potentialOccluders = useMemo(() => {
     // creating a list of potential occluders which filter out e.g. camera; target object ; light or invisible objects.
     return scene.children.filter((obj) => {
-      if (obj === targetRef?.current || obj.type === 'Camera' || obj.type.includes('Light') || obj.visible === false ) return false;
+      if (obj === targetRef?.current || obj.type === 'Camera' || obj.type.includes('Light') || obj.visible === false 
+    || obj.userData?.permanentInvisible) return false;
       return true;
     });
   }, [scene, targetRef?.current]);

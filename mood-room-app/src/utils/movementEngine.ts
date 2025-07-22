@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { getPosition, setPosition } from "@/utils/rapierHelpers";
-import { handleSlidingMovement, resolveDepenetration } from "@/utils/collision";
+import {isOverlapping} from "@/utils/collision";
 import type { Collider, Rotation, Shape } from "@dimforge/rapier3d-compat";
 import { RapierRigidBody } from "@react-three/rapier";
 import { RapierWorld } from "@/types/types";
@@ -25,33 +25,40 @@ type MovementOptions = {
 
 // This is the main function will will be responsible to actually move object (has built in collision detection)
 export function applyMovement({ direction, distance, world, shape, rotation, rigidBody, collider, isHorizontal, cachedColliders = [],}: MovementOptions) {
-    if (direction.lengthSq() === 0) return;
+  if (direction.lengthSq() === 0) return;
 
   const currentPos = getPosition(rigidBody);
-  const margin = 0.01;// a small margin to prevent objet's from actually touching each other (bad for collision); small enough to 
-  // make it seem that objects are touching each other.
 
-  const target = handleSlidingMovement( world, currentPos, direction.normalize(), shape, rotation, distance, margin, 
-  collider, rigidBody, isHorizontal);
+  // total movement vector scaled by distance
+  const moveVec = direction.clone().normalize().multiplyScalar(distance);
 
-  if (target) {
-    setPosition(rigidBody, target);
-  } else if (cachedColliders.length > 0) {
-    // make sure to update and reset frame every loop for efficiency.
-    currentFrame = currentFrame >= 60 ? 0 : currentFrame + 1;
+  // We'll try moving per axis separately
+  // axes for horizontal: X and Z; vertical: Y only?
+  // Assuming horizontal moves in XZ plane here:
+  const axes: ('x' | 'y' | 'z')[] = isHorizontal ? ['x', 'z'] : ['y'];
 
-    resolveDepenetration(
-      world,
-      shape,
-      cachedColliders,
-      currentPos,
-      rotation,
-      isHorizontal,
-      currentFrame,
-      3,              // depenetration stride
-      rigidBody,
-      collider,
-      5               // max attempts
-    );
+  let newPos = currentPos.clone();
+
+  for (const axis of axes) {
+    if (moveVec[axis] === 0) continue;
+
+    const testPos = newPos.clone();
+    testPos[axis] += moveVec[axis];
+
+    const { isOverlapping: wasOverlapping, penetrationDepth: beforePenetration } =
+      isOverlapping(world, newPos, rotation, shape, collider, rigidBody);
+
+    const { isOverlapping: willOverlap, penetrationDepth: afterPenetration } =
+      isOverlapping(world, testPos, rotation, shape, collider, rigidBody);
+
+    // Allow move if no collision OR if penetration reduces (escaping)
+    if (!willOverlap || (wasOverlapping && afterPenetration < beforePenetration)) {
+      newPos.copy(testPos);
+    }
+    // else skip axis move, block only the colliding axis but allow others
   }
+
+  setPosition(rigidBody, newPos);
+
+  currentFrame = (currentFrame + 1) % 60;
 }

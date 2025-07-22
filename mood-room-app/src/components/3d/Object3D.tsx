@@ -69,14 +69,14 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
 
 
   const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, objectRef: modelRef,
-    enabled: mode === "edit" && editingMode === 'move' && isSelected && !isColliding,
+    enabled: mode === "edit" && editingMode === 'move' && isSelected,
     isHorizontalMode: isHorizontalMode,
     onStart: () => onDragging(true),
     onEnd: () => {onDragging(false)},
   });
 
   // add in movement logic:
-  useKeyboardMovement({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, modelRef: modelRef, enabled: isSelected && mode === 'edit' && editingMode === 'move' && !isColliding,
+  useKeyboardMovement({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, modelRef: modelRef, enabled: isSelected && mode === 'edit' && editingMode === 'move',
     isHorizontalMode: isHorizontalMode});
 
   // if parent page wants the internal model ref, pass it to them.

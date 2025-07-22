@@ -3,8 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { globalScale } from "@/utils/const";
 import { RapierRigidBody, useRapier} from "@react-three/rapier";
-import type { Collider } from "@dimforge/rapier3d-compat";
-import { applyMovement } from "@/utils/movementEngine";
+import { ColliderDesc, type Collider } from "@dimforge/rapier3d-compat";
+import { applyMovement } from "@/utils/movementEngine";;
 
 /*** This hook is used to move an object via keybaord controls *********/
 
@@ -84,8 +84,9 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
     const direction = new THREE.Vector3(...delta).normalize();
     const distance = new THREE.Vector3(...delta).length();
     const rigidBody = rigidBodyRef.current
-
-    applyMovement({direction, distance, world, shape: new rapier.Ball(1),rotation: rigidBody.rotation(), rigidBody, collider: rigidBody.collider(0),
+    const shape =  rigidBody.collider(0).shape
+   // console.log('shape is', rigidBody.collider(0).shape)
+    applyMovement({direction, distance, world, shape: shape,rotation: rigidBody.rotation(), rigidBody, collider: rigidBody.collider(0),
       isHorizontal: isHorizontalMode, cachedColliders: cachedColliders.current
     })
   });

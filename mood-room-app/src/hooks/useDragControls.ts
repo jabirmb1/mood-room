@@ -59,20 +59,29 @@ function handlePointerMove(e: ThreeEvent<PointerEvent>,   rigidBodyRef: React.Re
   
 
     if (!dragging || !rigidBodyRef?.current || !objectRef.current) return;
-    const ray = e.ray;
-    const intersection = new THREE.Vector3();
+  const ray = e.ray;
+  const intersection = new THREE.Vector3();
 
-    if (ray.intersectPlane(plane.current, intersection)) {// if our ray interescts the dragging plane, it means that it is a draggable object
-        const newPos = intersection.add(dragOffset.current);
-        const currentPos = getPosition(rigidBodyRef.current);
-        const direction = newPos.clone().sub(currentPos);
-        const distance = direction.length();
+  if (ray.intersectPlane(plane.current, intersection)) {
+    const targetPos = intersection.add(dragOffset.current);
+    const currentPos = getPosition(rigidBodyRef.current);
+    
+    const fullDelta = targetPos.clone().sub(currentPos);
 
-        applyMovement({direction, distance,world, shape: new rapier.Ball(1),rotation: rigidBodyRef.current.rotation(),rigidBody: rigidBodyRef.current,
-          collider: rigidBodyRef.current.collider(0),  isHorizontal: isHorizontalMode,
-        });
-        
-    }
+    // to keep drag controls as smooth and prediciable as e.g. keybaord controls; we will limit the direction into smaller
+    // continuas steps rather than one big step.
+    const maxStep = 0.5; // smaller step means smoother, more controlled drag
+    const stepDelta = fullDelta.clone().clampLength(0, maxStep);
+
+    const direction = stepDelta.clone().normalize();
+    const distance = stepDelta.length();
+
+    const shape = rigidBodyRef.current.collider(0).shape
+
+    applyMovement({direction, distance,world, shape: shape,rotation: rigidBodyRef.current.rotation(),rigidBody: rigidBodyRef.current,
+      collider: rigidBodyRef.current.collider(0),  isHorizontal: isHorizontalMode,
+    });
+  }
 }
 
 // function to run when we release our mouse from object (it's basically a clean up function)

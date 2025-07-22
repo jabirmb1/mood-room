@@ -22,7 +22,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import RoomFoundation from '@/components/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
-import { Physics, RigidBody } from '@react-three/rapier';
+import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
@@ -194,7 +194,7 @@ export default function Editor() {
                   <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
                   <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />
-                  <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}}/>
+                  <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}} collidersEnabled={true}/>
                 
                   {models.map((model) => 
             
@@ -206,12 +206,15 @@ export default function Editor() {
                       // if we want to allow objects to go into each other but mark as invalid (might seem smoother), just remove the collision map parts 
                       // within the type prop below (so it will malways be kinematic during move mode no matter if it collides or not.)
                       type={'kinematicPosition'}
-                      colliders="hull"
+                      colliders={false}// we will not use auto generation colliders.
                       position={model.position ?? [0, 0, 0]}
                       rotation={model.rotation ?? [0, 0, 0]}
                       onCollisionEnter={()=>updateCollisionMap(model.id, true)}
                       onCollisionExit={()=>updateCollisionMap(model.id, false)}
                       >
+
+                      {/* for dev testing purposes; will replace with a compound collider later */}
+                      <CuboidCollider args={[1, 1, 1]}/>
                                      
                      {/* Your visual 3D model */}
                      <Object3D
