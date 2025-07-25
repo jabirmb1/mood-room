@@ -6,6 +6,8 @@ import { RapierRigidBody, useRapier } from "@react-three/rapier";
 import { getPosition} from "@/utils/rapierHelpers";
 import { applyMovement } from "@/utils/movementEngine";
 import { Rapier, RapierWorld } from "@/types/types";
+import { trySnapDownFromObject } from "@/utils/collision";
+import { snapDownwardsCountdown } from "@/utils/const";
 /* This hook is used to easily drag and drop any objects which call upon it */
 
 type UseDragControlsProps =  {
@@ -25,7 +27,7 @@ type DragHandlers = {
 // This function will run when user clicks down on the object referenced by the passed in ref.
 //
 function handlePointerDown( e: ThreeEvent<PointerEvent>, rigidBodyRef: React.RefObject<RapierRigidBody | null>, 
-  plane: React.RefObject<THREE.Plane>, dragOffset: React. RefObject<THREE.Vector3>, 
+  plane: React.RefObject<THREE.Plane>, dragOffset: React.RefObject<THREE.Vector3>, 
   setDragging: (v: boolean) => void,enabled: boolean,isHorizontalMode: boolean,onStart?: () => void) {
 
   if (!enabled || !rigidBodyRef?.current) return;
@@ -86,11 +88,24 @@ function handlePointerMove(e: ThreeEvent<PointerEvent>,   rigidBodyRef: React.Re
 
 // function to run when we release our mouse from object (it's basically a clean up function)
 //
-function handlePointerUp(e: ThreeEvent<PointerEvent>, setDragging: (v: boolean) => void, dragging: boolean, onEnd?: () => void ) {
+function handlePointerUp(e: ThreeEvent<PointerEvent>, rigidBodyRef: React.RefObject<RapierRigidBody | null>,
+  snapTimeout: React.RefObject<NodeJS.Timeout | null>, world: RapierWorld, setDragging: (v: boolean) => void, dragging: boolean, onEnd?: () => void ) {
     if (!dragging) return;
     setDragging(false);
     const target = e.target as HTMLElement;
     target.releasePointerCapture(e.pointerId);// explicitly release the pointer capture so we can stop dragging.
+
+    if (rigidBodyRef.current)
+    {
+       if (snapTimeout.current) clearTimeout(snapTimeout.current);
+       {
+      
+              // Try snapping after a pause from key release
+              snapTimeout.current = setTimeout(() => {
+                trySnapDownFromObject(world, rigidBodyRef.current!);
+              }, snapDownwardsCountdown);
+        }
+    }
     onEnd?.();
 }
   
@@ -103,6 +118,7 @@ function handlePointerUp(e: ThreeEvent<PointerEvent>, setDragging: (v: boolean) 
     const dragOffset = useRef(new THREE.Vector3());
     const { floorRef } = useRoomContext();
     const {world, rapier} = useRapier()
+    const snapTimeout = useRef<NodeJS.Timeout | null>(null);
 
     // Clean up dragging on global pointer up (failsafe for trackpads and touch devices)
     useEffect(() => {
@@ -126,7 +142,7 @@ function handlePointerUp(e: ThreeEvent<PointerEvent>, setDragging: (v: boolean) 
           [objectRef, plane, dragOffset, dragging, isHorizontalMode]
         ),
         onPointerUp: useCallback(
-          (e) => handlePointerUp(e, setDragging, dragging, onEnd),
+          (e) => handlePointerUp(e, rigidBodyRef, snapTimeout, world, setDragging, dragging, onEnd),
           [setDragging, dragging, onEnd]
         ),
       };

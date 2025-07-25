@@ -42,6 +42,11 @@ const initialModels: Model[] = [
     url: "/assets/lights/ShadeLampBasic.glb",
     position: [0, 0, 0],
   },
+  {
+    id: uuidv4(),
+    url: "/assets/lights/ShadeLampBasic.glb",
+    position: [0, 4, 0],
+  },
    
  /* 
  
@@ -209,7 +214,7 @@ export default function Editor() {
                       colliders={false}// we will not use auto generation colliders.
                       position={model.position ?? [0, 0, 0]}
                       rotation={model.rotation ?? [0, 0, 0]}
-                      onCollisionEnter={()=>updateCollisionMap(model.id, true)}
+                      onCollisionEnter={()=>{updateCollisionMap(model.id, true)}}
                       onCollisionExit={()=>updateCollisionMap(model.id, false)}
                       >
 

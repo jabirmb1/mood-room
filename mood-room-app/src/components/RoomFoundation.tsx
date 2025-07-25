@@ -35,11 +35,10 @@ export default function RoomFoundation({ onFloorReady, collidersEnabled = false 
             name="floor"
             receiveShadow
             castShadow
-            rotation={[-Math.PI / 2, 0, 0]}
             position={[0, 0, 0]}
             material={floorMaterial}
           >
-            <boxGeometry args={[roomSize, roomSize, wallThickness]} />
+            <boxGeometry args={[roomSize,wallThickness, roomSize]} />
           </mesh>
         </RigidBody>
       ) : (
@@ -48,11 +47,10 @@ export default function RoomFoundation({ onFloorReady, collidersEnabled = false 
           name="floor"
           receiveShadow
           castShadow
-          rotation={[-Math.PI / 2, 0, 0]}
           position={[0, 0, 0]}
           material={floorMaterial}
         >
-          <boxGeometry args={[roomSize, roomSize, wallThickness]} />
+          <boxGeometry args={[roomSize,wallThickness, roomSize]} />
         </mesh>
       )}
 
