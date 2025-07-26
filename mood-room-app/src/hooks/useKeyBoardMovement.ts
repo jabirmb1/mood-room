@@ -44,7 +44,9 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
 
         // Try snapping after a pause from key release
         snapTimeout.current = setTimeout(() => {
-          trySnapDownFromObject(world, rigidBodyRef.current!);
+          // we call is WallArt here since rigidBody may turn null at some parts.
+          const isWallArt =rigidBodyRef?.current?.userData?.tags?.includes('wall-art')
+          trySnapDownFromObject(world, rigidBodyRef.current!, undefined, !isWallArt);// don't allow wall art models to snap to surfaces.
           movementOccurred.current = false; // reset tracker
         }, snapDownwardsCountdown);
       }

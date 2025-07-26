@@ -102,7 +102,8 @@ function handlePointerUp(e: ThreeEvent<PointerEvent>, rigidBodyRef: React.RefObj
       
               // Try snapping after a pause from key release
               snapTimeout.current = setTimeout(() => {
-                trySnapDownFromObject(world, rigidBodyRef.current!);
+                const isWallArt =rigidBodyRef?.current?.userData?.tags?.includes('wall-art')
+                trySnapDownFromObject(world, rigidBodyRef.current!, undefined, !isWallArt);// don't allow wall art models to snap to surfaces.
               }, snapDownwardsCountdown);
         }
     }

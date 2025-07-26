@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { getPosition, setPosition } from "@/utils/rapierHelpers";
+import { getPosition, isWall, matchRigidBodyRotation, setPosition } from "@/utils/rapierHelpers";
 import {canObjectSnapRecursive, isOverlapping, snapObjectOnAnother} from "@/utils/collision";
 import type { Collider, Rotation, Shape } from "@dimforge/rapier3d-compat";
 import { RapierRigidBody } from "@react-three/rapier";
@@ -29,7 +29,7 @@ export function applyMovement({ direction, distance, world, shape, rotation, rig
 
   const currentPos = getPosition(rigidBody);
   const isDecor = rigidBody.userData?.tags?.includes('decor') ?? false;// only decor are allowed to snap on top of other objects.
-
+  const isWallArt =  rigidBody.userData?.tags?.includes('wall-art') ?? false;// wall art models are allowed to stick to walls.
   // total movement vector scaled by distance
   const moveVec = direction.clone().normalize().multiplyScalar(distance);
 
@@ -46,17 +46,15 @@ export function applyMovement({ direction, distance, world, shape, rotation, rig
     const testPos = newPos.clone();
     testPos[axis] += moveVec[axis];
 
-    const { isOverlapping: wasOverlapping, penetrationDepth: beforePenetration } =
+    const { isOverlapping: wasOverlapping, penetrationDepth: beforePenetration} =
       isOverlapping(world, newPos, rotation, shape, collider, rigidBody, (targetRB) => {
-        // Optional condition: only if userData allows it (decor) and targetRB is not a wall.
         if (canObjectSnapRecursive(world, rigidBody, targetRB)) {
           snapObjectOnAnother(rigidBody, targetRB);
         }
         });
 
-    const { isOverlapping: willOverlap, penetrationDepth: afterPenetration } =
+    const { isOverlapping: willOverlap, penetrationDepth: afterPenetration, otherRigidBody} =
       isOverlapping(world, testPos, rotation, shape, collider, rigidBody, isDecor? (targetRB) => {
-        // Optional condition: only if userData allows it and targetRB is not a wall
         if (canObjectSnapRecursive(world, rigidBody, targetRB)) {
           snapObjectOnAnother(rigidBody, targetRB);
         }
@@ -66,9 +64,15 @@ export function applyMovement({ direction, distance, world, shape, rotation, rig
     if (!willOverlap || (wasOverlapping && afterPenetration < beforePenetration)) {
       newPos.copy(testPos);
     }
-    // else skip axis move, block only the colliding axis but allow others
 
-    // we do snap on top of object logic here:
+    // snap the wall art model to the direction that the wall is facing.
+    if (otherRigidBody && isWall(otherRigidBody) && isWallArt)
+    {
+      matchRigidBodyRotation(rigidBody, otherRigidBody)
+    }
+    
+
+    // else skip axis move, block only the colliding axis but allow others
   }
 
   setPosition(rigidBody, newPos);

@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { RapierRigidBody} from "@react-three/rapier";
 import { Ray, type Ball, type Capsule, type Collider, type Cuboid, type Rotation, type Shape} from "@dimforge/rapier3d-compat";
 import { RapierWorld } from "@/types/types";
+import { isWall } from "./rapierHelpers";
 
 
 type CollisionRules = {// the different rules of collision that an object may follow.
@@ -17,7 +18,9 @@ type CollisionTag = typeof collisionSpecificTags[number];// a specific object's 
 
 type SceneObjectRole = "model" | "floor" | "wall";// role of a specific object and what it is.
 
-type ObjectOverlap = {isOverlapping: boolean, penetrationDepth: number}
+type ObjectOverlap = {isOverlapping: boolean, penetrationDepth: number, otherRigidBody: RapierRigidBody | null, selectedRigidBody:
+  RapierRigidBody
+}
 
 const collisionRules: Record<CollisionTag, CollisionRules> = {
     furniture: {
@@ -79,6 +82,7 @@ export function isOverlapping(world: RapierWorld, pos: THREE.Vector3, rotation: 
   let overlapping = false;
   let maxPenetration = 0;
   const predictionDistance = 1.0
+  let overlappingBody: RapierRigidBody | null = null;
    // Store only the first candidate
   let snapCandidate: RapierRigidBody | null = null;
 
@@ -88,11 +92,11 @@ export function isOverlapping(world: RapierWorld, pos: THREE.Vector3, rotation: 
     if (isOverlapping) {
       overlapping = true;
       maxPenetration = Math.max(maxPenetration, penetrationDepth);// we want the max penetration depth.
+      overlappingBody = otherCollider.parent();
     }
     // if the object can snap onto it; keep track of it so we can snap on it after the query.
     if (onSnapCandidate) {
-      const otherRigidBody = otherCollider.parent();
-      snapCandidate = otherRigidBody
+      snapCandidate = overlappingBody
     }
 
     return false; // continue iterating all overlaps
@@ -102,7 +106,7 @@ export function isOverlapping(world: RapierWorld, pos: THREE.Vector3, rotation: 
    if (onSnapCandidate && snapCandidate) {
       onSnapCandidate(snapCandidate);
     }
-  return {isOverlapping: overlapping, penetrationDepth: maxPenetration};
+  return {isOverlapping: overlapping, penetrationDepth: maxPenetration, otherRigidBody: overlappingBody, selectedRigidBody: rigidBody};
 }
 
 // Return the first rigid body that overlaps the selectedBody at candidate position.
@@ -289,7 +293,8 @@ export function canObjectSnapRecursive(world: RapierWorld, selectedBody: RapierR
   yOffset = 0.02,// vertical offset to avoid objects from actually touching each other vertically and prevents them from getting stuck
   overlapThreshold = 0.8,// the ratio that the overlap needs to be to allow snapping.
 ): boolean {
-  if (!selectedBody || !targetBody) return false;
+  // if we don't have the selected model's rigid body, or the target's rigid body; or the target is a wall; don't allow snapping.
+  if (!selectedBody || !targetBody || isWall(targetBody)) return false;// don't allow objects to snap on top of walls
   if (visited.has(targetBody)) return false;  // prevent cycles
   visited.add(targetBody);
 
@@ -347,8 +352,8 @@ export function canObjectSnapRecursive(world: RapierWorld, selectedBody: RapierR
 // This function will cast a ray downwards and see if it can snap or not. (will only check the first collision with the ray)
 // returns a boolean whether or not object has been successfully snapped
 //
-export function trySnapDownFromObject(world: RapierWorld, selectedBody: RapierRigidBody | null, maxSnapDistance = 3): boolean {
-  if (!selectedBody) return false;
+export function trySnapDownFromObject(world: RapierWorld, selectedBody: RapierRigidBody | null, maxSnapDistance = 3, enabled = true): boolean {
+  if (!enabled || !selectedBody) return false;
   const bottom = getBottomMostColliderAABB(selectedBody);
   if (!bottom) return false;
 

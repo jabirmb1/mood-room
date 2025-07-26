@@ -16,6 +16,9 @@ export default function RoomFoundation({ onFloorReady, collidersEnabled = false 
   const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);
   const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);
   const [showGrid, setShowGrid] = useState(true);
+  const wallSize: [number, number, number] = [roomSize, wallHeight, wallThickness]
+  const rightDirection : [number, number, number] = [0, Math.PI/2, 0];
+  const leftDirection : [number, number, number]= [0, -Math.PI/2, 0]
 
   const floorRef = useRef<THREE.Mesh>(null);
 
@@ -55,12 +58,13 @@ export default function RoomFoundation({ onFloorReady, collidersEnabled = false 
       )}
 
       {/* Walls */}
-      <Wall name="backWall" position={[0, wallHeight / 2, -roomSize / 2]} size={[roomSize, wallHeight, wallThickness]} enableColliders={true}/>
-      <Wall name="frontWall" position={[0, wallHeight / 2, roomSize / 2]} size={[roomSize, wallHeight, wallThickness]} enableColliders={true} 
+      <Wall name="backWall" position={[0, wallHeight / 2, -roomSize / 2]} size={wallSize} enableColliders={true}/>
+      <Wall name="frontWall" position={[0, wallHeight / 2, roomSize / 2]} size={wallSize} enableColliders={true} 
       invisible={true}/>
-      <Wall name="leftWall" position={[-roomSize / 2, wallHeight / 2, 0]} size={[wallThickness, wallHeight, roomSize]} enableColliders={true} />
-      <Wall name="rightWall" position={[roomSize / 2, wallHeight / 2, 0]} size={[wallThickness, wallHeight, roomSize]} enableColliders={true}
-      invisible={true} />
+      <Wall name="leftWall" position={[0, wallHeight / 2, -roomSize/2]} size={wallSize} enableColliders={true} 
+      rotation={rightDirection}/>
+      <Wall name="rightWall" position={[0, wallHeight / 2, -roomSize/2]} size={wallSize} enableColliders={true}
+       rotation={leftDirection} invisible={true} />
 
       {/* Ceiling */}
       <Wall name="ceiling" position={[0, wallHeight, 0]} size={[roomSize, wallThickness, roomSize]}  enableColliders={true}
