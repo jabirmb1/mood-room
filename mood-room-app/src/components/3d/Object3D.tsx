@@ -81,13 +81,17 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
 
   // if parent page wants the internal model ref, pass it to them.
   useEffect(() => {
-    if (modelRef.current && onModelUpdate) {
+    if (isSelected && modelRef.current && onModelUpdate) {
       onModelUpdate(modelRef.current);
     }
-    return () => {
+    else if (!isSelected && onModelUpdate)// clean up when  de selected.
+    {
+      onModelUpdate(null);
+    }
+    return () => {// always clean up on mount or when selected changes.
       if (onModelUpdate) onModelUpdate(null);
     };
-  }, [clonedScene, isSelected]);
+  }, [clonedScene, isSelected, onModelUpdate]);
 
   // add in a custom colour palette to model if user has specfied one.
   useEffect(() => {
@@ -101,19 +105,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
       applyColourPalette(modelRef.current, colourPalette);
     }
   }, [colourPalette]);
-
-  useEffect(()=> {
-    if (isColliding)
-    {
-      console.log('object is colliding; cant move')
-    }
-    else
-    {
-      console.log('object is not colliding')
-    }
-  },[isColliding])
   
-
   // add in a hovered effect if user is in edit mode and hovers over model
   useEffect(() => {
     if (!modelRef.current) return;
@@ -169,6 +161,8 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
           recieveShadow = {true}
           onDoubleClick={(e: ThreeEvent<PointerEvent>) => {
             e.stopPropagation();
+            // Clear any existing selection first
+            setSelectedId(null);
             setEditingMode('edit');
             setSelectedId(id);
           }}

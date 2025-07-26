@@ -270,56 +270,62 @@ export function getBaseMaterialName<T extends string>(name: string, validBaseNam
   return validBaseNames.includes(base as T) ? (base as T) : undefined;
 }
 
-
-// This function will determine of which folder the model lies in e.g. furniture, decor, lighting etc
-// and then apply some tags to the user data; this is because different categories of models behaves differently
+// This fucntion will get category tags from the url; it will also replace some default tag via a json depending
+// if the url has a sub folder or not ( for extra tags, or to remove tags)
 //
-export async function applyCategoryTags(url: string, object: THREE.Object3D) {
-  object.userData.tags = object.userData.tags || [];
-
+export async function getCategoryTagsFromURL(url: string){
+  const tags = new Set<string>();
   const lowerUrl = url.toLowerCase();
 
-  // Folder-based default tags
+  // Infer base tags from folder
   if (lowerUrl.includes('lights')) {
-    object.userData.tags.push('light');
-    object.userData.tags.push('decor');
+    tags.add('light');
+    tags.add('decor');
   } else if (lowerUrl.includes('furniture')) {
-    object.userData.tags.push('furniture');
+    tags.add('furniture');
   } else if (lowerUrl.includes('decor')) {
-    object.userData.tags.push('decor');
+    tags.add('decor');
   } else if (lowerUrl.includes('wall-art')) {
-    object.userData.tags.push('wall-art');
+    tags.add('wall-art');
   }
 
-    // Check if model is inside its own subfolder
-    const match = url.match(/([^/]+)\/\1\.glb$/i); // matches furniture/bed3/bed3.glb
-    if (!match) return; // skip meta load if not in dedicated folder
-  
-    const jsonUrl = url.replace(/\.glb$/i, '.meta.json');
-  
+  // Only look for .meta.json if in its own subfolder
+  const match = url.match(/([^/]+)\/\1\.glb$/i);
+  if (!match) return Array.from(tags);
 
-  // Now try to fetch a matching JSON metadata file
+  const jsonUrl = url.replace(/\.glb$/i, '.meta.json');
+
   try {
     const response = await fetch(jsonUrl);
     if (response.ok) {
       const meta: ModelTags = await response.json();
 
-      const currentTags = new Set(object.userData.tags);
-
-      // Apply additions
       if (Array.isArray(meta.addTags)) {
-        for (const tag of meta.addTags) currentTags.add(tag);
+        for (const tag of meta.addTags) tags.add(tag);
       }
-
-      // Apply removals
       if (Array.isArray(meta.removeTags)) {
-        for (const tag of meta.removeTags) currentTags.delete(tag);
+        for (const tag of meta.removeTags) tags.delete(tag);
       }
-
-      object.userData.tags = Array.from(currentTags);
     }
-  } catch (err) {
-    // Failing to load meta.json is okay — not all models need it
+  } catch {
     console.warn(`[Meta Tags] No meta.json found or failed for ${url}`);
   }
+
+  return Array.from(tags);
+}
+
+// Applies tags to object.userData.tags safely (deduplicates)
+//
+export function applyTagsToObject(object: THREE.Object3D, tags: string[]) {
+  const current = new Set(object.userData.tags || []);
+  for (const tag of tags) current.add(tag);
+  object.userData.tags = Array.from(current);
+}
+
+// a wrapper function whicih is used to apply tags to the passed in object.
+//
+export async function applyCategoryTags(url: string,  object: THREE.Object3D)
+{
+  const tags = await getCategoryTagsFromURL(url);
+  applyTagsToObject(object, tags);
 }

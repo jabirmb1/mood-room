@@ -53,6 +53,12 @@ export async function loadInitialModels(): Promise<Model[]> {
       position: [0, 4, 0],
       tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
     },
+    {
+      id: uuidv4(),
+      url: "/assets/wall-art/rectangleTEST.glb",
+      position: [0, 8, 0],
+      tags: await getCategoryTagsFromURL("/assets/wall-art/rectangleTEST.glb"),
+    },
   ];
 }
 
@@ -63,7 +69,7 @@ export default function Editor() {
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
   const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, 
-    deleteModel, updateCollisionMap} = useModel([], floorRef, []);
+     refUpdateTrigger, forceRefUpdate, deleteModel, updateCollisionMap} = useModel([], floorRef, []);
 
   const emptyRef = React.useRef<THREE.Object3D | null>(null);// a default empty ref.
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
@@ -110,7 +116,7 @@ export default function Editor() {
     } else {
       setSelectedModelRef(null);
     }
-  }, [selectedId, modelRefs.current]);
+  }, [selectedId, refUpdateTrigger]);
 
   useEffect(() => {
     loadInitialModels().then(setModels);
@@ -119,9 +125,20 @@ export default function Editor() {
   // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
   // and then change the selected ID.
   const handleSelect = useCallback((id: string | null) => {
-    setEditingMode('edit');
-    setSelectedId(id);
-  }, []);
+     // Clear previous selection immediately
+     setSelectedModelRef(null);
+     setEditingMode('edit');
+     
+     // If selecting the same object, deselect it
+     if (selectedId === id) {
+       setSelectedId(null);
+       return;
+     }
+     setSelectedId(id);
+     
+     // Force ref update after state changes
+     setTimeout(() => forceRefUpdate(), 0);
+  }, [selectedId, forceRefUpdate]);
 
   // creating a useEfect to just dim the lights down and not dim them down when pop up is open or not (object editor)
   useEffect(() => {
@@ -238,7 +255,7 @@ export default function Editor() {
                    </RigidBody>
                     ))}
 
-                  {orbitControlsRef.current &&(
+                  {orbitControlsRef.current && (
                     <CameraController
                       controlsRef={orbitControlsRef}
                       rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}

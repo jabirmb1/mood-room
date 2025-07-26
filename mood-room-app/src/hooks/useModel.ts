@@ -13,6 +13,8 @@ type useModelReturn = {
   rigidBodyRefs: React.RefObject<Record<string, React.RefObject<RapierRigidBody | null>>>;// a record of all rigid bodies for the selected models.
   areModelRefsReady: boolean; // a boolean to check if all model refs are ready.
   collisionMap: Record<string, boolean>;// a map which says if each model is in an illegal collider or not.
+  refUpdateTrigger: number; // number to force refs to update and remount
+  forceRefUpdate: () => void; // function to update refs and update in useEffect.
   setModels: React.Dispatch<React.SetStateAction<Model[]>>;// function to change the models array.
   getModelInstanceUpdateHandler: (id: string) => (ref: THREE.Object3D | null) => void;// function to update a model's instance within the record.
   getRigidBodyInstanceUpdateHandler: (id: string) => (ref: RapierRigidBody | null) => void; // function to update a rigid bodie's instance within the record.
@@ -29,6 +31,12 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
   const [rigidBodyVersions, setRigidBodyVersions] = useState<Record<string, number>>({});
   const [collisionMap, setCollisionMap] = useState<Record<string, boolean>>({});
   const areModelRefsReady = models.every(model => modelRefs.current[model.id]?.current);;// an initial check to see if any initial models are ready.
+  const [refUpdateTrigger, setRefUpdateTrigger] = useState(0);
+
+  // Function to force ref update
+  const forceRefUpdate = useCallback(() => {
+    setRefUpdateTrigger(prev => prev + 1);
+  }, []);
 
   // Returns a callback to update the model ref for a given id
   const getModelInstanceUpdateHandler = useCallback(
@@ -43,8 +51,7 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
         // Instance is null, remove the ref
         delete modelRefs.current[id];
       }
-    },
-    []
+    },[]
   );
 
   // Returns a callback to update the rigid body ref for a given id
@@ -171,6 +178,6 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     }, []);
     
 
-  return {models,modelRefs, rigidBodyRefs,rigidBodyVersions, areModelRefsReady, collisionMap,
-    setModels, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, refreshRigidBody,updateModelInformation, deleteModel, updateCollisionMap};
+  return {models,modelRefs, rigidBodyRefs,rigidBodyVersions, areModelRefsReady, collisionMap, refUpdateTrigger, forceRefUpdate
+    ,setModels, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, refreshRigidBody,updateModelInformation, deleteModel, updateCollisionMap};
 }

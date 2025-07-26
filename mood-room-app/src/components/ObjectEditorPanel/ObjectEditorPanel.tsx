@@ -22,9 +22,12 @@ type ObjectEditorPanelProps = {
 export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModelInformation, onClose, onDelete, setMode }: ObjectEditorPanelProps) {
  // On unmount, update model with final transform data
  useEffect(() => {
+  // Store the current objectId to prevent stale closure issues
+  const currentObjectId = objectId;
+
   return () => {
     const object = objectRef?.current;
-    if (!object) return;
+    if (!object || !currentObjectId) return; // we need to double check if we are updating the correct object or not
 
       const rigid = rigidBodyRef?.current;
       
@@ -45,15 +48,15 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
 
       const { currentcolours } = getObjectMaterialMap(objectRef);
 
-      updateModelInformation(objectId, {
+      updateModelInformation(objectId, {// storing the data.
         rotation: [rotation.x, rotation.y, rotation.z],
         scale: [object.scale.x, object.scale.y, object.scale.z],
         colourPalette: currentcolours,
       });
   };
-}, [objectRef, rigidBodyRef, objectId, updateModelInformation]);
+}, []);
 
-  if (!objectRef?.current) {
+  if (!objectRef?.current || !objectId) {
     return null; // wait until the object is ready
   }
 

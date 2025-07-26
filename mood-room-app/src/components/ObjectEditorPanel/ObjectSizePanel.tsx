@@ -36,8 +36,8 @@ export function ObjectSizePanel({ objectRef, objectId}: ObjectScalePanelProps) {
   function handleSizeChange(delta: number){
     setSizePercentage(prev => {
       const next = prev + delta;
-      if (next < -50) return prev;
-      if (next > 50) return prev;
+      if (next < -50) return -50;
+      if (next > 50) return 50;
       return next;
     });
   };
