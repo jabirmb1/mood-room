@@ -1,7 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import * as THREE from "three";
 import { Model } from "@/types/types";
-import { validateObjectPlacement } from "@/utils/collision";
 import { RapierRigidBody } from "@react-three/rapier";
 
 /***************This hook will be used to centralise how we handle multiple models; it will keep a record of all model's

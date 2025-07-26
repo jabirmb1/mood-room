@@ -28,6 +28,7 @@ export function applyMovement({ direction, distance, world, shape, rotation, rig
   if (direction.lengthSq() === 0) return;
 
   const currentPos = getPosition(rigidBody);
+  const isDecor = rigidBody.userData?.tags?.includes('decor') ?? false;// only decor are allowed to snap on top of other objects.
 
   // total movement vector scaled by distance
   const moveVec = direction.clone().normalize().multiplyScalar(distance);
@@ -54,12 +55,12 @@ export function applyMovement({ direction, distance, world, shape, rotation, rig
         });
 
     const { isOverlapping: willOverlap, penetrationDepth: afterPenetration } =
-      isOverlapping(world, testPos, rotation, shape, collider, rigidBody, (targetRB) => {
+      isOverlapping(world, testPos, rotation, shape, collider, rigidBody, isDecor? (targetRB) => {
         // Optional condition: only if userData allows it and targetRB is not a wall
         if (canObjectSnapRecursive(world, rigidBody, targetRB)) {
           snapObjectOnAnother(rigidBody, targetRB);
         }
-        })
+        }: undefined)
 
     // Allow move if no collision OR if penetration reduces (escaping)
     if (!willOverlap || (wasOverlapping && afterPenetration < beforePenetration)) {

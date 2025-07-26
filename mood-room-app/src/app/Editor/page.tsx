@@ -23,59 +23,47 @@ import RoomFoundation from '@/components/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
 import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
+import { getCategoryTagsFromURL } from '@/utils/object3D';
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
-const initialModels: Model[] = [
-  {
-    id: uuidv4(),
-    url: "/assets/furniture/Tvold.glb",
-    colourPalette: {
-      primary: "#0ff0ff",
-      secondary: "#ff0000",
-      tertiary: "#ff0000"
+
+export async function loadInitialModels(): Promise<Model[]> {
+  return [
+    {
+      id: uuidv4(),
+      url: "/assets/furniture/Tvold.glb",
+      colourPalette: {
+        primary: "#0ff0ff",
+        secondary: "#ff0000",
+        tertiary: "#ff0000",
+      },
+      position: [0, 2, -5],
+      tags: await getCategoryTagsFromURL("/assets/furniture/Tvold.glb"),
     },
-    position: [0, 2, -5],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/lights/ShadeLampBasic.glb",
-    position: [0, 0, 0],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/lights/ShadeLampBasic.glb",
-    position: [0, 4, 0],
-  },
-   
- /* 
- 
-  {
-    id: uuidv4(),
-    url: "/assets/lights/WallLampBasic.glb",
-    position: [0, 2, 6],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/lights/WallLamp.glb",
-    position: [4, 2, 0],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/lights/WallLampPoles.glb",
-    position: [-4, 2, 0],
-  }, */
-];
+    {
+      id: uuidv4(),
+      url: "/assets/lights/ShadeLampBasic.glb",
+      position: [0, 0, 0],
+      tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
+    },
+    {
+      id: uuidv4(),
+      url: "/assets/lights/ShadeLampBasic.glb",
+      position: [0, 4, 0],
+      tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
+    },
+  ];
+}
 
 export default function Editor() {
 
    // State to hold floor returned from RoomFoundation
-   const floorRef = useRef<THREE.Object3D | null>(null);
-   
+   const floorRef = useRef<THREE.Object3D | null>(null);   
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
   const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, 
-    deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
+    deleteModel, updateCollisionMap} = useModel([], floorRef, []);
 
   const emptyRef = React.useRef<THREE.Object3D | null>(null);// a default empty ref.
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
@@ -124,6 +112,10 @@ export default function Editor() {
     }
   }, [selectedId, modelRefs.current]);
 
+  useEffect(() => {
+    loadInitialModels().then(setModels);
+  }, []);
+
   // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
   // and then change the selected ID.
   const handleSelect = useCallback((id: string | null) => {
@@ -158,13 +150,15 @@ export default function Editor() {
   
   
   // function to add in a new model.
-  function handleAddModel(model: Omit<ModelItem, 'thumbnail'>): void {
+  async function handleAddModel(model: Omit<ModelItem, 'thumbnail'>) {
+    const tags = await getCategoryTagsFromURL(model.url); // fetch tags from url
     const newModel: Model = {
       id: uuidv4(),
       url: model.url,
       colourPalette: model.colourPalette,
       position: [3, 3, 3],
-      scale: [1, 1, 1]
+      scale: [1, 1, 1],
+      tags: tags
     };
     setModels(prev => [...prev, newModel]);
     setShowAddModelTab(false); // optional: close the tab
@@ -216,6 +210,7 @@ export default function Editor() {
                       rotation={model.rotation ?? [0, 0, 0]}
                       onCollisionEnter={()=>{updateCollisionMap(model.id, true)}}
                       onCollisionExit={()=>updateCollisionMap(model.id, false)}
+                      userData={{tags: model.tags ?? []}}
                       >
 
                       {/* for dev testing purposes; will replace with a compound collider later */}

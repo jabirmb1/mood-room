@@ -18,6 +18,7 @@ export type Model = {
       rotation: [number, number, number];
       scale: [number, number, number];
     };
+    tags?: string[]; // Preloaded category tags (optional)
   };
 
   // colour type (e.g. primary; secondary and tertiary)

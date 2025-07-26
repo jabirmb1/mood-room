@@ -40,7 +40,6 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
 
        // Debounced snap trigger after movement
       if (!anyMovementKeyStillDown && movementOccurred.current && rigidBodyRef.current) {
-        console.log('movemen has occured; trying to snap')
         if (snapTimeout.current) clearTimeout(snapTimeout.current);
 
         // Try snapping after a pause from key release
