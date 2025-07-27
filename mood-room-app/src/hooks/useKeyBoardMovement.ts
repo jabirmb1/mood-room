@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { globalScale } from "@/utils/const";
+import { globalScale, snapDownwardsCountdown } from "@/utils/const";
 import { RapierRigidBody, useRapier} from "@react-three/rapier";
-import type { Collider } from "@dimforge/rapier3d-compat";
-import { applyMovement } from "@/utils/movementEngine";
+import {type Collider } from "@dimforge/rapier3d-compat";
+import { applyMovement } from "@/utils/movementEngine";import { trySnapDownFromObject } from "@/utils/collision";
+;
 
 /*** This hook is used to move an object via keybaord controls *********/
 
@@ -19,7 +20,10 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
   
   // Track which keys are pressed
   const keysPressed = useRef<Record<string, boolean>>({});
-  const { world, rapier} = useRapier();
+  const movementKeys = new Set(["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"]);// all valid movement keys
+  const { world} = useRapier();
+  const movementOccurred = useRef(false);
+  const snapTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Cache static colliders and data
   const cachedColliders = useRef<Collider[]>([]);
@@ -31,6 +35,20 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
     }
     function onKeyUp(e: KeyboardEvent) {
       keysPressed.current[e.key.toLowerCase()] = false;
+
+      const anyMovementKeyStillDown = [...movementKeys].some(k => keysPressed.current[k]);
+
+       // Debounced snap trigger after movement
+      if (!anyMovementKeyStillDown && movementOccurred.current && rigidBodyRef.current) {
+        console.log('movemen has occured; trying to snap')
+        if (snapTimeout.current) clearTimeout(snapTimeout.current);
+
+        // Try snapping after a pause from key release
+        snapTimeout.current = setTimeout(() => {
+          trySnapDownFromObject(world, rigidBodyRef.current!);
+          movementOccurred.current = false; // reset tracker
+        }, snapDownwardsCountdown);
+      }
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -79,13 +97,15 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
     }
 
     if (delta.every((v) => v === 0)) return;
+    movementOccurred.current = true; // mark that some movement just happened
     // if one or more of the values is not 0, i.e there has been a change in position Calculate new position
 
     const direction = new THREE.Vector3(...delta).normalize();
     const distance = new THREE.Vector3(...delta).length();
     const rigidBody = rigidBodyRef.current
-
-    applyMovement({direction, distance, world, shape: new rapier.Ball(1),rotation: rigidBody.rotation(), rigidBody, collider: rigidBody.collider(0),
+    const shape =  rigidBody.collider(0).shape
+   // console.log('shape is', rigidBody.collider(0).shape)
+    applyMovement({direction, distance, world, shape: shape,rotation: rigidBody.rotation(), rigidBody, collider: rigidBody.collider(0),
       isHorizontal: isHorizontalMode, cachedColliders: cachedColliders.current
     })
   });

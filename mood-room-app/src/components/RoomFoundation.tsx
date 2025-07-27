@@ -1,57 +1,80 @@
-// components/MainWalls.tsx
 'use client';
 
 import { useMemo, useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Grid } from '@react-three/drei';
 import { wallHeight, wallThickness, roomSize } from '@/utils/const';
+import { RigidBody } from '@react-three/rapier';
+import { Wall } from './Wall';
 
 type RoomFoundationProps = {
-  onFloorReady?: (objects: THREE.Object3D) => void;// if the floor instance is ready or not.
-}
-export default function RoomFoundation({ onFloorReady }: RoomFoundationProps) {
+  onFloorReady?: (objects: THREE.Object3D) => void;
+  collidersEnabled?: boolean; // Toggle physics colliders (e.g., disable in view mode)
+};
+
+export default function RoomFoundation({ onFloorReady, collidersEnabled = false }: RoomFoundationProps) {
   const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);
   const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);
-  const [showGrid, setShowGrid] = useState<boolean>(true);
+  const [showGrid, setShowGrid] = useState(true);
 
-  // Refs to the floor and walls meshes
   const floorRef = useRef<THREE.Mesh>(null);
-  const backWallRef = useRef<THREE.Mesh>(null);
-  const leftWallRef = useRef<THREE.Mesh>(null);
 
-   // Notify parent with the floor ref when ready
-   useEffect(() => {
-    if (floorRef?.current && onFloorReady) {
+  useEffect(() => {
+    if (floorRef.current && onFloorReady) {
       onFloorReady(floorRef.current);
     }
   }, []);
 
   return (
     <>
-      {/* floor */}
-      <mesh ref = {floorRef}  name = 'floor' receiveShadow = {true}  castShadow = {true} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} material={floorMaterial}>
-        <boxGeometry args={[roomSize, roomSize, wallThickness]} />
-      </mesh>
+      {/* Floor */}
+      {collidersEnabled ? (
+        <RigidBody type="fixed" colliders="cuboid">
+          <mesh
+            ref={floorRef}
+            name="floor"
+            receiveShadow
+            castShadow
+            position={[0, 0, 0]}
+            material={floorMaterial}
+          >
+            <boxGeometry args={[roomSize,wallThickness, roomSize]} />
+          </mesh>
+        </RigidBody>
+      ) : (
+        <mesh
+          ref={floorRef}
+          name="floor"
+          receiveShadow
+          castShadow
+          position={[0, 0, 0]}
+          material={floorMaterial}
+        >
+          <boxGeometry args={[roomSize,wallThickness, roomSize]} />
+        </mesh>
+      )}
 
-      {/* walls */}
-      <mesh  ref = {backWallRef} name = 'backWall' receiveShadow = {true}  castShadow = {true} position={[0, wallHeight / 2, -roomSize / 2]}>
-        <boxGeometry args={[roomSize, wallHeight, wallThickness]} />
-        <meshStandardMaterial color="lightgray" />
-      </mesh>
+      {/* Walls */}
+      <Wall name="backWall" position={[0, wallHeight / 2, -roomSize / 2]} size={[roomSize, wallHeight, wallThickness]} enableColliders={true}/>
+      <Wall name="frontWall" position={[0, wallHeight / 2, roomSize / 2]} size={[roomSize, wallHeight, wallThickness]} enableColliders={true} 
+      invisible={true}/>
+      <Wall name="leftWall" position={[-roomSize / 2, wallHeight / 2, 0]} size={[wallThickness, wallHeight, roomSize]} enableColliders={true} />
+      <Wall name="rightWall" position={[roomSize / 2, wallHeight / 2, 0]} size={[wallThickness, wallHeight, roomSize]} enableColliders={true}
+      invisible={true} />
+
+      {/* Ceiling */}
+      <Wall name="ceiling" position={[0, wallHeight, 0]} size={[roomSize, wallThickness, roomSize]}  enableColliders={true}
+      invisible={true}/>
+
       {showGrid && (
         <Grid
           args={[roomSize, roomSize]}
           position={[0, 0.3, 0]}
           cellColor="#888"
           fadeDistance={100}
-          fadeStrength={1}  
+          fadeStrength={1}
         />
       )}
-      <mesh  ref = {leftWallRef} name='leftWall' receiveShadow = {true}  castShadow = {true} position={[-roomSize / 2, wallHeight / 2, 0]}>
-        <boxGeometry args={[wallThickness, wallHeight, roomSize]} />
-        <meshStandardMaterial color="lightgray" />
-      </mesh>
     </>
   );
 }
-  

@@ -10,3 +10,5 @@ export const collisionSpecificTags = ['decor', 'furniture', 'wall-art'] as const
 export const wallHeight = 10;
 export const wallThickness = 0.3
 export const roomSize = 13;
+
+export const snapDownwardsCountdown = 500// how quikcly an object should snap downwards after movement (ms)
