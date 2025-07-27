@@ -24,6 +24,7 @@ import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
 import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
 import { getCategoryTagsFromURL } from '@/utils/object3D';
+import { getRelativeColliderScale } from '@/utils/collision';
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
@@ -74,7 +75,7 @@ export default function Editor() {
   const emptyRef = React.useRef<THREE.Object3D | null>(null);// a default empty ref.
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
    // getting the selected model's model refs:
-  const [selectedModelRef, setSelectedModelRef] =useState<React.RefObject<THREE.Object3D | null> | null>(null);;// using a usestate now since models will now remount due to rigid bodies.
+  const [selectedModelRef, setSelectedModelRef] =useState<React.RefObject<THREE.Object3D | null>>(emptyRef);;// using a usestate now since models will now remount due to rigid bodies.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not, needed for orbital controls
   const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if the user wants to show model's editor panel
   //or instead show a floating panel so they can move model around.
@@ -109,12 +110,16 @@ export default function Editor() {
     console.log("hello");
   }, [areModelRefsReady]); */
 
+  useEffect(()=>{
+    console.log('selected model ref is:', selectedModelRef)
+  }, [selectedModelRef])
+
   // function to update selectedModelRef to be as up to date as possible:
   useEffect(() => {
     if (selectedId && modelRefs.current[selectedId]) {
       setSelectedModelRef(modelRefs.current[selectedId]);
     } else {
-      setSelectedModelRef(null);
+      setSelectedModelRef(emptyRef);
     }
   }, [selectedId, refUpdateTrigger]);
 
@@ -126,7 +131,7 @@ export default function Editor() {
   // and then change the selected ID.
   const handleSelect = useCallback((id: string | null) => {
      // Clear previous selection immediately
-     setSelectedModelRef(null);
+     setSelectedModelRef(emptyRef);
      setEditingMode('edit');
      
      // If selecting the same object, deselect it
@@ -231,7 +236,7 @@ export default function Editor() {
                       >
 
                       {/* for dev testing purposes; will replace with a compound collider later */}
-                      <CuboidCollider args={[1, 1, 1]}/>
+                      <CuboidCollider args={[1, 1, 1]} scale={getRelativeColliderScale(model.scale?.[0], globalScale)}/>
                                      
                      {/* Your visual 3D model */}
                      <Object3D
@@ -284,7 +289,7 @@ export default function Editor() {
 
         {/* Editor Panel */}
         <AnimatePresence>{/* animate the panel coming in from the side */}
-          {isPopupOpen && editingMode === 'edit' && (
+          {isPopupOpen && editingMode === 'edit' && selectedModelRef.current && (
             <motion.aside
               key="editor-panel"
               initial={{ x: '100%' }}
@@ -297,7 +302,7 @@ export default function Editor() {
             >
               <ObjectEditorPanel
                 rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
-                objectRef={selectedModelRef ?? emptyRef}
+                objectRef={selectedModelRef}
                 objectId={selectedId}
                 updateModelInformation={updateModelInformation}
                 onClose={() => setSelectedId(null)}

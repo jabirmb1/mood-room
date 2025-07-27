@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback} from "react";
 import * as THREE from "three";
 import { Model } from "@/types/types";
 import { RapierRigidBody } from "@react-three/rapier";
@@ -35,7 +35,7 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
 
   // Function to force ref update
   const forceRefUpdate = useCallback(() => {
-    setRefUpdateTrigger(prev => prev + 1);
+    setRefUpdateTrigger(prev => (prev === 1 ? 0 : 1));// only toggle between 0 and 1
   }, []);
 
   // Returns a callback to update the model ref for a given id
@@ -82,11 +82,19 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     }
     
     // using time out to prevent any race conditions.
-    setTimeout(() => {
+    setTimeout(() => {// numbers are now between 0 and 2; will never reach infinity.
       setRigidBodyVersions(prev => {
-        const currentVersion = prev[id] ?? 0;
-        const newVersion = currentVersion + 1;// for some reason when toggling 0 and 1; it causes errors (fix later).
-                //console.log(`Rigid body version: ${currentVersion} → ${newVersion}`);
+        let currentVersion = prev[id] ?? 0;
+        console.log(currentVersion)
+        let newVersion = 0;
+        if (currentVersion >= 2)
+        {
+          newVersion = 0
+        }
+        else
+        {
+          newVersion = currentVersion + 1
+        }
         return { ...prev, [id]: newVersion };
       });
     }, 16);

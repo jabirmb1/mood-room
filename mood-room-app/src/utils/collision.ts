@@ -215,6 +215,15 @@ export function getApproximateAABB(collider: Collider): THREE.Box3 | null {
   }
 }
 
+// This function will calculate the actual scale needed to be passed down into the collider scale props for it to fit the mode
+// wuth the base scale/ global scale applied.
+//
+export function getRelativeColliderScale(actualScale: number | undefined, baseScale: number): [number, number, number] {
+  const scale = actualScale ?? baseScale;
+  const factor = scale / baseScale;
+  return [factor, factor, factor];
+}
+
 // This function will get a rigid body's top most collider's AABB.
 //
 export function getTopMostColliderAABB(rigidBody: RapierRigidBody): THREE.Box3 | null {

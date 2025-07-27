@@ -104,7 +104,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
       });
       applyColourPalette(modelRef.current, colourPalette);
     }
-  }, [colourPalette]);
+  }, [colourPalette]);// may be an error as it may not be constant
   
   // add in a hovered effect if user is in edit mode and hovers over model
   useEffect(() => {
@@ -161,10 +161,14 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
           recieveShadow = {true}
           onDoubleClick={(e: ThreeEvent<PointerEvent>) => {
             e.stopPropagation();
-            // Clear any existing selection first
-            setSelectedId(null);
-            setEditingMode('edit');
-            setSelectedId(id);
+            if (isSelected) {
+              // Deselect if the same model is clicked again
+              setSelectedId(null);
+            } else {
+              // Select new model
+              setEditingMode('edit');
+              setSelectedId(id);
+            }
           }}
           
           onPointerOver={(e: ThreeEvent<PointerEvent>) => {
