@@ -174,8 +174,8 @@ export default function Editor() {
   }
 
   return (
-    <section className="flex flex-col items-center justify-center w-full h-screen">
-      <h1 className="text-xl font-bold mb-2">Editor</h1>
+    <section className="flex flex-col items-center justify-center w-full h-full">
+      <h1 className="text-xl font-bold mb-1">Editor</h1>
       <p>Edit your generated room layout</p>
       <div className="w-full h-[80vh] mt-4 flex flex-col lg:flex-row relative">
         {/* Canvas Section */}
@@ -185,7 +185,7 @@ export default function Editor() {
             <Canvas
               shadows
               camera={{ position: defaultCameraPosition, fov: 50 }}
-              className={`canvas-container h-full w-full bg-gray-200 z-50
+              className={`canvas-container sm:h-full h-[70vh] w-full bg-gray-200 z-50
               ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
                 <Physics debug gravity={[0, 0, 0]}>{/* using rapier physics engine to handle collisions (no physics)*/}
                   {/* if object if being hovered over change cursor into a grab */}

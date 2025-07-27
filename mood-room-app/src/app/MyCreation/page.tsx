@@ -2,8 +2,8 @@
 "use client"; // This component needs to be a Client Component to use useState
 
 import React, { useState, useEffect } from 'react';
-import PolaroidCanvasBox from '@/components/MyCreationComp/PolaroidCanvasBox'; // Your clickable component
-import ViewMode from '@/components/MyCreationComp/ViewMode'; // Your ViewMode component
+import PolaroidCanvasBox from '@/components/MyCreationComponent/PolaroidCanvasBox'; // Your clickable component
+import ViewMode from '@/components/MyCreationComponent/ViewMode'; // Your ViewMode component
 
 export default function MyCreationsPage() { // Or your specific page/component name
   const [isViewModeOpen, setIsViewModeOpen] = useState(false); // State to control ViewMode's visibility

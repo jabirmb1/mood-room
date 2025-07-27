@@ -49,7 +49,7 @@ export default function PolaroidCanvasBox({ onCanvasClick }: PolaroidCanvasBoxPr
             >             
             <div 
             className={`flex flex-col gap-2 border border-black ${theme === 'dark' ? 'border-white bg-amber-50' : 'border-black bg-amber-50'} w-80 h-100 relative overflow-hidden rounded-sm`}
-            onClick={onCanvasClick}
+            onDoubleClick={onCanvasClick}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {

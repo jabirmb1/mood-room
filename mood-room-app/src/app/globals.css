@@ -24,15 +24,14 @@ html, body {
 }
 
 html.dark{
-  background-color: black ;
+  background-color: grey-900 ;
   color: white;
 }
 
 
 
 
-
-/* Polaroid Animations */
+/* Polaroid Animations for component*/
 @keyframes polaroidReflection {
   0%, 100% { 
     transform: translateX(-100px) rotate(45deg);
@@ -100,3 +99,81 @@ html.dark{
 .vintage-filter {
   filter: sepia(25%) saturate(80%) brightness(98%) contrast(95%);
 }
+
+
+
+
+/* Gradient animated background*/
+.your-element {
+  background: radial-gradient(100% 100% at var(--26-x-position) var(--26-y-position), #ffdd00 -80%, transparent),
+              radial-gradient(100% 100% at var(--27-x-position) var(--27-y-position), #15c3ef -27%, transparent),
+              radial-gradient(100% 100% at var(--28-x-position) var(--28-y-position), #bd0f0f 14%, transparent),
+              radial-gradient(100% 100% at var(--29-x-position) var(--29-y-position), #6041aa 5%, transparent),
+              #1b253b;
+  animation-name: main;
+  animation-iteration-count: infinite;
+  animation-duration: 10s;
+  transition-timing-function: ease-out;
+}
+
+@property --26-x-position {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 13.087966720779217%;
+}
+
+@property --26-y-position {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 82.5390625%;
+}
+
+/* And so on for all props */
+@property --27-x-position {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 80.14458198051952%;
+}
+@property --27-y-position { syntax: '<percentage>'; inherits: false; initial-value: 15.703125000000002%; }
+@property --28-x-position { syntax: '<percentage>'; inherits: false; initial-value: 79.29738230519484%; }
+@property --28-y-position { syntax: '<percentage>'; inherits: false; initial-value: 75.3125%; }
+@property --29-x-position { syntax: '<percentage>'; inherits: false; initial-value: 20.386566558441576%; }
+@property --29-y-position { syntax: '<percentage>'; inherits: false; initial-value: 23.750000000000004%; }
+
+/* root initial values */
+:root {
+  --26-x-position: 13.087966720779217%;
+  --26-y-position: 82.5390625%;
+  --27-x-position: 80.14458198051952%;
+  --27-y-position: 15.703125000000002%;
+  --28-x-position: 79.29738230519484%;
+  --28-y-position: 75.3125%;
+  --29-x-position: 20.386566558441576%;
+  --29-y-position: 23.750000000000004%;
+}
+
+/* Animation */
+@keyframes main {
+  25% {
+    --26-x-position: 15%;
+    --26-y-position: 15%;
+    --27-x-position: 85%;
+    --27-y-position: 80%;
+  }
+  50% {
+    --26-x-position: 80%;
+    --26-y-position: 15%;
+    --27-x-position: 15%;
+    --27-y-position: 85%;
+    --28-x-position: 20%;
+    --28-y-position: 20%;
+    --29-x-position: 20%;
+    --29-y-position: 20%;
+  }
+}
+
+
+
+
+
+

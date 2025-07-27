@@ -45,7 +45,7 @@ export default function DropDownMenu() {
 
   //classes for the dropdown container itself
   const dropdownContainerClasses = `
-    absolute right-0 mt-2 w-48 h-80 rounded-xl shadow-lg z-10
+    absolute right-0 mt-2 w-48 h-80 rounded-xl shadow-lg z-50
     ${theme === 'dark' 
       ? 'bg-neutral-900 text-white border-neutral-600' 
       : 'bg-white text-black border-white'}
@@ -53,7 +53,7 @@ export default function DropDownMenu() {
   `.replace(/\s+/g, ' ').trim(); 
 
   return (
-    <div className="relative inline-block" ref={menuRef}>
+    <div className="absolute right-0 z-50 inline-block" ref={menuRef}>
       <button
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="listbox"

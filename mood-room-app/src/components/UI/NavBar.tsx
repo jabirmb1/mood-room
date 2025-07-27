@@ -46,7 +46,7 @@ export default function NavBar() {
         </Link>
     </div>
             {/* more logic for the drop down menu neede for loging out  and interchanging */}
-    <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex items-center gap-5">
+    <div className="absolute right-6 top-1/2 transform -translate-y-1/2 flex items-center gap-5 z-75">
     <DropDownMenu />
     </div>
 </nav>
