@@ -23,7 +23,7 @@ import RoomFoundation from '@/components/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
 import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
-import { getCategoryTagsFromURL } from '@/utils/object3D';
+import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/object3D';
 import { getRelativeColliderScale } from '@/utils/collision';
 import Colliders from '@/components/Colliders';
 
@@ -42,17 +42,18 @@ export async function loadInitialModels(): Promise<Model[]> {
       },
       position: [0, 2, -5],
       tags: await getCategoryTagsFromURL("/assets/furniture/NormTable/NormTable.glb"),
-    },
-   /* {
-      id: uuidv4(),
-      url: "/assets/decor/WBinvisCOLLIDER2.glb",
-      position: [0, 0, 0],
-      tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
+      colliderDataUrl: await getModelColliderDataUrl('/assets/furniture/NormTable/NormTable.glb'), 
     },
     {
       id: uuidv4(),
       url: "/assets/decor/WaterBottle.glb",
       position: [0, 4, 0],
+      tags: await getCategoryTagsFromURL("/assets/decor/WaterBottle.glb"),
+    },
+   /* {
+      id: uuidv4(),
+      url: "/assets/decor/WBinvisCOLLIDER2.glb",
+      position: [0, 0, 0],
       tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
     },
     {
@@ -175,13 +176,15 @@ export default function Editor() {
   // function to add in a new model.
   async function handleAddModel(model: Omit<ModelItem, 'thumbnail'>) {
     const tags = await getCategoryTagsFromURL(model.url); // fetch tags from url
+    const colliderDataUrl = await getModelColliderDataUrl(model.url)
     const newModel: Model = {
       id: uuidv4(),
       url: model.url,
       colourPalette: model.colourPalette,
       position: [3, 3, 3],
       scale: [1, 1, 1],
-      tags: tags
+      tags: tags,
+      colliderDataUrl: colliderDataUrl,
     };
     setModels(prev => [...prev, newModel]);
     setShowAddModelTab(false); // optional: close the tab
@@ -237,7 +240,7 @@ export default function Editor() {
                       >
 
                       {/* for dev testing purposes; will replace with a compound collider later */}
-                      <Colliders jsonUrl={'/assets/furniture/NormTable/colliders.json'} scale={model.scale ?? [globalScale, globalScale, globalScale]}/>
+                      <Colliders jsonUrl={model.colliderDataUrl ?? null} scale={model.scale ?? [globalScale, globalScale, globalScale]}/>
                                      
                      {/* Your visual 3D model */}
                      <Object3D

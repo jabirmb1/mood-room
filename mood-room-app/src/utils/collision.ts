@@ -179,7 +179,8 @@ export function checkMultiColliderOverlap(world: RapierWorld, rigidBody: RapierR
       hasOverlap = true;
       maxPenetration = Math.max(maxPenetration, overlap.penetrationDepth);
       if (overlap.otherRigidBody) {
-        collidingBodies.add(overlap.otherRigidBody);
+        collidingBodies.add(overlap.otherRigidBody);// we don't exit out ealry since we need all collider overlapping data to see
+        // when entire model is escaping out of a collision.
       }
     }
   }

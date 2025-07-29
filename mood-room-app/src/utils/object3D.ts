@@ -289,9 +289,12 @@ export async function getCategoryTagsFromURL(url: string){
     tags.add('wall-art');
   }
 
+  /*
   // Only look for .meta.json if in its own subfolder
   const match = url.match(/([^/]+)\/\1\.glb$/i);
   if (!match) return Array.from(tags);
+  */ //We no longer check if if the model is in it's own sub folder or not since now, due to compound colliders and their information;
+  // every model is inside it's own sub folder
 
   const jsonUrl = url.replace(/\.glb$/i, '.meta.json');
 
@@ -308,10 +311,20 @@ export async function getCategoryTagsFromURL(url: string){
       }
     }
   } catch {
-    console.warn(`[Meta Tags] No meta.json found or failed for ${url}`);
+    // we do nothing since some folders will have an extra json file; and others will not.
+   // console.warn(`[Meta Tags] No meta.json found or failed for ${url}`);
   }
 
   return Array.from(tags);
+}
+
+//This function will get a model url and then return it's collider url
+// This is because  the colllider url is standardised and each collider json is named colliders.json and is inside each model's sub folder
+//
+export async function getModelColliderDataUrl(url: string): Promise<string> {
+  // Replace the model file name (e.g., NormTable.glb) with 'colliders.json'
+  const colliderUrl = url.replace(/[^/]+\.glb$/i, 'colliders.json');
+  return colliderUrl
 }
 
 // Applies tags to object.userData.tags safely (deduplicates)
