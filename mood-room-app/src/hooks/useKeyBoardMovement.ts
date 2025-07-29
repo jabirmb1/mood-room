@@ -104,10 +104,6 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
     const direction = new THREE.Vector3(...delta).normalize();
     const distance = new THREE.Vector3(...delta).length();
     const rigidBody = rigidBodyRef.current
-    const shape =  rigidBody.collider(0).shape
-   // console.log('shape is', rigidBody.collider(0).shape)
-    applyMovement({direction, distance, world, shape: shape,rotation: rigidBody.rotation(), rigidBody, collider: rigidBody.collider(0),
-      isHorizontal: isHorizontalMode, cachedColliders: cachedColliders.current
-    })
+    applyMovement({direction, distance, world, rigidBody, isHorizontal: isHorizontalMode})
   });
 }

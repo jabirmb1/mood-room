@@ -3,8 +3,8 @@
 import { collisionSpecificTags, wallHeight} from "./const"
 import * as THREE from "three";
 import { RapierRigidBody} from "@react-three/rapier";
-import { Ray, type Ball, type Capsule, type Collider, type Cuboid, type Rotation, type Shape} from "@dimforge/rapier3d-compat";
-import { RapierWorld } from "@/types/types";
+import {Ray, type Ball, type Capsule, type Collider, type Cuboid, type Rotation, type Shape} from "@dimforge/rapier3d-compat";
+import {RapierWorld } from "@/types/types";
 import { isWall } from "./rapierHelpers";
 
 
@@ -20,6 +20,14 @@ type SceneObjectRole = "model" | "floor" | "wall";// role of a specific object a
 
 type ObjectOverlap = {isOverlapping: boolean, penetrationDepth: number, otherRigidBody: RapierRigidBody | null, selectedRigidBody:
   RapierRigidBody
+}
+
+// structure to see if  rigid body can overlap or not; handles compound colliders.
+type MultiColliderOverlap = {
+  isOverlapping: boolean;
+  maxPenetrationDepth: number;
+  collidingBodies: Set<RapierRigidBody>;
+  snapCandidates: RapierRigidBody[];
 }
 
 const collisionRules: Record<CollisionTag, CollisionRules> = {
@@ -125,6 +133,70 @@ function getFirstOverlappingRigidBody(world: RapierWorld, candidatePos: THREE.Ve
 
   return foundBody;
 }
+
+
+// Helper function to check overlaps for all colliders of a rigid body
+export function checkMultiColliderOverlap(world: RapierWorld, rigidBody: RapierRigidBody, testPos: THREE.Vector3,onSnapCandidate?: (targetRB: RapierRigidBody) => void): MultiColliderOverlap {
+  let hasOverlap = false;
+  let maxPenetration = 0;
+  const collidingBodies = new Set<RapierRigidBody>();
+  const snapCandidates: RapierRigidBody[] = [];
+
+  // Check all colliders of the rigid body
+  const colliderCount = rigidBody.numColliders();
+  
+  for (let i = 0; i < colliderCount; i++) {
+    const collider = rigidBody.collider(i);
+    const shape = collider?.shape;
+    if (!shape) continue;
+
+    // Store current position and temporarily move to test position
+    const originalPos = rigidBody.translation();
+    const offset = {
+      x: testPos.x - originalPos.x,
+      y: testPos.y - originalPos.y,
+      z: testPos.z - originalPos.z
+    };
+
+    // Calculate this collider's position at the test location
+    const colliderCurrentPos = collider.translation();
+    const colliderTestPos = new THREE.Vector3(
+      colliderCurrentPos.x + offset.x,
+      colliderCurrentPos.y + offset.y,
+      colliderCurrentPos.z + offset.z
+    );
+
+    const overlap = isOverlapping(world, colliderTestPos, rigidBody.rotation(), shape, collider, rigidBody,
+    onSnapCandidate ? (targetRB) => {// conditionally add in the snap candidate field depending if the object is allowed to snap
+      // on top of other objects.
+        if (targetRB && !snapCandidates.includes(targetRB)) {
+          snapCandidates.push(targetRB);
+        }
+      } : undefined
+    );
+
+    if (overlap.isOverlapping) {
+      hasOverlap = true;
+      maxPenetration = Math.max(maxPenetration, overlap.penetrationDepth);
+      if (overlap.otherRigidBody) {
+        collidingBodies.add(overlap.otherRigidBody);
+      }
+    }
+  }
+
+  // Call snap candidate callback for unique candidates
+  if (onSnapCandidate) {
+    snapCandidates.forEach(candidate => onSnapCandidate(candidate));
+  }
+
+  return {
+    isOverlapping: hasOverlap,
+    maxPenetrationDepth: maxPenetration,
+    collidingBodies,
+    snapCandidates
+  };
+}
+
 
 /********************************* AABB/ OBB sections **************/
 
@@ -360,7 +432,7 @@ export function canObjectSnapRecursive(world: RapierWorld, selectedBody: RapierR
 }
 // This function will cast a ray downwards and see if it can snap or not. (will only check the first collision with the ray)
 // returns a boolean whether or not object has been successfully snapped
-//
+//TO DO: make this work for multiple shapes e.g. a list of all bottom colliders for e.g. legs and base
 export function trySnapDownFromObject(world: RapierWorld, selectedBody: RapierRigidBody | null, maxSnapDistance = 3, enabled = true): boolean {
   if (!enabled || !selectedBody) return false;
   const bottom = getBottomMostColliderAABB(selectedBody);

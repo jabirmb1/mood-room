@@ -78,11 +78,7 @@ function handlePointerMove(e: ThreeEvent<PointerEvent>,   rigidBodyRef: React.Re
     const direction = stepDelta.clone().normalize();
     const distance = stepDelta.length();
 
-    const shape = rigidBodyRef.current.collider(0).shape
-
-    applyMovement({direction, distance,world, shape: shape,rotation: rigidBodyRef.current.rotation(),rigidBody: rigidBodyRef.current,
-      collider: rigidBodyRef.current.collider(0),  isHorizontal: isHorizontalMode,
-    });
+    applyMovement({direction, distance, world, rigidBody: rigidBodyRef.current, isHorizontal: isHorizontalMode, });
   }
 }
 
