@@ -1,11 +1,14 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ObjectRotationPanel } from "./ObjectRotationPanel";
 import { ObjectColourPanel } from "./ObjectColourPanel";
 import { ObjectSizePanel } from "./ObjectSizePanel";
-import { Model } from "@/types/types";
+import { Model, RotationDegrees } from "@/types/types";
 import { getObjectMaterialMap } from "@/utils/object3D";
 import { RapierRigidBody } from "@react-three/rapier";
+import { getRigidBodyRotation } from "@/utils/rotation";
+import { areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/comparisons";
+import { globalScale } from "@/utils/const";
 
 /******** This panel will be used to change the properties of an object e.g. it's rotation; size; colour scheme etc. ********/
 
@@ -20,44 +23,55 @@ type ObjectEditorPanelProps = {
 };
 
 export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModelInformation, onClose, onDelete, setMode }: ObjectEditorPanelProps) {
-  const unmountCounterRef = useRef(0);
+  const initialScale = useRef<THREE.Vector3 | null>(null);
+  const initialColours = useRef<Model['colourPalette'] | null>(null);
+  const initialRotation = useRef<RotationDegrees | null>(null);
   // since we are conditionally rendering this panel the life cycle of it is: mount -> unmount -> remount -> unmount last time)
   // Onthe last unmount (e.g. it visually goes away; we will want to do the clean up logic), update model with final transform data
   useEffect(() => {
     const currentObjectId = objectId;
+    const object = objectRef.current;
+    if (!object) return;
+
+    // on mount store initial details of the object.
+    initialScale.current = object.scale.clone() ?? new THREE.Vector3(globalScale, globalScale, globalScale);
+    initialRotation.current = getRigidBodyRotation(rigidBodyRef);
+    initialColours.current = getObjectMaterialMap(objectRef).currentcolours;
+
     return () => {
-      unmountCounterRef.current += 1;// just unmounted
-      // Only run update when counter hits 2)
-      if (unmountCounterRef.current === 2) {// second unmount; component is about to be visiually removed from scene
-        // TO DO: this may be bad for other browsrs; test and go for new logic if necessary
-        // e.g. always render editing panel but do .visible = false and pass it in from editor.
-       
-        const object = objectRef?.current;
-        if (!object || !currentObjectId) return;// make sure that we are updating the correct object.
+  
+      // on unmount check to see if there was any differences; if there was then update the model information
+      const object = objectRef?.current;
+      if (!object || !currentObjectId) return;// make sure that we are updating the correct object.
 
-        const rigid = rigidBodyRef?.current;
+      const rigid = rigidBodyRef?.current;
 
-        // Add null checks and error handling
-        let rotation = { x: 0, y: 0, z: 0 };
+      // Add null checks and error handling
+      let rotation = { x: 0, y: 0, z: 0 };
 
-        if (rigid && rigid.rotation) {
-          const quaternion = rigid.rotation();
-          const euler = new THREE.Euler().setFromQuaternion(
-            new THREE.Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
-          );
-          rotation = { x: euler.x, y: euler.y, z: euler.z };;// storing rotation in radians.
-        }
-        else {
-          rotation = object.rotation;
-        }
-
-        const { currentcolours } = getObjectMaterialMap(objectRef);
-        updateModelInformation(objectId, {// storing the data.
-          rotation: [rotation.x, rotation.y, rotation.z],
-          scale: [object.scale.x, object.scale.y, object.scale.z],
-          colourPalette: currentcolours,
-        });
+      if (rigid && rigid.rotation) {
+        const quaternion = rigid.rotation();
+        const euler = new THREE.Euler().setFromQuaternion(
+          new THREE.Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
+        );
+        rotation = { x: euler.x, y: euler.y, z: euler.z };// storing rotation in radians.
       }
+      else {
+        rotation = object.rotation;
+      }
+      const { currentcolours } = getObjectMaterialMap(objectRef);
+      
+      const originalScale = initialScale.current;
+      const originalRotation = initialRotation.current;
+      const originalColours = initialColours.current;
+
+      //(pass in undefined if we want to skip updating that field)
+      // otherwise pass in the new value so that we can update that part
+      updateModelInformation(objectId, {
+        rotation: originalRotation && areRotationsEqual(originalRotation, rotation) ? undefined : [rotation.x, rotation.y, rotation.z],
+        scale: originalScale && areVectorsEqual(object.scale, originalScale) ? undefined : [object.scale.x, object.scale.y, object.scale.z],
+        colourPalette: originalColours && deepEqual(originalColours, currentcolours) ? undefined : currentcolours,
+      });
     };
   }, [objectId]);
 

@@ -104,11 +104,15 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     setModels(prevModels =>
       prevModels.map(model => {
         if (model.id !== id) return model;
-        console.log("Before update:", model);
-        console.log("Updates:", updates);
-        const updatedModel = { ...model, ...updates };
+
+        // we want to skip any undefined values passed in (e.g. fields which we want to skip updating; we will pass in an undefined.)
+        const filteredUpdates = Object.fromEntries(
+          Object.entries(updates).filter(([_, value]) => value !== undefined)
+        );
+        const updatedModel = { ...model, ...filteredUpdates };
+        
         // Force rigid body recreation if scale is updated
-        if (updates.scale) {
+        if ('scale' in filteredUpdates) {// using this new syntax to avoid edge case where scale is [0, 0, 0]
           refreshRigidBody(id);
         }
         return updatedModel;
