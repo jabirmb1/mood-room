@@ -19,12 +19,17 @@ export type Model = {
       scale: [number, number, number];
     };
     tags?: string[]; // Preloaded category tags (optional)
+    colliderDataUrl?: string | null// pre loaded url of where the json file containing collider information of the specifc model is
+    // stored in.
   };
 
-  // colour type (e.g. primary; secondary and tertiary)
-  export type MaterialColourType = typeof modelMaterialNames[number];
+// colour type (e.g. primary; secondary and tertiary)
+export type MaterialColourType = typeof modelMaterialNames[number];
 
-  // type to define a rigid bodie's max and min bounds.
+// rotation type (degrees)
+export type RotationDegrees = { x: number; y: number; z: number };
+
+// type to define a rigid bodie's max and min bounds.
 export type RapierAABB = {
   min: { x: number; y: number; z: number };
   max: { x: number; y: number; z: number };
