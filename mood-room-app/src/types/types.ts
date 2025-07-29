@@ -39,3 +39,11 @@ type UseRapierReturn = ReturnType<typeof useRapier>;
 // Extract the `world` type
 export type RapierWorld = UseRapierReturn["world"];
 export type Rapier = UseRapierReturn["rapier"];
+
+// This is how the collider jsons should be structured:
+export type ColliderJsonData={
+  shape: 'box' | 'sphere' | "capsule",
+  position: [number, number, number],
+  rotation: [number, number, number],// stored as eular
+  dimensions: number[]//depending on the shape it can be an array of 1, 2 or 3. (we are only using box, capsule and spheres)
+}

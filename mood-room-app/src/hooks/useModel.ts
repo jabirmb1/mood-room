@@ -85,7 +85,6 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     setTimeout(() => {// numbers are now between 0 and 2; will never reach infinity.
       setRigidBodyVersions(prev => {
         let currentVersion = prev[id] ?? 0;
-        console.log(currentVersion)
         let newVersion = 0;
         if (currentVersion >= 2)
         {
@@ -105,6 +104,8 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     setModels(prevModels =>
       prevModels.map(model => {
         if (model.id !== id) return model;
+        console.log("Before update:", model);
+        console.log("Updates:", updates);
         const updatedModel = { ...model, ...updates };
         // Force rigid body recreation if scale is updated
         if (updates.scale) {

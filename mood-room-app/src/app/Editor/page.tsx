@@ -25,6 +25,7 @@ import { Model } from '@/types/types';
 import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
 import { getCategoryTagsFromURL } from '@/utils/object3D';
 import { getRelativeColliderScale } from '@/utils/collision';
+import Colliders from '@/components/Colliders';
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
@@ -33,24 +34,24 @@ export async function loadInitialModels(): Promise<Model[]> {
   return [
     {
       id: uuidv4(),
-      url: "/assets/furniture/Tvold.glb",
+      url: "/assets/furniture/NormTable/NormTable.glb",
       colourPalette: {
         primary: "#0ff0ff",
         secondary: "#ff0000",
         tertiary: "#ff0000",
       },
       position: [0, 2, -5],
-      tags: await getCategoryTagsFromURL("/assets/furniture/Tvold.glb"),
+      tags: await getCategoryTagsFromURL("/assets/furniture/NormTable/NormTable.glb"),
     },
-    {
+   /* {
       id: uuidv4(),
-      url: "/assets/lights/ShadeLampBasic.glb",
+      url: "/assets/decor/WBinvisCOLLIDER2.glb",
       position: [0, 0, 0],
       tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
     },
     {
       id: uuidv4(),
-      url: "/assets/lights/ShadeLampBasic.glb",
+      url: "/assets/decor/WaterBottle.glb",
       position: [0, 4, 0],
       tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
     },
@@ -59,7 +60,7 @@ export async function loadInitialModels(): Promise<Model[]> {
       url: "/assets/wall-art/rectangleTEST.glb",
       position: [0, 8, 0],
       tags: await getCategoryTagsFromURL("/assets/wall-art/rectangleTEST.glb"),
-    },
+    }, */
   ];
 }
 
@@ -236,7 +237,7 @@ export default function Editor() {
                       >
 
                       {/* for dev testing purposes; will replace with a compound collider later */}
-                      <CuboidCollider args={[1, 1, 1]} scale={getRelativeColliderScale(model.scale?.[0], globalScale)}/>
+                      <Colliders jsonUrl={'/assets/furniture/NormTable/colliders.json'} scale={model.scale ?? [globalScale, globalScale, globalScale]}/>
                                      
                      {/* Your visual 3D model */}
                      <Object3D
