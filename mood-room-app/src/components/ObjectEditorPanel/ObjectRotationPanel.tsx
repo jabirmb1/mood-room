@@ -24,7 +24,7 @@ export function ObjectRotationPanel({ rigidBodyRef, objectId }: RotateComponentP
   useEffect(() => {
     const body = rigidBodyRef.current;
     if (body) {
-      setRigidBodyRotation(body, { y: rotation }); // apply the rotation to the rigid body
+      setRigidBodyRotation(body, { x: 0, y: rotation, z: 0 }); // apply the rotation to the rigid body
     }
   }, [rotation]);
 
