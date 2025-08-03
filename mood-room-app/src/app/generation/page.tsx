@@ -1,3 +1,5 @@
+//User will input a sentence about how they feel or how their day went and will pass to AI and random genration code
+//
 
 'use client';
 
@@ -21,6 +23,7 @@ export default function GenerationPage() {
   
     if (!mounted) return null 
 
+    // auto adjust textarea height for clean look
   const handleInput = () => {
     const textarea = textareaRef.current;
     if (textarea) {

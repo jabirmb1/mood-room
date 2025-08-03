@@ -1,3 +1,5 @@
+// component that will provide the theme context to the app
+//
 "use client"
 
 import * as React from "react"

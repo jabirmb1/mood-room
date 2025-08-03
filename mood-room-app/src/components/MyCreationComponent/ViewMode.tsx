@@ -1,6 +1,7 @@
 // page that will display the 3d model in my creation when clicked on the polaroid
 //
 
+
 'use client';
 
 import { useTheme } from 'next-themes';

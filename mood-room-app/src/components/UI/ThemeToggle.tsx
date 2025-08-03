@@ -1,4 +1,5 @@
-// used to set dark mode and light mode with unique icon
+// used to set dark mode and light mode with unique icon show when not sm
+//
 
 "use client"
 
@@ -13,7 +14,7 @@ export default function ThemeToggle() {
 
   useEffect(() => setMounted(true), [])
 
-  if (!mounted) return null //
+  if (!mounted) return null // only render on client and when theme is loaded
 
   return (
     <div className="relative inline-block">

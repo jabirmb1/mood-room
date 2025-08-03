@@ -1,6 +1,9 @@
 // componet that will display the 3d model in my creation
 // like a polaroid photo
 //
+
+// add logi for hear buttona and passing the 3d model from my creation tohere the to view mode
+//
 'use client';
 import { motion } from "framer-motion";
 import {Heart} from 'lucide-react';
@@ -73,6 +76,9 @@ export default function PolaroidCanvasBox({ onCanvasClick }: PolaroidCanvasBoxPr
                     <p className="relative z-10">Canvas</p>
                     {/* Canvas reflection effect */}
                     <div className="absolute inset-0 pointer-events-none opacity-30 polaroid-reflection" />
+
+                    {/* place the 3d model here */}
+
                 </div>
                 </section>
                 

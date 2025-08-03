@@ -1,3 +1,6 @@
+//menu for the navbar show when logged in
+//
+
 "use client"
 
 import * as React from "react"
@@ -37,13 +40,13 @@ export default function DropDownMenu() {
     if (!mounted || !theme) return null;
 
 
-  //common classes for all dropdown items (Links and the theme button)
+  //common css for all dropdown items (Links and the theme button)
   const commonItemBaseClasses = "block px-4 m-1 py-2 text-left rounded-xl";
   const commonItemThemeClasses = theme === 'dark' 
     ? 'bg-neutral-900 text-white hover:bg-neutral-800 border-neutral-300' 
     : 'bg-white text-black hover:bg-gray-100 border-gray-200';
 
-  //classes for the dropdown container itself
+  //css for the dropdown container itself
   const dropdownContainerClasses = `
     absolute right-0 mt-2 w-48 h-80 rounded-xl shadow-lg z-50
     ${theme === 'dark' 
