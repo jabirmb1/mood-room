@@ -1,22 +1,10 @@
 // This file will handle all logic relating to the collision system for the mood room.
 
-import { collisionSpecificTags, wallHeight} from "./const"
 import * as THREE from "three";
-import { RapierRigidBody} from "@react-three/rapier";
-import {Ray, type Ball, type Capsule, type Collider, type Cuboid, type Rotation, type Shape} from "@dimforge/rapier3d-compat";
+import { RapierCollider, RapierRigidBody} from "@react-three/rapier";
+import {type Ball, type Capsule, type Collider, type Cuboid, type Rotation, type Shape} from "@dimforge/rapier3d-compat";
 import {RapierWorld } from "@/types/types";
-import { isWall } from "./rapierHelpers";
 
-
-type CollisionRules = {// the different rules of collision that an object may follow.
-    mustTouchGround?: boolean;
-    mustBeOnSurface?: boolean;
-    disallowStacking?: boolean;
-    mustBeOnWall?: boolean;
-}
-type CollisionTag = typeof collisionSpecificTags[number];// a specific object's collision tag e.g. 'decor', 'furniture' 'wall-art' etc.
-
-type SceneObjectRole = "model" | "floor" | "wall";// role of a specific object and what it is.
 
 type ObjectOverlap = {isOverlapping: boolean, penetrationDepth: number, otherRigidBody: RapierRigidBody | null, selectedRigidBody:
   RapierRigidBody
@@ -29,28 +17,15 @@ type MultiColliderOverlap = {
   collidingBodies: Set<RapierRigidBody>;
   snapCandidates: RapierRigidBody[];
 }
+// a type to kee[ track of the result of world.castShape but for compound colliders.
+type CompoundCastHit = {
+  collider: RapierCollider;
+  toi: number; // time of impact
+  point: { x: number; y: number; z: number };// point of contact
+  normal: { x: number; y: number; z: number };// normal at contact point
+  otherCollider: RapierCollider;// the other collider that was hit
+} | null;
 
-const collisionRules: Record<CollisionTag, CollisionRules> = {
-    furniture: {
-      mustTouchGround: true,
-      disallowStacking: true,
-    },
-    decor: {
-      mustBeOnSurface: true,
-    },
-    'wall-art': {
-      mustBeOnWall: true,
-    },
-};
-
-type WallOrientation = 'frontBack' | 'leftRight';
-type WallNormalAxis = 'x' | 'z';
-
-type WallOrientationData = {
-  orientation: WallOrientation;
-  normalAxis: WallNormalAxis;
-  wallNormal: number;
-};
 
 /************** rapier rigid body collisions (will replace above collision logic soon) ********* */
 
@@ -81,6 +56,38 @@ export function checkCollisionWith(selfCollider: Collider, shape: Shape, positio
   };
 }
 
+//This function will be used to perform a world.castShape sweep test but with compound colliders;
+// returns the closest hit if there is multiple:
+//
+export function sweepCastCompoundRigidBodyShape( world: RapierWorld, body: RapierRigidBody, direction: THREE.Vector3, 
+  maxDistance: number, filterPredicate?: (otherCollider: RapierCollider) => boolean): CompoundCastHit {
+
+  let closestHit: CompoundCastHit = null;
+
+  for (let i = 0; i < body.numColliders(); i++) {
+    const collider = body.collider(i);
+    if (!collider) continue;
+
+    const shape = collider.shape;
+    const bodyPos = body.translation();
+    const colliderLocalPos = collider.translation();
+
+    // get the world position of the colllider
+    const position = new THREE.Vector3(bodyPos.x + colliderLocalPos.x, bodyPos.y + colliderLocalPos.y,bodyPos.z + colliderLocalPos.z) ;
+   
+    const rotation = collider.rotation();
+    const hit = world.castShape( position,rotation,direction,shape,maxDistance, maxDistance,false,undefined,undefined,collider, body);
+
+
+    // only accept the closest hit when there has been a hit, it's with an object that's not itself and it's within the range.
+    if (hit && hit.collider && hit.collider.parent() !== body && hit.time_of_impact < maxDistance && (!filterPredicate || filterPredicate(hit.collider))) {
+      if (( !closestHit || hit.time_of_impact < closestHit.toi)) {// we want the closest hit to avoid any clipping with compound colliders.
+        closestHit = {collider, toi: hit.time_of_impact, point: hit.witness1, normal: hit.normal1, otherCollider: hit.collider};
+      }
+    }
+  }
+  return closestHit;
+}
 
 //This function will check if an object is currently intersecting with another object; returns an ObjectOverlap object.
 //
@@ -136,7 +143,7 @@ function getFirstOverlappingRigidBody(world: RapierWorld, candidatePos: THREE.Ve
 
 
 // Helper function to check overlaps for all colliders of a rigid body
-export function checkMultiColliderOverlap(world: RapierWorld, rigidBody: RapierRigidBody, testPos: THREE.Vector3,onSnapCandidate?: (targetRB: RapierRigidBody) => void): MultiColliderOverlap {
+export function checkMultiColliderOverlap(world: RapierWorld, rigidBody: RapierRigidBody, testPos: THREE.Vector3): MultiColliderOverlap {
   let hasOverlap = false;
   let maxPenetration = 0;
   const collidingBodies = new Set<RapierRigidBody>();
@@ -152,28 +159,13 @@ export function checkMultiColliderOverlap(world: RapierWorld, rigidBody: RapierR
 
     // Store current position and temporarily move to test position
     const originalPos = rigidBody.translation();
-    const offset = {
-      x: testPos.x - originalPos.x,
-      y: testPos.y - originalPos.y,
-      z: testPos.z - originalPos.z
-    };
+    const offset = {x: testPos.x - originalPos.x, y: testPos.y - originalPos.y, z: testPos.z - originalPos.z};
 
     // Calculate this collider's position at the test location
     const colliderCurrentPos = collider.translation();
-    const colliderTestPos = new THREE.Vector3(
-      colliderCurrentPos.x + offset.x,
-      colliderCurrentPos.y + offset.y,
-      colliderCurrentPos.z + offset.z
-    );
+    const colliderTestPos = new THREE.Vector3(colliderCurrentPos.x + offset.x, colliderCurrentPos.y + offset.y, colliderCurrentPos.z + offset.z);
 
-    const overlap = isOverlapping(world, colliderTestPos, rigidBody.rotation(), shape, collider, rigidBody,
-    onSnapCandidate ? (targetRB) => {// conditionally add in the snap candidate field depending if the object is allowed to snap
-      // on top of other objects.
-        if (targetRB && !snapCandidates.includes(targetRB)) {
-          snapCandidates.push(targetRB);
-        }
-      } : undefined
-    );
+    const overlap = isOverlapping(world, colliderTestPos, rigidBody.rotation(), shape, collider, rigidBody);
 
     if (overlap.isOverlapping) {
       hasOverlap = true;
@@ -184,18 +176,7 @@ export function checkMultiColliderOverlap(world: RapierWorld, rigidBody: RapierR
       }
     }
   }
-
-  // Call snap candidate callback for unique candidates
-  if (onSnapCandidate) {
-    snapCandidates.forEach(candidate => onSnapCandidate(candidate));
-  }
-
-  return {
-    isOverlapping: hasOverlap,
-    maxPenetrationDepth: maxPenetration,
-    collidingBodies,
-    snapCandidates
-  };
+  return {isOverlapping: hasOverlap, maxPenetrationDepth: maxPenetration, collidingBodies, snapCandidates};
 }
 
 
@@ -297,218 +278,22 @@ export function getRelativeColliderScale(actualScale: number | undefined, baseSc
   return [factor, factor, factor];
 }
 
-// This function will get a rigid body's top most collider's AABB.
+// This function will return the collider which is the lowest in world pos from the passed in rigid body
 //
-export function getTopMostColliderAABB(rigidBody: RapierRigidBody): THREE.Box3 | null {
-  let topAABB: THREE.Box3 | null = null;
-  let topY = -Infinity;
+export function getLowestCollider(rigidBody: RapierRigidBody): RapierCollider | null {
+  let lowestCollider: RapierCollider | null = null;
+  let lowestY = Infinity;
 
-  const count = rigidBody.numColliders();
-  for (let i = 0; i < count; i++) {// iterate through all colliders of selected rigid body to try and find top most collider via 
-    // bounding boxes (e.g. compare top of bounding box and see if it's higher than what we tracked -> can be replaced with e.g.
-    // a map which will make things more efficient.)
-    const collider = rigidBody.collider(i);// get the collider
-    const aabb = getApproximateAABB(collider);
-    if (!aabb) continue;
-
-    if (aabb.max.y > topY) {
-      topY = aabb.max.y;
-      topAABB = aabb;
-    }
-  }
-
-  return topAABB;
-}
-
-//This function will get a rigid body's bottom most collider's AABB.
-//
-export function getBottomMostColliderAABB(rigidBody: RapierRigidBody): THREE.Box3 | null {
-  let bottomAABB: THREE.Box3 | null = null;
-  let bottomY = Infinity;
-
-  const count = rigidBody.numColliders();
-  for (let i = 0; i < count; i++) {// find the lowest collider by finding the bounding box with the least y value.
+  for (let i = 0; i < rigidBody.numColliders(); i++) {
     const collider = rigidBody.collider(i);
-    const aabb = getApproximateAABB(collider);
-    if (!aabb) continue;
+    if (!collider) continue;
 
-    if (aabb.min.y < bottomY) {
-      bottomY = aabb.min.y;
-      bottomAABB = aabb;
+    const position = collider.translation();
+    if (position.y < lowestY) {
+      lowestY = position.y;
+      lowestCollider = collider;
     }
   }
 
-  return bottomAABB;
-}
-// Returns the ratio of selected box's area to target box's area (both in XZ plane)
-// Returns a ratio in [0, ∞) — values <= 1 mean "target can hold selected" (boxB is bigger than boxA)
-//
-export function get2DAreaCoverageRatio(boxA: THREE.Box2, boxB: THREE.Box2): number {
-  const areaA = (boxA.max.x - boxA.min.x) * (boxA.max.y - boxA.min.y); // selected
-  const areaB = (boxB.max.x - boxB.min.x) * (boxB.max.y - boxB.min.y); // target
-
-  if (areaA === 0) return 0; // invalid object
-  return areaB / areaA;
-}
-
-
-
-// Returns the XZ footprint (surface) of a 3D box, has an optional margin prop to allow to increase/ decrease surface area.
-//
-export function getFootprintFromBox3(box: THREE.Box3, margin = 0): THREE.Box2 {
-  return new THREE.Box2(
-    new THREE.Vector2(box.min.x - margin, box.min.z - margin),
-    new THREE.Vector2(box.max.x + margin, box.max.z + margin)
-  );
-}
-
-
-
-// This function will try to snap the selected object on top of anoher object if the other object has enough space on top of it to
-// to handle the bottom of the selected object; and also if snapping on top will lead to any collisions or not
-// also returns a boolean indicating if the snap wass successful or not
-//
-export function canObjectSnapRecursive(world: RapierWorld, selectedBody: RapierRigidBody | null, targetBody: RapierRigidBody | null,
-  visited = new Set<RapierRigidBody>(), // to avoid infinite loops
-  ceilingY = wallHeight, // how huigh up the cieling is
-  margin = 0.05,// horizontal margin so uyser's don't have to be perfecntly accurate
-  yOffset = 0.02,// vertical offset to avoid objects from actually touching each other vertically and prevents them from getting stuck
-  overlapThreshold = 0.8,// the ratio that the overlap needs to be to allow snapping.
-): boolean {
-  // if we don't have the selected model's rigid body, or the target's rigid body; or the target is a wall; don't allow snapping.
-  if (!selectedBody || !targetBody || isWall(targetBody)) return false;// don't allow objects to snap on top of walls
-  if (visited.has(targetBody)) return false;  // prevent cycles
-  visited.add(targetBody);
-
-  const selectedBottomAABB = getBottomMostColliderAABB(selectedBody);
-  const selectedTopAABB = getTopMostColliderAABB(selectedBody)
-  const targetTopAABB = getTopMostColliderAABB(targetBody);
-  if (!selectedBottomAABB || !selectedTopAABB  || !targetTopAABB) return false;
-
-  // Compute 2D bounds (XY) for footprint comparison
-  //(we want to compare bottom of selected object to the top of the other object.)
-  const selectedFootprint = getFootprintFromBox3(selectedBottomAABB)
-  const targetSurface = getFootprintFromBox3(targetTopAABB, margin)
-  const surfaceOverlapRatio = get2DAreaCoverageRatio(selectedFootprint, targetSurface)
-  const fits = surfaceOverlapRatio >= overlapThreshold;
-  if (!fits) return false;
-
-  // Snap selected body on top of target
-  const bottomOffset = selectedBottomAABB.max.y - selectedBody.translation().y;
-  const newY = targetTopAABB.max.y + bottomOffset + yOffset;
-
-  // calculate what the new top y will be to check if it will exceed ceiling or not.
-  const currentTranslationY = selectedBody.translation().y;
-  const topOffset = selectedTopAABB.max.y - currentTranslationY;
-  const newTopY = newY + topOffset;
-
-  
-  // see if top of selected object will go over cieling or not:
-  if (newTopY >= ceilingY) return false;
-
-  // check for collisions on candidate pos.
-  const candidatePos =  new THREE.Vector3(selectedBody.translation().x, newY, selectedBody.translation().z );
-
-   // Loop through all colliders and check for overlap
-   const colliderCount = selectedBody.numColliders();
-   for (let i = 0; i < colliderCount; i++) {
-     const collider = selectedBody.collider(i);
-     const shape = collider?.shape;
-     if (!shape) continue;
- 
-     const overlap = isOverlapping(world, candidatePos,selectedBody.rotation(), shape, collider!, selectedBody);
-     if (overlap.isOverlapping) {// one of the colliders are colliding with something
-       const overlappingBody = getFirstOverlappingRigidBody(world, candidatePos, selectedBody, shape);
-       if (!overlappingBody || overlappingBody === targetBody) {// there is a collidion but we can't identify what we are colliding with
-        // so we just return false to be safe. second condition just means that we are somehow trying to overlap over target body again
-        // not intended therefore return false as well.
-         return false;
-       }
- 
-       return canObjectSnapRecursive( world, selectedBody, overlappingBody, visited, ceilingY, margin, yOffset, overlapThreshold);
-     }
-   }
-   // if none of the selected bodies colliders are colliding; then return true.
-   return true
-}
-// This function will cast a ray downwards and see if it can snap or not. (will only check the first collision with the ray)
-// returns a boolean whether or not object has been successfully snapped
-//TO DO: make this work for multiple shapes e.g. a list of all bottom colliders for e.g. legs and base
-export function trySnapDownFromObject(world: RapierWorld, selectedBody: RapierRigidBody | null, maxSnapDistance = 3, enabled = true): boolean {
-  if (!enabled || !selectedBody) return false;
-  const bottom = getBottomMostColliderAABB(selectedBody);
-  if (!bottom) return false;
-
-  const pos = selectedBody.translation();
-  const alreadyOnSurfaceThreshold = 0.025; // Time-of-impact close to zero means we're touching surface
-  // accurate enough; and also more efficient than always querying or checking collisions
-
-  const width = bottom.max.x - bottom.min.x;
-  const depth = bottom.max.z - bottom.min.z;
-
-  // Sample points: center + 4 near-corners
-  const offsets = [
-    { x: 0, z: 0 },          // center
-    { x: -0.49, z: -0.49 },  // bottom-left
-    { x: 0.49, z: -0.49 },   // bottom-right
-    { x: -0.49, z: 0.49 },   // top-left
-    { x: 0.49, z: 0.49 },    // top-right
-  ];
-
-  for (const offset of offsets) {
-    const origin = new THREE.Vector3( bottom.min.x + width * (0.5 + offset.x), bottom.min.y, bottom.min.z + depth * (0.5 + offset.z));
-    const dir = new THREE.Vector3(0, -1, 0); // downward
-    const ray = new Ray(origin, dir);
-
-    // Cast ray from object downwards
-    const hit = world.castRay(ray, alreadyOnSurfaceThreshold, true, undefined, undefined, undefined, selectedBody);
-
-    if (hit && hit.collider && hit.timeOfImpact <= alreadyOnSurfaceThreshold) {
-      // Already on surface — no snapping needed
-      return false;
-    }
-  }
-
-  // Now do one main raycast from center to find a surface to snap to
-  const mainOrigin = new THREE.Vector3(pos.x, bottom.min.y, pos.z);
-  const mainRay = new Ray(mainOrigin, new THREE.Vector3(0, -1, 0));
-  const mainHit = world.castRay(mainRay, maxSnapDistance, true, undefined, undefined, undefined, selectedBody);
-
-  if (!mainHit || !mainHit.collider || mainHit.timeOfImpact <= alreadyOnSurfaceThreshold) return false; // nothing below or too close
-  const hitBody = mainHit.collider.parent();
-  if (!hitBody || hitBody === selectedBody) return false; // can't count itself
-
-  const canSnap = canObjectSnapRecursive(world, selectedBody, hitBody);
-  if (canSnap) {
-    return snapObjectOnAnother(selectedBody, hitBody);
-  }
-
-  return false;
-}
-
-
-// this function actually snaps an object on top of the other (assuming that it will be valid)
-// returns boolean of whether or not object was successfully snapped
-//
-export function snapObjectOnAnother(selectedBody: RapierRigidBody | null, targetBody: RapierRigidBody | null, yOffset = 0.02): boolean {
-  if (!selectedBody || !targetBody) return false;
-
-  const selectedBottomAABB = getBottomMostColliderAABB(selectedBody);
-  const targetTopAABB = getTopMostColliderAABB(targetBody);
-  if (!selectedBottomAABB || !targetTopAABB) return false;
-
-  const bottomOffset = selectedBottomAABB.max.y - selectedBody.translation().y;
-  const newY = targetTopAABB.max.y + bottomOffset + yOffset;
-
-  try {
-    selectedBody.setTranslation(
-      { x: selectedBody.translation().x, y: newY, z: selectedBody.translation().z },
-      true
-    );
-  } catch (e) {
-    console.error('Translation error:', e);
-    return false;
-  }
-
-  return true;
+  return lowestCollider;
 }

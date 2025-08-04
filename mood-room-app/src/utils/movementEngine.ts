@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { getPosition, isWall, matchRigidBodyRotation, setPosition } from "@/utils/rapierHelpers";
-import {canObjectSnapRecursive, checkMultiColliderOverlap, isOverlapping, snapObjectOnAnother} from "@/utils/collision";
-import type { Collider, Rotation, Shape } from "@dimforge/rapier3d-compat";
+import {checkMultiColliderOverlap} from "@/utils/collision";
 import { RapierRigidBody } from "@react-three/rapier";
 import { RapierWorld} from "@/types/types";
 
@@ -17,15 +16,13 @@ type MovementOptions = {
   world: RapierWorld;// instance of world from rapier
   rigidBody: RapierRigidBody;// rigid body of the object that we are moving
   isHorizontal: boolean;// what movement we are in
-  cachedColliders?: Collider[];// cached colliders for better efficiency.
 };
 
 // This is the main function will will be responsible to actually move object (has built in collision detection)
-export function applyMovement({ direction, distance, world, rigidBody, isHorizontal, cachedColliders = []}: MovementOptions) {
+export function applyMovement({ direction, distance, world, rigidBody, isHorizontal}: MovementOptions) {
   if (direction.lengthSq() === 0) return;
 
   const currentPos = getPosition(rigidBody);
-  const isDecor = rigidBody.userData?.tags?.includes('decor') ?? false;// only decor are allowed to snap on top of other objects.
   const isWallArt = rigidBody.userData?.tags?.includes('wall-art') ?? false;// wall art models are allowed to stick to walls.
   
   // total movement vector scaled by distance
@@ -44,22 +41,10 @@ export function applyMovement({ direction, distance, world, rigidBody, isHorizon
     testPos[axis] += moveVec[axis];
 
     // Check current overlaps (before moving)
-    const beforeOverlap = checkMultiColliderOverlap(world,  rigidBody,  newPos,
-      (targetRB) => {
-        if (canObjectSnapRecursive(world, rigidBody, targetRB)) {
-          snapObjectOnAnother(rigidBody, targetRB);
-        }
-      }
-    );
+    const beforeOverlap = checkMultiColliderOverlap(world,  rigidBody,  newPos);
 
     // Check overlaps after potential movement
-    const afterOverlap = checkMultiColliderOverlap(world, rigidBody, testPos,
-      isDecor ? (targetRB) => {
-        if (canObjectSnapRecursive(world, rigidBody, targetRB)) {
-          snapObjectOnAnother(rigidBody, targetRB);
-        }
-      } : undefined
-    );
+    const afterOverlap = checkMultiColliderOverlap(world, rigidBody, testPos);
 
     // Allow move if no collision OR if penetration reduces (escaping)
     if (!afterOverlap.isOverlapping || 

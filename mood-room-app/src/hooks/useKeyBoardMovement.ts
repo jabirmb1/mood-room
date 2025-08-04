@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { globalScale, snapDownwardsCountdown } from "@/utils/const";
+import { globalScale} from "@/utils/const";
 import { RapierRigidBody, useRapier} from "@react-three/rapier";
-import {type Collider } from "@dimforge/rapier3d-compat";
-import { applyMovement } from "@/utils/movementEngine";import { trySnapDownFromObject } from "@/utils/collision";
+import { applyMovement } from "@/utils/movementEngine";
 ;
 
 /*** This hook is used to move an object via keybaord controls *********/
@@ -20,14 +19,8 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
   
   // Track which keys are pressed
   const keysPressed = useRef<Record<string, boolean>>({});
-  const movementKeys = new Set(["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"]);// all valid movement keys
+ // const movementKeys = new Set(["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"]);// all valid movement keys
   const { world} = useRapier();
-  const movementOccurred = useRef(false);
-  const snapTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  // Cache static colliders and data
-  const cachedColliders = useRef<Collider[]>([]);
-  const wasEnabled = useRef<boolean>(false);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -35,21 +28,6 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
     }
     function onKeyUp(e: KeyboardEvent) {
       keysPressed.current[e.key.toLowerCase()] = false;
-
-      const anyMovementKeyStillDown = [...movementKeys].some(k => keysPressed.current[k]);
-
-       // Debounced snap trigger after movement
-      if (!anyMovementKeyStillDown && movementOccurred.current && rigidBodyRef.current) {
-        if (snapTimeout.current) clearTimeout(snapTimeout.current);
-
-        // Try snapping after a pause from key release
-        snapTimeout.current = setTimeout(() => {
-          // we call is WallArt here since rigidBody may turn null at some parts.
-          const isWallArt =rigidBodyRef?.current?.userData?.tags?.includes('wall-art')
-          trySnapDownFromObject(world, rigidBodyRef.current!, undefined, !isWallArt);// don't allow wall art models to snap to surfaces.
-          movementOccurred.current = false; // reset tracker
-        }, snapDownwardsCountdown);
-      }
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -59,25 +37,7 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, []);
-
-  // Cache static colliders once when enabled toggles true
-  useEffect(() => {
-    if (enabled && !wasEnabled.current) {
-      // Collect colliders that do not belong to our rigidBody (i.e., static)
-      cachedColliders.current = [];
-
-      world.forEachCollider((collider) => {
-        if (
-          collider.parent() === null || // static collider, or
-          collider.parent() !== rigidBodyRef.current // not our player collider
-        ) {
-          cachedColliders.current.push(collider);
-        }
-      });
-    }
-    wasEnabled.current = enabled;
-  }, [enabled, world, rigidBodyRef]);
+  }, [enabled]);// no need to call this effect again, as we only need to set up the event listeners once.
 
    // we use useFrame to efficntly move current object
   useFrame(() => {
@@ -98,7 +58,6 @@ export function useKeyboardMovement({rigidBodyRef, modelRef, enabled, isHorizont
     }
 
     if (delta.every((v) => v === 0)) return;
-    movementOccurred.current = true; // mark that some movement just happened
     // if one or more of the values is not 0, i.e there has been a change in position Calculate new position
 
     const direction = new THREE.Vector3(...delta).normalize();

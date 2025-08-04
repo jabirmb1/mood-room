@@ -46,3 +46,14 @@ export function isWall(rigidBody: RapierRigidBody)
   }
   return false
 }
+
+//This function is used to try and set the positon of a rigid body in the current frame.
+//
+export function setCurrentPosition(obj: RapierRigidBody, newPos: THREE.Vector3) {
+  try{
+    obj.setTranslation(newPos, true);
+  }
+  catch(error){
+    console.error('Failed to set position:', error);
+  }
+}
