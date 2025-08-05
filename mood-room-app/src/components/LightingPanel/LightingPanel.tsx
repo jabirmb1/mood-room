@@ -25,10 +25,8 @@ export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }
   };
 
   return (
-    <div className="h-full flex flex-col rounded-lg h-[80vh]">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900">Lighting</h3>
-      </div>
+    <section className="h-full flex flex-col rounded-lg h-[80vh]">
+        <h3 className="flex items-center justify-between mb-4 font-semibold text-gray-900">Lighting</h3>
 
       {(['ambient', 'directional'] as const).map((type) => {
         const label = type === 'ambient' ? '💡 Ambient' : '☀️ Directional';
@@ -37,10 +35,8 @@ export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }
         const colour = config[type].colour;
 
         return (
-          <div key={type} className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm">{label}</span>
-            </div>
+          <article key={type} className="mb-6">
+            <span className="text-sm flex items-center gap-2 mb-2">{label}</span>
 
             {/* Intensity Slider */}
             <div className="space-y-2 mb-2">
@@ -80,9 +76,9 @@ export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }
              onClose={() => setShowPicker(false)}
            />
             )}
-          </div>
+          </article>
         );
       })}
-    </div>
+    </section>
   );
 };
