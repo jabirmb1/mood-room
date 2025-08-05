@@ -1,0 +1,119 @@
+[
+  {
+    "name": "armchair",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/armchair.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/armchair.png"
+  },
+  {
+    "name": "bed",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/bed.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/bed.png"
+  },
+  {
+    "name": "BookShelf",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/BookShelf.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/BookShelf.png"
+  },
+  {
+    "name": "BookshelfBasic",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/BookshelfBasic.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/BookshelfBasic.png"
+  },
+  {
+    "name": "BookStackBasic",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/BookStackBasic.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/BookStackBasic.png"
+  },
+  {
+    "name": "NormTable",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/NormTable.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/NormTable.png"
+  },
+  {
+    "name": "sofa",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/sofa.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/sofa.png"
+  },
+  {
+    "name": "TVold",
+    "category": [
+      "All",
+      "Furniture"
+    ],
+    "path": "/assets/Furniture/TVold.glb",
+    "thumbnail": "/assets/Thumbnails/Furniture/TVold.png"
+  },
+  {
+    "name": "ShadeLampBasic",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/ShadeLampBasic.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/ShadeLampBasic.png"
+  },
+  {
+    "name": "WallLamp",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/WallLamp.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/WallLamp.png"
+  },
+  {
+    "name": "WallLampBasic",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/WallLampBasic.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/WallLampBasic.png"
+  },
+  {
+    "name": "WallLampPoles",
+    "category": [
+      "All",
+      "Lights"
+    ],
+    "path": "/assets/Lights/WallLampPoles.glb",
+    "thumbnail": "/assets/Thumbnails/Lights/WallLampPoles.png"
+  },
+  {
+    "name": "wallart",
+    "category": [
+      "All",
+      "Wallart"
+    ],
+    "path": "/assets/Wallart/wallart.glb",
+    "thumbnail": "/assets/Thumbnails/Wallart/wallart.png"
+  }
+]

@@ -1,0 +1,37 @@
+[
+    { 
+        "rules":{
+            "min_clearance" : [0.5],
+            "cannot_block_window": [true],
+            "on_wall": ["Wallart","Lamp"],
+            "must_be_near": [
+                ["bedside_table", "bed", 0.5],
+                ["lamp", "desk", 0.3],
+                ["mouse", "keyboard", 0.2]
+            ],
+            "must_be_onTop": [
+                ["pencil", "table"],
+                ["laptop", "desk"]
+            ],
+            "must_face": [
+                ["tv_stand", "couch", 3.0]
+            ],
+            "must_be_under":[
+                ["rug", "coffee_table"],
+                ["rug", "bed"],
+                ["rug", "sofa"]
+              ],
+            "inside_room": [true],
+            "touch_ground": [true],
+            "cannot_overlap": [true],
+            "must_align": [
+                ["chair", "desk"]
+            ],
+            "must_align_with_wall": ["desk", "bed"],
+            "max_quantity": [
+                ["bed", 1],
+                ["sofa", 1]
+            ]
+        }
+    }
+]

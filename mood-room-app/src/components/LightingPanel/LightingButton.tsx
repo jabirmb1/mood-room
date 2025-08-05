@@ -27,7 +27,7 @@ export function LightingButton({ show, toggle, config, onChange, className = '' 
                 </button>
             </div>
             {show && (
-                <aside className="absolute right-0 mt-2 w-96 bg-white p-4 rounded shadow-lg z-20 max-h-[50vh] overflow-y-auto">
+                <aside className="absolute right-0 mt-2 lg:w-100 w-64 bg-white p-4 rounded shadow-lg z-20 max-h-[50vh] overflow-y-auto">
                 <LightingPanel config={config} onChange={onChange} />
                 </aside>
             )}

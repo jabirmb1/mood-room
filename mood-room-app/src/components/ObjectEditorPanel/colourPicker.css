@@ -1,6 +1,6 @@
 .colour-picker-wrapper .react-colorful {
   width: 100% !important;
-  height: 24rem !important;/* make the colour picker big so we have more control of which colour we can pick */
+  height: 20rem !important;/* make the colour picker big so we have more control of which colour we can pick */
   max-width: 100% !important;
   aspect-ratio: 1 / 1 !important;/* without this, the display doesn't show */
   }

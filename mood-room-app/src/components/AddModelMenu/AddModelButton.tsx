@@ -23,10 +23,11 @@ export function AddModelButton({ show, className = '', toggle, onAddModel }: Add
         </button>
       </div>
       {show && (
-        <aside className="absolute left-0 mt-2 w-64 bg-white p-4 rounded shadow-lg z-20">
+        <aside className="absolute left-0 mt-2 md:w-120 w-64 bg-white p-4 rounded shadow-lg z-20">
           <AddModelTab onAddModel={onAddModel} />
         </aside>
       )}
     </div>
   );
 }
+//cahnge 180 to 64 when done

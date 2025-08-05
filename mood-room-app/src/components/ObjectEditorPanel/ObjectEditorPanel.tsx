@@ -80,7 +80,7 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
   }
 
   return (
-      <article className = "bg-white shadow-xl border-l border-gray-300 p-6 flex flex-col h-full w-full  overflow-y-auto">
+      <article className = "bg-white border-4 border-black p-6 flex flex-col h-full w-full overflow-y-auto">
         <h2 className="text-xl font-semibold mb- text-center">Object Controls</h2>
 
         <section className="flex gap-2 justify-center mb-4">
