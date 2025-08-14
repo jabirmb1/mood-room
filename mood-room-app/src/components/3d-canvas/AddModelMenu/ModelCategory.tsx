@@ -1,11 +1,11 @@
-// settin g catogary based on what folder furniture in
+// setting catogary based on what folder the model is in
 
 import React, { useState, useEffect } from 'react';
 import { ModelItem } from './AddModelTab';
 import { ChevronDown } from 'lucide-react';
 
 
-interface FurnitureCategoryProps {
+interface ModelCategoryProps {
   items: ModelItem[];
   searchValue: string;
   onSelect: (filtered: ModelItem[], category: string) => void;
@@ -20,7 +20,7 @@ const CATEGORIES = [
 ];
 
 // dropdown menu for categories
-export function FurnitureCategory({ items, searchValue, onSelect }: FurnitureCategoryProps) {
+export function ModelCategory({ items, searchValue, onSelect }: ModelCategoryProps) {
   const [activeCategory, setActiveCategory] = useState<string>('All'); // default category
   const [menuOpen, setMenuOpen] = useState<boolean>(false); // dropdown state
   const menuRef = React.useRef<HTMLDivElement>(null); // why we need it? because we need to close the dropdown when we click outside of it

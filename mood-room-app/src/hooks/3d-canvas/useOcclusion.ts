@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { calculateObjectBoxSize } from '@/utils/object3D';
+import { calculateObjectBoxSize } from '@/utils/3d-canvas/object3D';
 
 /****  This hook is used to make objects between target object and camera be invisible/ trasnparent via raycasting****/
 

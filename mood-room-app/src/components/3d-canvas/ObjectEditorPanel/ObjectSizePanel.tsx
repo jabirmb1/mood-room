@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { HorizontalSlider } from "../HorizontalSlider"; 
-import { getObjectSizeDifference } from "@/utils/object3D";
-import { globalScale } from "@/utils/const";
+import { HorizontalSlider } from "../../UI/HorizontalSlider"; 
+import { getObjectSizeDifference } from "@/utils/3d-canvas/object3D";
+import { globalScale } from "@/utils/3d-canvas/const";
 
 /************** This panel will be used to change an object's size via buttons and a slider */
 type ObjectScalePanelProps = {

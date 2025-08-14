@@ -5,34 +5,34 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei'; // the actual react component for orbital controls.
 import { OrbitControls } from 'three-stdlib'; // instance class (used as a type)
-import { Object3D } from '@/components/3d/Object3D';
-import { CameraController } from '@/components/CameraController';
+import { Object3D } from '@/components/3d-canvas/3d/Object3D';
+import { CameraController } from '@/components/3d-canvas/CameraController';
 import { v4 as uuidv4 } from 'uuid';
-import { defaultCameraPosition, globalScale, wallHeight, wallThickness } from '@/utils/const';
-import { ObjectEditorPanel } from '@/components/ObjectEditorPanel/ObjectEditorPanel';
+import { defaultCameraPosition, globalScale, wallHeight, wallThickness } from '@/utils/3d-canvas/const';
+import { ObjectEditorPanel } from '@/components/3d-canvas/ObjectEditorPanel/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useModel} from '@/hooks/useModel';
+import { useModel} from '@/hooks/3d-canvas/useModel';
 import * as THREE from "three";
-import { LightIntensityTransition } from '@/components/LightIntensityTransition';
-import { AddModelButton } from '@/components/AddModelMenu/AddModelButton';
-import { ModelItem } from '@/components/AddModelMenu/AddModelTab';
-import { LightingButton } from '@/components/LightingPanel/LightingButton';
-import { LightingConfig } from '@/components/LightingPanel/LightingPanel';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import RoomFoundation from '@/components/RoomFoundation';
+import { LightIntensityTransition } from '@/components/3d-canvas/LightIntensityTransition';
+import { AddModelButton } from '@/components/3d-canvas/AddModelMenu/AddModelButton';
+import { ModelItem } from '@/components/3d-canvas/AddModelMenu/AddModelTab';
+import { LightingButton } from '@/components/3d-canvas/LightingPanel/LightingButton';
+import { LightingConfig } from '@/components/3d-canvas/LightingPanel/LightingPanel';
+import { ConfirmDialog } from '@/components/UI/ConfirmDialog';
+import RoomFoundation from '@/components/3d-canvas/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
 import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
-import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/object3D';
-import { getRelativeColliderScale } from '@/utils/collision';
-import Colliders from '@/components/Colliders';
+import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/object3D';
+import { getRelativeColliderScale } from '@/utils/3d-canvas/collision';
+import Colliders from '@/components/3d-canvas/Colliders';
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
 
 export async function loadInitialModels(): Promise<Model[]> {
   return [
-    {
+   /* {
       id: uuidv4(),
       url: "/assets/furniture/NormTable/NormTable.glb",
       colourPalette: {

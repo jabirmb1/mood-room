@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import ColourButton from '../ColourButton';
 import * as THREE from 'three';
-import { getObjectMaterialMap, resetColourPalette} from '../../utils/object3D'
-import { ColourPickerControl } from '../ColourPickerControl';
+import { getObjectMaterialMap, resetColourPalette} from '../../../utils/3d-canvas/object3D'
+import { ColourPickerControl } from '../../UI/ColourPickerControl';
 import './colourPicker.css';
 import { MaterialColourType } from '@/types/types';
-import { modelMaterialNames } from '@/utils/const';
+import { modelMaterialNames } from '@/utils/3d-canvas/const';
 type ColourWheelProps = {
   objectRef: React.RefObject<THREE.Object3D | null>; // reference of the object that this colour wheel is linked to.
 };

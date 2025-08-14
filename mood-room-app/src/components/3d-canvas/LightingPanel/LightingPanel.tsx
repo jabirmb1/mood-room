@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ColourPickerControl } from '../ColourPickerControl';
+import { ColourPickerControl } from '../../UI/ColourPickerControl';
 
 export interface LightingConfig {
   ambient: { intensity: number; colour: string };// intensity and colour of ambient light

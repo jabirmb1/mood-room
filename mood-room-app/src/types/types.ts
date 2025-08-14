@@ -1,4 +1,4 @@
-import { modelMaterialNames } from "@/utils/const";
+import { modelMaterialNames } from "@/utils/3d-canvas/const";
 import { useRapier } from "@react-three/rapier";
 // model type.
 export type Model = {

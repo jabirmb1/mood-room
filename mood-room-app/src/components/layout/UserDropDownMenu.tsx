@@ -8,7 +8,7 @@ import { useTheme } from "next-themes"
 import Link from "next/link"
 import {Menu} from "lucide-react"
 
-export default function DropDownMenu() {
+export default function UserDropDownMenu() {
   const { setTheme, theme } = useTheme();
   const [open, setOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);  

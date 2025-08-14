@@ -2,12 +2,11 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { motion } from 'framer-motion';
-import { FurnitureCategory } from './FurnitureCategory';
-import { ModelThumbnail } from "./ModelThumbnail";
+import { ModelCategory } from './ModelCategory';
+import { ModelCard } from "./ModelCard";
 
 
-// used to define shape and properties of furniture
+// used to define shape and properties of models.
 export interface ModelItem {
   id: string;
   name: string;
@@ -81,7 +80,7 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
       />
      
       {/* Category filter */}
-      <FurnitureCategory
+      <ModelCategory
         items={modelItems}
         searchValue={searchValue}
         onSelect={(filtered, category) => {
@@ -99,40 +98,16 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
             </li>
           ) : (
             filteredItems.map((item) => (
-              <motion.div
-                key={item.id}
-                onClick={() => {
-                  // Only pass the necessary data to the parent
-                  const { position, ...modelData } = item;
-                  onAddModel(modelData);
-                }}
-                className="group cursor-pointer rounded-lg overflow-hidden shadow-md"
-                whileHover={{
-                  y: -5,
-                  scale: 1.02,
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 300,
-                  damping: 10
-                }}
-              >
-                {/* thumbnail */}
-                  <div className="aspect-square relative ">
-                  <ModelThumbnail
-                   path={item.path} 
-                   name={item.name} 
-                   thumbnail={item.thumbnail} 
-                   hoveredModel={hoveredModel }
-                   setHoveredModel={setHoveredModel}/>
-                  </div>
-
-                {/* name */}
-                  <div className="p-2">
-                    <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
-                  </div>
-                </motion.div>
+              <ModelCard
+              key={item.id}
+              item={item}
+              hoveredModel={hoveredModel}
+              setHoveredModel={setHoveredModel}
+              onClick={(clickedItem) => {
+                const { position, ...modelData } = clickedItem;
+                onAddModel(modelData);
+              }}
+            />
             ))
           )}
         </ul>

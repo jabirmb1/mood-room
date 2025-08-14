@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
-import { convertValidColourToHex } from '@/utils/colours';// conveets e.g. rgb, colour names etc into their hex values
+import { convertValidColourToHex } from '@/utils/general/colours';// converts e.g. rgb, colour names etc into their hex values
 
 /*********This component is just a react hex colour picker and also a text input which shows current colour*****/
 interface ColourPickerControlProps {

@@ -1,13 +1,13 @@
 'use client';
 import { useGLTF} from "@react-three/drei";
 import { useEffect, useState, useRef, useMemo} from "react";
-import { useDragControls } from "@/hooks/useDragControls";
+import { useDragControls } from "@/hooks/3d-canvas/useDragControls";
 import {ThreeEvent } from "@react-three/fiber";
-import { useKeyboardMovement } from "@/hooks/useKeyBoardMovement";
-import { globalScale } from "@/utils/const";
+import { useKeyboardMovement } from "@/hooks/3d-canvas/useKeyBoardMovement";
+import { globalScale } from "@/utils/3d-canvas/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/object3D";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/3d-canvas/object3D";
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";

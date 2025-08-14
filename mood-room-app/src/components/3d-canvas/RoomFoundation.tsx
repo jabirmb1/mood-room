@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Grid } from '@react-three/drei';
-import { wallHeight, wallThickness, roomSize } from '@/utils/const';
+import { wallHeight, wallThickness, roomSize } from '@/utils/3d-canvas/const';
 import { RigidBody } from '@react-three/rapier';
 import { Wall } from './Wall';
 

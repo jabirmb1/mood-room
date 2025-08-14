@@ -1,8 +1,8 @@
 "use client"
 
 import Link from 'next/link';
-import DropDownMenu from './DropDownMenu';
-import ThemeToggle from './ThemeToggle';
+import DropDownMenu from './UserDropDownMenu';
+import ThemeToggle from '../UI/ThemeToggle';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 

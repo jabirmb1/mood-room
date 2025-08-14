@@ -4,11 +4,11 @@ import { ObjectRotationPanel } from "./ObjectRotationPanel";
 import { ObjectColourPanel } from "./ObjectColourPanel";
 import { ObjectSizePanel } from "./ObjectSizePanel";
 import { Model, RotationDegrees } from "@/types/types";
-import { getObjectMaterialMap } from "@/utils/object3D";
+import { getObjectMaterialMap } from "@/utils/3d-canvas/object3D";
 import { RapierRigidBody } from "@react-three/rapier";
-import { getRigidBodyRotation } from "@/utils/rotation";
-import { areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/comparisons";
-import { globalScale } from "@/utils/const";
+import { getRigidBodyRotation } from "@/utils/3d-canvas/rotation";
+import { areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/3d-canvas/comparisons";
+import { globalScale } from "@/utils/3d-canvas/const";
 
 /******** This panel will be used to change the properties of an object e.g. it's rotation; size; colour scheme etc. ********/
 
