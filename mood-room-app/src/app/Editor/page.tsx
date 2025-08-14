@@ -46,9 +46,9 @@ export async function loadInitialModels(): Promise<Model[]> {
     },
     {
       id: uuidv4(),
-      url: "/assets/decor/WaterBottle.glb",
+      url: "/assets/decor/WaterBottle/WaterBottle.glb",
       position: [0, 4, 0],
-      tags: await getCategoryTagsFromURL("/assets/decor/WaterBottle.glb"),
+      tags: await getCategoryTagsFromURL("/assets/decor/WaterBottle/WaterBottle.glb"),
     },
    /* {
       id: uuidv4(),
@@ -182,7 +182,6 @@ export default function Editor() {
       url: model.url,
       colourPalette: model.colourPalette,
       position: [3, 3, 3],
-      scale: [1, 1, 1],
       tags: tags,
       colliderDataUrl: colliderDataUrl,
     };
