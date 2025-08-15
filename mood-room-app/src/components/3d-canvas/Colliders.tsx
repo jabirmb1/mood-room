@@ -4,6 +4,8 @@ import {BallCollider, CapsuleCollider, CuboidCollider,} from "@react-three/rapie
 import { Euler } from "three";
 import { getRelativeColliderScale } from "@/utils/3d-canvas/collision";
 import { globalScale } from "@/utils/3d-canvas/const";
+import { getModelColliderDataUrl } from "@/utils/3d-canvas/object3D";
+import { getModelColliderData } from "@/services/modelServices";
 
 /******This compoenent will be responsible to generate multiple colliders per object so we can have compound, simplifed colliders
  *  per model; keeping it efficient and accurate.
@@ -20,29 +22,26 @@ export default function Colliders({ jsonUrl, scale }: CollidersProps) {
   const [fetchFailed, setFetchFailed] = useState<boolean>(false);// whether we have valid collider data or not
   const DEGREES90 = Math.PI/2
 
-  // use effect to fetch the collider data from the json file.
+  // Fetch the collider data from the server
   useEffect(() => {
-    const fetchColliders = async () => {
-      if (!jsonUrl) {
+    if (!jsonUrl) {
+      setFetchFailed(true);
+      return;
+    }
+
+    // inline function to fetch the collider data and set the collider state depending if it was successful or not.
+    async function fetchColliderData(){
+      const data = await getModelColliderData(jsonUrl);
+      if (!data) {// fetching failed or no data was returned
+        console.warn("No collider data found or fetch failed.");
         setFetchFailed(true);
-        return;
-      }
-
-      try {
-        setFetchFailed(false); // reset on re-attempt
-        const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error(`Failed to load: ${jsonUrl}`);// couldn't find the url
-
-        const data: ColliderJsonData[] = await response.json();
+      } else {
+        setFetchFailed(false);
         setColliders(data);
-        console.log("remaking colliders");
-      } catch (err) {
-        console.error("Error loading collider JSON:", err);
-        setFetchFailed(true);
       }
     };
 
-    fetchColliders();
+    fetchColliderData();
   }, [jsonUrl]);
 
   if (fetchFailed) {// return a fallback cuboid collider is no collider data was found or url was null

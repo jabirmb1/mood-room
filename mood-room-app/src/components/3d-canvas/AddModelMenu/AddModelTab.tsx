@@ -19,36 +19,25 @@ export interface ModelItem {
 
 
 interface AddModelTabProps {
+  manifestData: ModelItem[] | null; // manifest data to use for adding models, if not provided, will use the default one.
   onAddModel: (model: Omit<ModelItem, 'position'>) => void;
 }
 
 
-export function AddModelTab({ onAddModel }: AddModelTabProps) {
+export function AddModelTab({ manifestData, onAddModel }: AddModelTabProps) {
   const [modelItems, setModelItems] = useState<ModelItem[]>([]); // all models
   const [searchValue, setSearchValue] = useState<string>(''); // search value
   const [filteredItems, setFilteredItems] = useState<ModelItem[]>([]); // filtered models
   const [activeCategory, setActiveCategory] = useState<string>('all'); // active category
   const [hoveredModel, setHoveredModel] = useState<string | null>(null); // hovered model
 
-
-  // Fetch manifest for assets
+  // on load set the model items and filtered items to the passed in data.
   useEffect(() => {
-    fetch('/assetsManifest.json')
-      .then(res => res.json())
-      .then((data) => {
-        // Map manifest items to ModelItem format
-        const items: ModelItem[] = data.map((item: any, idx: number) => ({
-          id: `${item.category || 'asset'}-${item.name || idx}`,
-          name: item.name,
-          path: item.path, // path from manifest
-          thumbnail: item.thumbnail, // thumbnail path from manifest
-          category: item.category || 'all',
-          url: item.path || '',
-          }));
-        setModelItems(items);
-        setFilteredItems(items);
-      });
-  }, []);
+    if (manifestData) {
+      setModelItems(manifestData);
+      setFilteredItems(manifestData);
+    }
+  }, [manifestData]);
 
 
   // Filter items when search/category changes

@@ -2,6 +2,7 @@
 import * as THREE from "three";
 import { globalScale, modelMaterialNames } from "./const";
 import { MaterialColourType } from "@/types/types";
+import { fetchModelMeta } from "@/services/modelServices";
 
 // declaring types here:
 export type ColourPalette = {
@@ -312,25 +313,18 @@ export async function getCategoryTagsFromURL(url: string){
   // every model is inside it's own sub folder
 
   const jsonUrl = url.replace(/\.glb$/i, '.meta.json');
+  const metaData = await fetchModelMeta(jsonUrl);// grab the metadata from the server.
 
-  try {
-    const response = await fetch(jsonUrl);
-    if (response.ok) {
-      const meta: ModelTags = await response.json();
-
-      if (Array.isArray(meta.addTags)) {
-        for (const tag of meta.addTags) tags.add(tag);
-      }
-      if (Array.isArray(meta.removeTags)) {
-        for (const tag of meta.removeTags) tags.delete(tag);
-      }
+  if (metaData) {
+    // add/ subtract tags as necessary depending on the meta data.
+    if (Array.isArray(metaData.addTags)) {
+      for (const tag of metaData.addTags) tags.add(tag);
     }
-  } catch {
-    // we do nothing since some folders will have an extra json file; and others will not.
-   // console.warn(`[Meta Tags] No meta.json found or failed for ${url}`);
+    if (Array.isArray(metaData.removeTags)) {
+      for (const tag of metaData.removeTags) tags.delete(tag);
+    }
   }
-
-  return Array.from(tags);
+  return Array.from(tags);// return the tags as an array 
 }
 
 //This function will get a model url and then return it's collider url

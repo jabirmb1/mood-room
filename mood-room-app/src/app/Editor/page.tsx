@@ -26,43 +26,13 @@ import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-thr
 import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/object3D';
 import { getRelativeColliderScale } from '@/utils/3d-canvas/collision';
 import Colliders from '@/components/3d-canvas/Colliders';
+import { getManifestData } from '@/services/manifestServices';
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
 
 export async function loadInitialModels(): Promise<Model[]> {
-  return [
-   /* {
-      id: uuidv4(),
-      url: "/assets/furniture/NormTable/NormTable.glb",
-      colourPalette: {
-        primary: "#0ff0ff",
-        secondary: "#ff0000",
-        tertiary: "#ff0000",
-      },
-      position: [0, 2, -5],
-      tags: await getCategoryTagsFromURL("/assets/furniture/NormTable/NormTable.glb"),
-      colliderDataUrl: await getModelColliderDataUrl('/assets/furniture/NormTable/NormTable.glb'), 
-    },
-    {
-      id: uuidv4(),
-      url: "/assets/decor/WaterBottle/WaterBottle.glb",
-      position: [0, 4, 0],
-      tags: await getCategoryTagsFromURL("/assets/decor/WaterBottle/WaterBottle.glb"),
-    },
-   /* {
-      id: uuidv4(),
-      url: "/assets/decor/WBinvisCOLLIDER2.glb",
-      position: [0, 0, 0],
-      tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
-    },
-    {
-      id: uuidv4(),
-      url: "/assets/wall-art/rectangleTEST.glb",
-      position: [0, 8, 0],
-      tags: await getCategoryTagsFromURL("/assets/wall-art/rectangleTEST.glb"),
-    }, */
-  ];
+  return [];
 }
 
 export default function Editor() {
@@ -102,7 +72,8 @@ export default function Editor() {
   // creating some refs for the lighting:
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const directionalRef = useRef<THREE.DirectionalLight>(null);
-  const [hasRunOnce, setHasRunOnce] = useState<boolean>(false);// flag to check if a function has run once or not, used to prevent multiple updates
+ // const [hasRunOnce, setHasRunOnce] = useState<boolean>(false);// flag to check if a function has run once or not, used to prevent multiple updates
+  const [manifestData, setManifestData] = useState<ModelItem[] | null>(null);
 
   
   // function to validate all object's collisions on load:
@@ -111,6 +82,20 @@ export default function Editor() {
     if (areModelRefsReady)
     console.log("hello");
   }, [areModelRefsReady]); */
+
+  // useEffect to get the manifest data from the server once per page mount.
+  //
+  useEffect(()=>{
+    if(manifestData) return; // if we already have the manifest data, do not fetch again.
+    
+    // fetch the manifest data from the server and set the data.
+    async function fetchData(){
+      const data = await getManifestData();
+      setManifestData(data);
+    };
+    fetchData();
+  },[])
+
 
   useEffect(()=>{
     console.log('selected model ref is:', selectedModelRef)
@@ -283,7 +268,7 @@ export default function Editor() {
         </article>
 
         {/* furnitur button and ui*/}
-        <AddModelButton show={showAddModelTab} className={"absolute top-4 left-4 z-60"}
+        <AddModelButton show={showAddModelTab} manifestData={manifestData} className={"absolute top-4 left-4 z-60"}
          toggle = {()=> setShowAddModelTab(p => !p)} onAddModel={handleAddModel}/>
 
         {/* Top right lighting button */}
