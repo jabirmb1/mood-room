@@ -41,9 +41,10 @@ export function ModelPreview({gltf,isHovered}: {gltf: { scene: THREE.Group },isH
   useFrame(() => {
     if (group.current && isHovered) {
       group.current.rotation.y += 0.01;
-      console.log("Rotating…"); // REMOVE
+     /* console.log("Rotating…"); // REMOVE
       console.log("isHovered?", isHovered);
-      console.log("group.current?", group.current);
+      console.log("group.current?", group.current); 
+      */
     }
   });
 
@@ -58,7 +59,9 @@ export function ModelPreview({gltf,isHovered}: {gltf: { scene: THREE.Group },isH
 // display static image and 3D object when we hover
 export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHoveredModel, onError }: ModelThumbnailProps) {
   const [gltf, setGltf] = useState<{ scene: THREE.Group } | null>(null);
-  const [exists, setExists] = useState(true); // track if the GLTF exists
+  const [gltfExists, setGltfExists] = useState(true);
+  const [thumbnailError, setThumbnailError] = useState(false);// we may want to use this for debugging e.g. to figure out 
+  // if a thumnail exists or not.
 
   const imgSrc = thumbnail || path.replace(/\.glb$/, '.png'); // load the thumbnail
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); 
@@ -71,10 +74,6 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
    // load GLTF model and detect errors
    useEffect(() => {
     let canceled = false;
-    if (!path || !inView){ // do not load if no path or not in view
-      setExists(false);
-      return;
-    }
     const loader = new GLTFLoader();
     loader.load(
       path,
@@ -82,12 +81,13 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
         const loadedGltf = data as { scene: THREE.Group };
         if (!canceled) {
           setGltf(loadedGltf);
+          setGltfExists(true)
         }
       },
       undefined,
       () => {
         if (!canceled) {
-          setExists(false); // hide the block if loading fails
+          setGltfExists(false); // hide the block if loading fails
         }
       }
     );
@@ -97,15 +97,16 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
 
   // if there is an error (e.g. the gltf model does not exist), call the onError function if provided
   useEffect(() => {
-    if (exists === false && onError) {
+    if (!gltfExists && onError) {
       onError();
     }
-  }, [exists, onError]);
+  }, [!gltfExists, onError]);
 
 
 
   // function to handle when thumnail is hovered
   const handleMouseEnter = () => {
+   // console.log('hovering over:', name);
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredModel(name);
     }, 2000); // delay to ensure on purpose hover
@@ -120,12 +121,6 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
     }
     setHoveredModel(null); // reset the hovered model when hop off
   };
-
-  // don't render anything if the gltf loader failed to load in a model.
-  if (!exists)
-  {
-    return;
-  }
 
   return (
     <div
@@ -143,6 +138,7 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = '/placeholder-thumbnail.jpg';
+            setThumbnailError(true); // set thumbnail error to true if the image fails to load
           }}
         />
       )}

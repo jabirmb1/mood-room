@@ -42,7 +42,7 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
           name: item.name,
           path: item.path, // path from manifest
           thumbnail: item.thumbnail, // thumbnail path from manifest
-          category: item.category || ['All'],
+          category: item.category || 'all',
           url: item.path || '',
           }));
         setModelItems(items);
@@ -55,10 +55,7 @@ export function AddModelTab({ onAddModel }: AddModelTabProps) {
   useEffect(() => {
     let filtered = modelItems;
     if (activeCategory.toLowerCase() !== 'all') {
-      filtered = filtered.filter(item => {
-        const itemCategories = Array.isArray(item.category) ? item.category : [item.category || 'All'];
-        return itemCategories.includes(activeCategory);
-      });
+      filtered = filtered.filter(item => item.category === activeCategory);
     }
     if (searchValue) {
       filtered = filtered.filter(item => item.name.toLowerCase().includes(searchValue.toLowerCase()));

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { ModelThumbnail } from './ModelThumbnail';
 import { ModelItem } from './AddModelTab';
-import { useState } from 'react';
+import { use, useEffect, useState } from 'react';
 
 interface ModelCardProps {
   item: ModelItem;

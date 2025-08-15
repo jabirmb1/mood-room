@@ -1,119 +1,226 @@
 [
   {
-    "name": "armchair",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/armchair.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/armchair.png"
+    "name": "BookStackBasic",
+    "category": "decor",
+    "path": "/assets/Decor/BookStack/BookStackBasic/BookStackBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
-    "name": "bed",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/bed.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/bed.png"
+    "name": "WaterBottle",
+    "category": "decor",
+    "path": "/assets/Decor/WaterBottle/WaterBottleBasic/WaterBottle.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
-    "name": "BookShelf",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/BookShelf.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/BookShelf.png"
+    "name": "BedBasic",
+    "category": "furniture",
+    "path": "/assets/Furniture/Bed/BedBasic/BedBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "BedsideTableBasic",
+    "category": "furniture",
+    "path": "/assets/Furniture/BedsideTable/BedsideTableBasic/BedsideTableBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "BedsideTableFancy",
+    "category": "furniture",
+    "path": "/assets/Furniture/BedsideTable/BedsideTableFancy/BedsideTableFancy.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
     "name": "BookshelfBasic",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/BookshelfBasic.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/BookshelfBasic.png"
+    "category": "furniture",
+    "path": "/assets/Furniture/BookShelf/BookShelfBasic/BookshelfBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
-    "name": "BookStackBasic",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/BookStackBasic.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/BookStackBasic.png"
+    "name": "BookShelfFancy",
+    "category": "furniture",
+    "path": "/assets/Furniture/BookShelf/BookShelfFancy/BookShelfFancy.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
-    "name": "NormTable",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/NormTable.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/NormTable.png"
+    "name": "ChairBasicBroken",
+    "category": "furniture",
+    "path": "/assets/Furniture/Chair/ChairBasic/ChairBasicBroken/ChairBasicBroken.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
-    "name": "sofa",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/sofa.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/sofa.png"
+    "name": "ChairBasicNormal",
+    "category": "furniture",
+    "path": "/assets/Furniture/Chair/ChairBasic/ChariBasicNormal/ChairBasicNormal.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
-    "name": "TVold",
-    "category": [
-      "All",
-      "Furniture"
-    ],
-    "path": "/assets/Furniture/TVold.glb",
-    "thumbnail": "/assets/Thumbnails/Furniture/TVold.png"
+    "name": "DeskBasicBroken",
+    "category": "furniture",
+    "path": "/assets/Furniture/Desk/DeskBasic/DeskBasicBroken/DeskBasicBroken.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "DeskBasicNormal",
+    "category": "furniture",
+    "path": "/assets/Furniture/Desk/DeskBasic/DeskBasicNormal/DeskBasicNormal.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "DrawerBasic",
+    "category": "furniture",
+    "path": "/assets/Furniture/Drawer/DrawerBasic/DrawerBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "Drawer",
+    "category": "furniture",
+    "path": "/assets/Furniture/Drawer/DrawerFancy/Drawer.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "TableRoundBasicBroken",
+    "category": "furniture",
+    "path": "/assets/Furniture/TableRound/TableRoundBasic/TableRoundBasicBroken/TableRoundBasicBroken.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "TableRoundBasicNormal",
+    "category": "furniture",
+    "path": "/assets/Furniture/TableRound/TableRoundBasic/TableRoundBasicNormal/TableRoundBasicNormal.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "TVBasic",
+    "category": "furniture",
+    "path": "/assets/Furniture/TV/TVBasic/TVBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "TVFlat",
+    "category": "furniture",
+    "path": "/assets/Furniture/TV/TVFlat/TVFlat.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "TVOld",
+    "category": "furniture",
+    "path": "/assets/Furniture/TV/TVOld/TVOld.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "TVCabinetBasic",
+    "category": "furniture",
+    "path": "/assets/Furniture/TVCabinet/TVCabinetBasic/TVCabinetBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "TVcabinetBasic2",
+    "category": "furniture",
+    "path": "/assets/Furniture/TVCabinet/TVCabinetBasic2/TVcabinetBasic2.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "WardrobeBasicClosed",
+    "category": "furniture",
+    "path": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicClosed/WardrobeBasicClosed.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "WardrobeBasicOpen",
+    "category": "furniture",
+    "path": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicOpen/WardrobeBasicOpen.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "WardrobeBasicOpen2",
+    "category": "furniture",
+    "path": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicOpen2/WardrobeBasicOpen2.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "WardrobeLuxury",
+    "category": "furniture",
+    "path": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryClosed/WardrobeLuxury.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "WardrobeLuxuryOpen",
+    "category": "furniture",
+    "path": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryOpen/WardrobeLuxuryOpen.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
     "name": "ShadeLampBasic",
-    "category": [
-      "All",
-      "Lights"
-    ],
-    "path": "/assets/Lights/ShadeLampBasic.glb",
-    "thumbnail": "/assets/Thumbnails/Lights/ShadeLampBasic.png"
-  },
-  {
-    "name": "WallLamp",
-    "category": [
-      "All",
-      "Lights"
-    ],
-    "path": "/assets/Lights/WallLamp.glb",
-    "thumbnail": "/assets/Thumbnails/Lights/WallLamp.png"
+    "category": "lights",
+    "path": "/assets/Lights/ShadeLamp/ShadeLampBasic/ShadeLampBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
     "name": "WallLampBasic",
-    "category": [
-      "All",
-      "Lights"
-    ],
-    "path": "/assets/Lights/WallLampBasic.glb",
-    "thumbnail": "/assets/Thumbnails/Lights/WallLampBasic.png"
+    "category": "lights",
+    "path": "/assets/Lights/WallLamp/WallLampBasic/WallLampBasic.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "WallLampBasic2",
+    "category": "lights",
+    "path": "/assets/Lights/WallLamp/WallLampBasic2/WallLampBasic2.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
     "name": "WallLampPoles",
-    "category": [
-      "All",
-      "Lights"
-    ],
-    "path": "/assets/Lights/WallLampPoles.glb",
-    "thumbnail": "/assets/Thumbnails/Lights/WallLampPoles.png"
+    "category": "lights",
+    "path": "/assets/Lights/WallLamp/WallLampPoles/WallLampPoles.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "Painting",
+    "category": "uncategorized",
+    "path": "/assets/wall-art/Painting.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
+    "name": "rectangleTEST",
+    "category": "uncategorized",
+    "path": "/assets/wall-art/rectangleTEST.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   },
   {
     "name": "wallart",
-    "category": [
-      "All",
-      "Wallart"
-    ],
+    "category": "uncategorized",
     "path": "/assets/Wallart/wallart.glb",
-    "thumbnail": "/assets/Thumbnails/Wallart/wallart.png"
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
   }
 ]
