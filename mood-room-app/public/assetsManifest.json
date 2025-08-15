@@ -77,16 +77,16 @@
     "meta": null
   },
   {
-    "name": "DrawerBasic",
+    "name": "DrawerBasicBroken",
     "category": "furniture",
-    "path": "/assets/Furniture/Drawer/DrawerBasic/DrawerBasic.glb",
+    "path": "/assets/Furniture/Drawer/DrawerBasicBroken/DrawerBasicBroken.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
     "meta": null
   },
   {
-    "name": "Drawer",
+    "name": "DrawerFancy",
     "category": "furniture",
-    "path": "/assets/Furniture/Drawer/DrawerFancy/Drawer.glb",
+    "path": "/assets/Furniture/Drawer/DrawerFancy/DrawerFancy.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
     "meta": null
   },
@@ -161,9 +161,9 @@
     "meta": null
   },
   {
-    "name": "WardrobeLuxury",
+    "name": "WardrobeLuxuryClosed",
     "category": "furniture",
-    "path": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryClosed/WardrobeLuxury.glb",
+    "path": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryClosed/WardrobeLuxuryClosed.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
     "meta": null
   },
