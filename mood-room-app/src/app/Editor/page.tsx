@@ -207,7 +207,7 @@ export default function Editor() {
         
           <RoomContext.Provider value={{ floorRef: floorRef, wallHeight: wallHeight, wallThickness: wallThickness}}>
             <Canvas
-              shadows
+              shadows={false}
               camera={{ position: defaultCameraPosition, fov: 50 }}
               className={`canvas-container sm:h-full h-[70vh] w-full bg-gray-200 z-50
               ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >

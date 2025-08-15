@@ -22,6 +22,18 @@ export type ModelTags = {
   removeTags?: string[];
 };
 
+// This function will make a model rough and non metalic (mimics lambert material)
+//
+export function makeRoughNonMetallic(object: THREE.Object3D) {
+  object.traverse((child: any) => {
+    if (child.isMesh && child.material) {
+      if (child.material instanceof THREE.MeshStandardMaterial) {
+        child.material.roughness = 1.0;
+        child.material.metalness = 0.0;
+      }
+    }
+  });
+}
 // This function fully clones a model including its material.
 //
 export function cloneModel(scene: THREE.Object3D) {
@@ -31,6 +43,9 @@ export function cloneModel(scene: THREE.Object3D) {
     const initialcolours: MaterialcolourMap = {};
     // cache for meshes with materials
     const meshesWithMaterials: THREE.Mesh[] = [];
+
+     // give every material a lambert esque feel (art style for this project) Artistic matte look
+    makeRoughNonMetallic(clonedModel)
 
     //cloning the materials as well
     clonedModel.traverse((child: any) => {

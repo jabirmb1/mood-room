@@ -8,7 +8,7 @@ import { Canvas, useFrame, useThree} from '@react-three/fiber';
 import { useInView } from 'react-intersection-observer';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { fitCameraToObject } from '@/utils/3d-canvas/camera';
-import { centerPivot } from '@/utils/3d-canvas/object3D';
+import { centerPivot, makeRoughNonMetallic } from '@/utils/3d-canvas/object3D';
 
 interface ModelThumbnailProps {
   path: string;    // path to .glb
@@ -23,6 +23,8 @@ interface ModelThumbnailProps {
 export function ModelPreview({gltf,isHovered}: {gltf: { scene: THREE.Group },isHovered: boolean}) {
   const group = useRef<THREE.Group>(null);
   const scene = useMemo(() => gltf.scene.clone(), [gltf]); // clone the scene to avoid mutation since we are moving the group
+  // make the model rough and non metalic; like how they appear when they are loaded in:
+  makeRoughNonMetallic(scene);
   const centeredScene = centerPivot(scene) // center the model's pivot so they also rotate properly.
   const rotationSpeed = 0.01; // speed of rotation of the models inside preview thumbnail.
   const { camera } = useThree();
