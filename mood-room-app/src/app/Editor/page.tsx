@@ -5,82 +5,79 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei'; // the actual react component for orbital controls.
 import { OrbitControls } from 'three-stdlib'; // instance class (used as a type)
-import { Object3D } from '@/components/3d/Object3D';
-import { CameraController } from '@/components/CameraController';
+import { Object3D } from '@/components/3d-canvas/3d/Object3D';
+import { CameraController } from '@/components/3d-canvas/CameraController';
 import { v4 as uuidv4 } from 'uuid';
-import { defaultCameraPosition, globalScale, wallHeight, wallThickness } from '@/utils/const';
-import { ObjectEditorPanel } from '@/components/ObjectEditorPanel/ObjectEditorPanel';
+import { defaultCameraPosition, globalScale, wallHeight, wallThickness } from '@/utils/3d-canvas/const';
+import { ObjectEditorPanel } from '@/components/3d-canvas/ObjectEditorPanel/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useModel} from '@/hooks/useModel';
+import { useModel} from '@/hooks/3d-canvas/useModel';
 import * as THREE from "three";
-import { LightIntensityTransition } from '@/components/LightIntensityTransition';
-import { AddModelButton } from '@/components/AddModelMenu/AddModelButton';
-import { ModelItem } from '@/components/AddModelMenu/AddModelTab';
-import { LightingButton } from '@/components/LightingPanel/LightingButton';
-import { LightingConfig } from '@/components/LightingPanel/LightingPanel';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import RoomFoundation from '@/components/RoomFoundation';
+import { LightIntensityTransition } from '@/components/3d-canvas/LightIntensityTransition';
+import { AddModelButton } from '@/components/3d-canvas/AddModelMenu/AddModelButton';
+import { ModelItem } from '@/components/3d-canvas/AddModelMenu/AddModelTab';
+import { LightingButton } from '@/components/3d-canvas/LightingPanel/LightingButton';
+import { LightingConfig } from '@/components/3d-canvas/LightingPanel/LightingPanel';
+import { ConfirmDialog } from '@/components/UI/ConfirmDialog';
+import RoomFoundation from '@/components/3d-canvas/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { Model } from '@/types/types';
 import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
+import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/object3D';
+import { getRelativeColliderScale } from '@/utils/3d-canvas/collision';
+import Colliders from '@/components/3d-canvas/Colliders';
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
-const initialModels: Model[] = [
-  {
-    id: uuidv4(),
-    url: "/assets/Furniture/Tvold.glb",
-    colourPalette: {
-      primary: "#0ff0ff",
-      secondary: "#ff0000",
-      tertiary: "#ff0000"
+
+export async function loadInitialModels(): Promise<Model[]> {
+  return [
+   /* {
+      id: uuidv4(),
+      url: "/assets/furniture/NormTable/NormTable.glb",
+      colourPalette: {
+        primary: "#0ff0ff",
+        secondary: "#ff0000",
+        tertiary: "#ff0000",
+      },
+      position: [0, 2, -5],
+      tags: await getCategoryTagsFromURL("/assets/furniture/NormTable/NormTable.glb"),
+      colliderDataUrl: await getModelColliderDataUrl('/assets/furniture/NormTable/NormTable.glb'), 
     },
-    position: [0, 2, -5],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/lights/ShadeLampBasic.glb",
-    position: [0, 0, 0],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/lights/ShadeLampBasic.glb",
-    position: [0, 4, 0],
-  },
-   
- /* 
- 
-  {
-    id: uuidv4(),
-    url: "/assets/lights/WallLampBasic.glb",
-    position: [0, 2, 6],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/Furniture/BookShelfBasic.glb",
-    position: [4, 2, 0],
-  },
-  {
-    id: uuidv4(),
-    url: "/assets/lights/WallLampPoles.glb",
-    position: [-4, 2, 0],
-  }, */
-];
+    {
+      id: uuidv4(),
+      url: "/assets/decor/WaterBottle/WaterBottle.glb",
+      position: [0, 4, 0],
+      tags: await getCategoryTagsFromURL("/assets/decor/WaterBottle/WaterBottle.glb"),
+    },
+   /* {
+      id: uuidv4(),
+      url: "/assets/decor/WBinvisCOLLIDER2.glb",
+      position: [0, 0, 0],
+      tags: await getCategoryTagsFromURL("/assets/lights/ShadeLampBasic.glb"),
+    },
+    {
+      id: uuidv4(),
+      url: "/assets/wall-art/rectangleTEST.glb",
+      position: [0, 8, 0],
+      tags: await getCategoryTagsFromURL("/assets/wall-art/rectangleTEST.glb"),
+    }, */
+  ];
+}
 
 export default function Editor() {
 
    // State to hold floor returned from RoomFoundation
-   const floorRef = useRef<THREE.Object3D | null>(null);
-   
+   const floorRef = useRef<THREE.Object3D | null>(null);   
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
   const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, 
-    deleteModel, updateCollisionMap} = useModel(initialModels, floorRef, []);
+     refUpdateTrigger, forceRefUpdate, deleteModel, updateCollisionMap} = useModel([], floorRef, []);
 
   const emptyRef = React.useRef<THREE.Object3D | null>(null);// a default empty ref.
   const [selectedId, setSelectedId] = useState<string | null>(null);// id of the model which has been selected.
    // getting the selected model's model refs:
-  const [selectedModelRef, setSelectedModelRef] =useState<React.RefObject<THREE.Object3D | null> | null>(null);;// using a usestate now since models will now remount due to rigid bodies.
+  const [selectedModelRef, setSelectedModelRef] =useState<React.RefObject<THREE.Object3D | null>>(emptyRef);;// using a usestate now since models will now remount due to rigid bodies.
   const [isDragging, setDragging] = useState(false);// if user is dragging a model or not, needed for orbital controls
   const [editingMode, setEditingMode] = useState<'edit' | 'move'>('edit');// if the user wants to show model's editor panel
   //or instead show a floating panel so they can move model around.
@@ -115,21 +112,40 @@ export default function Editor() {
     console.log("hello");
   }, [areModelRefsReady]); */
 
+  useEffect(()=>{
+    console.log('selected model ref is:', selectedModelRef)
+  }, [selectedModelRef])
+
   // function to update selectedModelRef to be as up to date as possible:
   useEffect(() => {
     if (selectedId && modelRefs.current[selectedId]) {
       setSelectedModelRef(modelRefs.current[selectedId]);
     } else {
-      setSelectedModelRef(null);
+      setSelectedModelRef(emptyRef);
     }
-  }, [selectedId, modelRefs.current]);
+  }, [selectedId, refUpdateTrigger]);
+
+  useEffect(() => {
+    loadInitialModels().then(setModels);
+  }, []);
 
   // function to run when a user has selected a model, we set the model into editing mode (show's editor panel)
   // and then change the selected ID.
   const handleSelect = useCallback((id: string | null) => {
-    setEditingMode('edit');
-    setSelectedId(id);
-  }, []);
+     // Clear previous selection immediately
+     setSelectedModelRef(emptyRef);
+     setEditingMode('edit');
+     
+     // If selecting the same object, deselect it
+     if (selectedId === id) {
+       setSelectedId(null);
+       return;
+     }
+     setSelectedId(id);
+     
+     // Force ref update after state changes
+     setTimeout(() => forceRefUpdate(), 0);
+  }, [selectedId, forceRefUpdate]);
 
   // creating a useEfect to just dim the lights down and not dim them down when pop up is open or not (object editor)
   useEffect(() => {
@@ -158,13 +174,16 @@ export default function Editor() {
   
   
   // function to add in a new model.
-  function handleAddModel(model: Omit<ModelItem, 'thumbnail'>): void {
+  async function handleAddModel(model: Omit<ModelItem, 'thumbnail'>) {
+    const tags = await getCategoryTagsFromURL(model.url); // fetch tags from url
+    const colliderDataUrl = await getModelColliderDataUrl(model.url)
     const newModel: Model = {
       id: uuidv4(),
       url: model.url,
       colourPalette: model.colourPalette,
       position: [3, 3, 3],
-      scale: [1, 1, 1]
+      tags: tags,
+      colliderDataUrl: colliderDataUrl,
     };
     setModels(prev => [...prev, newModel]);
     setShowAddModelTab(false); // optional: close the tab
@@ -188,7 +207,7 @@ export default function Editor() {
         
           <RoomContext.Provider value={{ floorRef: floorRef, wallHeight: wallHeight, wallThickness: wallThickness}}>
             <Canvas
-              shadows
+              shadows={false}
               camera={{ position: defaultCameraPosition, fov: 50 }}
               className={`canvas-container sm:h-full h-[70vh] w-full bg-gray-200 z-50
               ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
@@ -216,10 +235,11 @@ export default function Editor() {
                       rotation={model.rotation ?? [0, 0, 0]}
                       onCollisionEnter={()=>{updateCollisionMap(model.id, true)}}
                       onCollisionExit={()=>updateCollisionMap(model.id, false)}
+                      userData={{tags: model.tags ?? []}}
                       >
 
                       {/* for dev testing purposes; will replace with a compound collider later */}
-                      <CuboidCollider args={[1, 1, 1]}/>
+                      <Colliders jsonUrl={model.colliderDataUrl ?? null} scale={model.scale ?? [globalScale, globalScale, globalScale]}/>
                                      
                      {/* Your visual 3D model */}
                      <Object3D
@@ -243,7 +263,7 @@ export default function Editor() {
                    </RigidBody>
                     ))}
 
-                  {orbitControlsRef.current &&(
+                  {orbitControlsRef.current && (
                     <CameraController
                       controlsRef={orbitControlsRef}
                       rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
@@ -272,7 +292,7 @@ export default function Editor() {
 
         {/* Editor Panel */}
         <AnimatePresence>{/* animate the panel coming in from the side */}
-          {isPopupOpen && editingMode === 'edit' && (
+          {isPopupOpen && editingMode === 'edit' && selectedModelRef.current && (
             <motion.aside
               key="editor-panel"
               initial={{ x: '100%' }}
@@ -285,7 +305,7 @@ export default function Editor() {
             >
               <ObjectEditorPanel
                 rigidBodyRef={rigidBodyRefs.current[selectedId ?? '']}
-                objectRef={selectedModelRef ?? emptyRef}
+                objectRef={selectedModelRef}
                 objectId={selectedId}
                 updateModelInformation={updateModelInformation}
                 onClose={() => setSelectedId(null)}

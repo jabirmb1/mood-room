@@ -3,6 +3,10 @@
 //
 const fs = require('fs');
 const path = require('path');
+<<<<<<< HEAD
+=======
+const validCategories = ['Furniture', 'Lights', 'Decor', 'WallArt']; // valid categories for models
+>>>>>>> origin/Fahi-code
 
 const assetsRoot = path.join(__dirname, 'public', 'assets');   // path to assets folder
 const outputManifest = path.join(__dirname, 'public', 'assetsManifest.json'); // path to output manifest file
@@ -16,6 +20,7 @@ function fileExists(filePath) {
   }
 }
 
+<<<<<<< HEAD
 // Function to get thumbnail path
 function getThumbnailPath(modelPath) {
   const thumbnailPath = modelPath.replace(/\.glb$/, '.png').replace('/assets/', '/assets/Thumbnails/'); // e.g /assets/Thumbnails/Categories/bed.png
@@ -27,6 +32,30 @@ function getThumbnailPath(modelPath) {
   return '/placeholder-thumbnail.jpg';
 }
 
+=======
+// function to get thumbnail path for a model, or replace it with a placeholder if it is not found.
+function findThumbnail(fullDirPath, modelName) {
+  // Look for png/jpg/jpeg in same folder as model
+  const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+  for (const ext of exts) {
+    const thumbPath = path.join(fullDirPath, modelName + ext);
+    if (fileExists(thumbPath)) {
+      return '/assets/' + path.relative(assetsRoot, thumbPath).replace(/\\/g, '/');
+    }
+  }
+  return '/placeholder-thumbnail.jpg';
+}
+
+// function to find a model's metadata file.
+function findMeta(fullDirPath, modelName) {
+  const metaPath = path.join(fullDirPath, modelName + 'Meta.json');
+  if (fileExists(metaPath)) {
+    return '/assets/' + path.relative(assetsRoot, metaPath).replace(/\\/g, '/');
+  }
+  return null;
+}
+
+>>>>>>> origin/Fahi-code
 // Function to walk through directory and generate manifest
 function walkDir(dir, baseUrl) {
   const items = [];
@@ -34,6 +63,7 @@ function walkDir(dir, baseUrl) {
   
   for (const file of files) {
     const fullPath = path.join(dir, file);
+<<<<<<< HEAD
     const relPath = path.relative(assetsRoot, fullPath).replace(/\\/g, '/'); // keeps relative path e.g Categories/bed.glb
     
     if (fs.statSync(fullPath).isDirectory()) {
@@ -51,6 +81,35 @@ function walkDir(dir, baseUrl) {
       });
     }
   }
+=======
+    if (fs.statSync(fullPath).isDirectory()) {
+      items.push(...walkDir(fullPath));
+    } else if (file.endsWith('.glb') || file.endsWith('.gltf')) {
+      const modelName = path.basename(file, path.extname(file));
+      const relPath = path.relative(assetsRoot, fullPath).replace(/\\/g, '/'); // keeps relative path e.g Categories/bed/bed.glb
+      const modelPath = '/assets/' + relPath;
+
+      const thumbnailPath = findThumbnail(path.dirname(fullPath), modelName);
+      const metaPath = findMeta(path.dirname(fullPath), modelName);
+
+      // Get top-level category folder (first folder inside assets)
+      const parts = relPath.split('/');
+      const topCategory = parts[0]; // e.g. 'Furniture', 'Lights', 'Decor', 'WallArt'
+
+      // Enforce clean category naming
+      const categoryName = validCategories.includes(topCategory)? topCategory : 'Uncategorized';
+
+      items.push({
+        name: modelName,
+        category: categoryName.toLowerCase(),
+        path: modelPath,
+        thumbnail: thumbnailPath,
+        meta: metaPath
+      });
+    }
+  }
+
+>>>>>>> origin/Fahi-code
   return items;
 }
 
@@ -61,6 +120,13 @@ if (!fs.existsSync(assetsRoot)) {
 
 // Create placeholder image if it doesn't exist
 const placeholderPath = path.join(__dirname, 'public', 'placeholder-thumbnail.jpg');
+<<<<<<< HEAD
+=======
+if (!fileExists(placeholderPath)) {
+  console.warn('Placeholder thumbnail missing:', placeholderPath);
+}
+
+>>>>>>> origin/Fahi-code
 
 // Generate manifest
 const manifest = walkDir(assetsRoot, '');
