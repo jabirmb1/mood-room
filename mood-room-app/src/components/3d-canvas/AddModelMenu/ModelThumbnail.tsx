@@ -4,9 +4,11 @@
 
 import { useState, useRef, Suspense, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { Canvas, useFrame, useThree} from '@react-three/fiber';
 import { useInView } from 'react-intersection-observer';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { fitCameraToObject } from '@/utils/3d-canvas/camera';
+import { centerPivot } from '@/utils/3d-canvas/object3D';
 
 interface ModelThumbnailProps {
   path: string;    // path to .glb
@@ -21,26 +23,22 @@ interface ModelThumbnailProps {
 export function ModelPreview({gltf,isHovered}: {gltf: { scene: THREE.Group },isHovered: boolean}) {
   const group = useRef<THREE.Group>(null);
   const scene = useMemo(() => gltf.scene.clone(), [gltf]); // clone the scene to avoid mutation since we are moving the group
-  console.log("Path being passed:", gltf.scene); // remove
+  const centeredScene = centerPivot(scene) // center the model's pivot so they also rotate properly.
+  const rotationSpeed = 0.01; // speed of rotation of the models inside preview thumbnail.
+  const { camera } = useThree();
+  // console.log("Path being passed:", gltf.scene); // remove
 
   useEffect(() => {
-    const box = new THREE.Box3().setFromObject(scene); // can be adjusted when we have proper models
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-
-    // move parent group to center the model
-    if (group.current) {
-      group.current.position.set(-center.x, -center.y, -center.z);
-    }
-
-    scene.scale.setScalar(1.5 / maxDim);
-  }, [scene]);
+    if (!group.current) return;
+    const{ center} = fitCameraToObject(camera as THREE.PerspectiveCamera, centeredScene)
+   // Offset group so it is centered at origin for rotation
+   group.current.position.set(-center.x, -center.y, -center.z);
+ }, [scene, camera]);
 
   // rotate the model
   useFrame(() => {
     if (group.current && isHovered) {
-      group.current.rotation.y += 0.01;
+      group.current.rotation.y += rotationSpeed;
      /* console.log("Rotating…"); // REMOVE
       console.log("isHovered?", isHovered);
       console.log("group.current?", group.current); 
@@ -51,7 +49,7 @@ export function ModelPreview({gltf,isHovered}: {gltf: { scene: THREE.Group },isH
   // return the group with the model inside it
   return (
     <group ref={group}>
-      <primitive object={scene} />
+      <primitive object={centeredScene} />
     </group>
   );
 }

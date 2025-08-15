@@ -3,10 +3,31 @@ import { calculateObjectBoxSize } from './object3D';
 import { RapierRigidBody } from '@react-three/rapier';
 /******** This file handles all logic relating to the camera **********/
 
+//This fuction just centers the camera on the passed in object so it fits within frame.
+//
+export function fitCameraToObject(camera: THREE.PerspectiveCamera, object: THREE.Object3D, margin = 1.5) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+
+  // Calculate distance based on FOV
+  const fov = camera.fov * (Math.PI / 180);
+  let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+
+  cameraZ *= margin;
+
+  // Center camera
+  camera.position.set(center.x, center.y, cameraZ);
+  camera.lookAt(center);
+
+  return { center, maxDim };
+}
+
 
 // This function just computes and returns the final position of where the camera should stop at, given an object.
 // if no object is present, then it will just reset the camera.
-
+//
 export function computeCameraTargetPositions( rigidBody: RapierRigidBody | null, object: THREE.Object3D | null,resetPosition: [number, number, number],
    cameraXOffset: number = 0, zoomOffset: number = 0) {
   const desiredCameraPos = new THREE.Vector3();
