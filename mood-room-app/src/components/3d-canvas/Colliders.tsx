@@ -12,49 +12,23 @@ import { getModelColliderData } from "@/services/modelServices";
  */
 
 type CollidersProps = {
-  jsonUrl: string | null;// a json url which leads to the model's colliders information and of how they should be processed.
+  colliderData: ColliderJsonData[] | null; // the collider data to use for the colliders
   scale: [number, number, number];// the scale to apply to the colliders.
 };
 
  // This function will be used to generate compound colliders from the information that is passed in.
-export default function Colliders({ jsonUrl, scale }: CollidersProps) {
-  const [colliders, setColliders] = useState<ColliderJsonData[] | null>(null);// the collider data
-  const [fetchFailed, setFetchFailed] = useState<boolean>(false);// whether we have valid collider data or not
+export default function Colliders({ colliderData, scale }: CollidersProps) {
   const DEGREES90 = Math.PI/2
 
-  // Fetch the collider data from the server
-  useEffect(() => {
-    if (!jsonUrl) {
-      setFetchFailed(true);
-      return;
-    }
-
-    // inline function to fetch the collider data and set the collider state depending if it was successful or not.
-    async function fetchColliderData(){
-      const data = await getModelColliderData(jsonUrl);
-      if (!data) {// fetching failed or no data was returned
-        console.warn("No collider data found or fetch failed.");
-        setFetchFailed(true);
-      } else {
-        setFetchFailed(false);
-        setColliders(data);
-      }
-    };
-
-    fetchColliderData();
-  }, [jsonUrl]);
-
-  if (fetchFailed) {// return a fallback cuboid collider is no collider data was found or url was null
-    //  console.warn("Using fallback cuboid collider due to fetch failure or missing URL.");
+  if (!colliderData) {// return a fallback cuboid collider is no collider data was provided.
+    //  console.warn("Using fallback cuboid collider due to no collider data being provided.");
       // since these scales are not altered to fit scene unlike the normal colliders for when a colliderData is provided;
       // we will just get the object's relative scale to scale everything up to fit the scene
       return <CuboidCollider args={[1, 1, 1]} scale={getRelativeColliderScale(scale[0], globalScale)} />;
     }
 
-  if (!colliders) return null;
-
   return (
-      colliders.map((col, idx) => {
+      colliderData.map((col, idx) => {
         // Position scaled per axis (in original Blender coordinate system)
         const position = col.position.map(
           (v, i) => v * scale[i]

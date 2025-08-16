@@ -21,12 +21,13 @@ import { LightingConfig } from '@/components/3d-canvas/LightingPanel/LightingPan
 import { ConfirmDialog } from '@/components/UI/ConfirmDialog';
 import RoomFoundation from '@/components/3d-canvas/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
-import { Model } from '@/types/types';
-import { CuboidCollider, CylinderCollider, Physics, RigidBody } from '@react-three/rapier';
+import { ColliderJsonData, Model } from '@/types/types';
+import { Physics, RigidBody } from '@react-three/rapier';
 import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/object3D';
-import { getRelativeColliderScale } from '@/utils/3d-canvas/collision';
 import Colliders from '@/components/3d-canvas/Colliders';
 import { getManifestData } from '@/services/manifestServices';
+import { getModelColliderData } from '@/services/modelServices';
+
 
 
 //place holder array of models until adding/ deletion of object functionality is added.
@@ -73,9 +74,9 @@ export default function Editor() {
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const directionalRef = useRef<THREE.DirectionalLight>(null);
  // const [hasRunOnce, setHasRunOnce] = useState<boolean>(false);// flag to check if a function has run once or not, used to prevent multiple updates
-  const [manifestData, setManifestData] = useState<ModelItem[] | null>(null);
+  const [manifestData, setManifestData] = useState<ModelItem[] | null>(null);// a cache for the manifest data to stop it from being fetched multiple times.
+  const [colliderDataCache, setColliderDataCache] = useState<Map<Model['colliderDataUrl'], ColliderJsonData[] | null>>(new Map());// collider data cache for the models.
 
-  
   // function to validate all object's collisions on load:
   //
   /*useEffect(() => {
@@ -157,6 +158,37 @@ export default function Editor() {
     }
   }, [isPopupOpen]);
   
+
+  // use effect to preload all models initially with cached data and then indivisually search up collider data when new 
+  // models are indivisually added by user.
+  useEffect(() => {
+    async function loadColliders() {
+      const urls = models.map(m => m.colliderDataUrl).filter(Boolean) as string[];
+  
+      // Find URLs not yet in the cache
+      const uncached = urls.filter(url => !colliderDataCache.has(url));
+  
+      if (uncached.length === 0) return;// everything is cached; so just return.
+  
+      // Fetch all uncached in parallel
+      const results = await Promise.all(
+        uncached.map(async url => [url, await getModelColliderData(url)] as const)
+      );
+  
+      // Batch update cache once; used for indivisually added models; so we don't iterate through entire map every time
+      // a new model is added.
+      setColliderDataCache(prev => {
+        const next = new Map(prev); // clone the Map
+        for (const [url, data] of results) {
+          if (data) next.set(url, data); // use Map.set
+        }
+        return next;
+      });
+    }
+  
+    loadColliders();
+  }, [models]);
+  
   
   // function to add in a new model.
   async function handleAddModel(model: Omit<ModelItem, 'thumbnail'>) {
@@ -206,8 +238,6 @@ export default function Editor() {
                   <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}} collidersEnabled={true}/>
                 
                   {models.map((model) => 
-            
-                    // (different than when selectedId changes on hover.)
                     (
                       <RigidBody
                       ref={getRigidBodyInstanceUpdateHandler(model.id)}
@@ -223,8 +253,9 @@ export default function Editor() {
                       userData={{tags: model.tags ?? []}}
                       >
 
-                      {/* for dev testing purposes; will replace with a compound collider later */}
-                      <Colliders jsonUrl={model.colliderDataUrl ?? null} scale={model.scale ?? [globalScale, globalScale, globalScale]}/>
+
+                      {/* compound collider */}
+                      <Colliders  colliderData={colliderDataCache.get(model.colliderDataUrl) ?? null} scale={model.scale ?? [globalScale, globalScale, globalScale]}/>
                                      
                      {/* Your visual 3D model */}
                      <Object3D
