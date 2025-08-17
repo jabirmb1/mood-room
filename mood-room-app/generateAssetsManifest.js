@@ -3,10 +3,7 @@
 //
 const fs = require('fs');
 const path = require('path');
-<<<<<<< HEAD
-=======
 const validCategories = ['Furniture', 'Lights', 'Decor', 'WallArt']; // valid categories for models
->>>>>>> origin/Fahi-code
 
 const assetsRoot = path.join(__dirname, 'public', 'assets');   // path to assets folder
 const outputManifest = path.join(__dirname, 'public', 'assetsManifest.json'); // path to output manifest file
@@ -20,19 +17,6 @@ function fileExists(filePath) {
   }
 }
 
-<<<<<<< HEAD
-// Function to get thumbnail path
-function getThumbnailPath(modelPath) {
-  const thumbnailPath = modelPath.replace(/\.glb$/, '.png').replace('/assets/', '/assets/Thumbnails/'); // e.g /assets/Thumbnails/Categories/bed.png
-  if (fileExists(path.join(__dirname, 'public', thumbnailPath))) {
-    return thumbnailPath; // return thumbnail path if it exists
-  }
-  
-  // If no thumbnail exists, return a placeholder path
-  return '/placeholder-thumbnail.jpg';
-}
-
-=======
 // function to get thumbnail path for a model, or replace it with a placeholder if it is not found.
 function findThumbnail(fullDirPath, modelName) {
   // Look for png/jpg/jpeg in same folder as model
@@ -55,7 +39,6 @@ function findMeta(fullDirPath, modelName) {
   return null;
 }
 
->>>>>>> origin/Fahi-code
 // Function to walk through directory and generate manifest
 function walkDir(dir, baseUrl) {
   const items = [];
@@ -63,25 +46,6 @@ function walkDir(dir, baseUrl) {
   
   for (const file of files) {
     const fullPath = path.join(dir, file);
-<<<<<<< HEAD
-    const relPath = path.relative(assetsRoot, fullPath).replace(/\\/g, '/'); // keeps relative path e.g Categories/bed.glb
-    
-    if (fs.statSync(fullPath).isDirectory()) {
-      items.push(...walkDir(fullPath, baseUrl + '/' + file));
-    } else if (file.endsWith('.glb')) {
-      const modelPath = '/assets/' + relPath; // e.g /assets/Categories/bed.glb
-      const thumbnailPath = getThumbnailPath(modelPath); // e.g /assets/Thumbnails/Categories/Furniture/bed.png
-      
-      const folderName = path.dirname(relPath).split(path.sep)[0];
-      items.push({
-        name: path.basename(file, '.glb'),
-        category: ['All', folderName || 'Uncategorized'],
-        path: modelPath,
-        thumbnail: thumbnailPath
-      });
-    }
-  }
-=======
     if (fs.statSync(fullPath).isDirectory()) {
       items.push(...walkDir(fullPath));
     } else if (file.endsWith('.glb') || file.endsWith('.gltf')) {
@@ -109,7 +73,6 @@ function walkDir(dir, baseUrl) {
     }
   }
 
->>>>>>> origin/Fahi-code
   return items;
 }
 
@@ -120,13 +83,10 @@ if (!fs.existsSync(assetsRoot)) {
 
 // Create placeholder image if it doesn't exist
 const placeholderPath = path.join(__dirname, 'public', 'placeholder-thumbnail.jpg');
-<<<<<<< HEAD
-=======
 if (!fileExists(placeholderPath)) {
   console.warn('Placeholder thumbnail missing:', placeholderPath);
 }
 
->>>>>>> origin/Fahi-code
 
 // Generate manifest
 const manifest = walkDir(assetsRoot, '');
