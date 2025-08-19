@@ -1,0 +1,12 @@
+[
+    { 
+        "rules":{
+            "minClearance": 0.3,       
+            "insideRoom": true,        
+            "mustTouchGround": true,   
+            "mustBeOnWall": false,     
+            "mustTouchWall": false,    
+            "allowStacking": false     
+          }
+    }
+]
