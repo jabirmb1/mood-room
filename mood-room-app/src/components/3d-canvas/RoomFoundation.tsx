@@ -20,6 +20,9 @@ export default function RoomFoundation({ onFloorReady, collidersEnabled = false 
   const rightDirection : [number, number, number] = [0, Math.PI/2, 0];
   const leftDirection : [number, number, number]= [0, -Math.PI/2, 0]
 
+  const cellSize = 0.5; // meters per cell
+  const divisions = roomSize / cellSize; // how many cells along each axis
+
   const floorRef = useRef<THREE.Mesh>(null);
 
   useEffect(() => {
@@ -72,12 +75,12 @@ export default function RoomFoundation({ onFloorReady, collidersEnabled = false 
 
       {showGrid && (
         <Grid
-          args={[roomSize, roomSize]}
-          position={[0, 0.3, 0]}
-          cellColor="#888"
-          fadeDistance={100}
-          fadeStrength={1}
-        />
+        args={[roomSize, roomSize, divisions, divisions]} // width, length, widthDivisions, lengthDivisions
+        position={[0, 0.3, 0]}
+        cellColor="#888"
+        fadeDistance={100}
+        fadeStrength={1}
+      />
       )}
     </>
   );
