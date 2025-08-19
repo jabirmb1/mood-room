@@ -7,7 +7,7 @@ import { MaterialColourType } from '@/types/types';
 type ColourButtonProps = {
   type: MaterialColourType ;// if the button relates to the primary, secondary or tertary part of model.
   isActive: boolean;// enabled/ disabled.
-  isAvailable: boolean;// if the model has e.g. a tertairy part to change colour with (and this button is a teriarty type.)
+  isAvailable: boolean;// if the model has e.g. a tertiary part to change colour with (and this button is a teriarty type.)
   colour: string;// what colour to display.
   onClick: () => void;// function to run when this button is clicked.
 };

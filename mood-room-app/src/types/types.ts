@@ -1,4 +1,4 @@
-import { modelMaterialNames } from "@/utils/3d-canvas/const";
+import { modelMaterialNames, moodTypes } from "@/utils/3d-canvas/const";
 import { useRapier } from "@react-three/rapier";
 // model type.
 export type Model = {
@@ -52,3 +52,24 @@ export type ColliderJsonData={
   rotation: [number, number, number],// stored as eular
   dimensions: number[]//depending on the shape it can be an array of 1, 2 or 3. (we are only using box, capsule and spheres)
 }
+
+export type HexColor = `#${string}`;
+type colourRange = [HexColor, HexColor];// a range of colours (e.g. from light to dark) for the colour palette.
+//The structure that each object colour palette will follow
+export type ObjectColourPalette = {
+  primary: colourRange,// a colour range for the primary colour of the object
+  secondary: colourRange;
+  tertiary?: colourRange;
+};
+
+
+//The structure that each room colour paletee will follow:
+export type roomColourPalette = {
+  primary: colourRange;// colour of the walls (given as a range of colours.)
+  secondary: colourRange;// colour of the floor
+  tertiary: colourRange;// colour of the skirting boards
+  objectColourPalettes: ObjectColourPalette[]// colour palettes for each object in the room (general)
+}
+
+// the different types of moods that are available in the project. (mood type)
+export type MoodType = typeof moodTypes[number];
