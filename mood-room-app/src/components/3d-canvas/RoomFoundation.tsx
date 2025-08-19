@@ -10,10 +10,12 @@ import { Wall } from './Wall';
 type RoomFoundationProps = {
   onFloorReady?: (objects: THREE.Object3D) => void;
   collidersEnabled?: boolean; // Toggle physics colliders (e.g., disable in view mode)
+  floorColour?: string;
+  wallColour?:string
 };
 
-export default function RoomFoundation({ onFloorReady, collidersEnabled = false }: RoomFoundationProps) {
-  const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);
+export default function RoomFoundation({ onFloorReady, wallColour, floorColour, collidersEnabled = false }: RoomFoundationProps) {
+  const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color:floorColour ?? 0xFFE99A }), []);
   const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);
   const [showGrid, setShowGrid] = useState(true);
   const wallSize: [number, number, number] = [roomSize, wallHeight, wallThickness]
@@ -58,11 +60,12 @@ export default function RoomFoundation({ onFloorReady, collidersEnabled = false 
       )}
 
       {/* Walls */}
-      <Wall name="backWall" position={[0, wallHeight / 2, -roomSize / 2]} size={wallSize} enableColliders={true}/>
+      <Wall name="backWall" position={[0, wallHeight / 2, -roomSize / 2]} size={wallSize} enableColliders={true}
+      colour={wallColour}/>
       <Wall name="frontWall" position={[0, wallHeight / 2, roomSize / 2]} size={wallSize} enableColliders={true} 
       invisible={true}/>
       <Wall name="leftWall" position={[0, wallHeight / 2, -roomSize/2]} size={wallSize} enableColliders={true} 
-      rotation={rightDirection}/>
+      rotation={rightDirection} colour={wallColour}/>
       <Wall name="rightWall" position={[0, wallHeight / 2, -roomSize/2]} size={wallSize} enableColliders={true}
        rotation={leftDirection} invisible={true} />
 

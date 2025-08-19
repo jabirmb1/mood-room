@@ -8,12 +8,13 @@ type WallProps = {
     position: [number, number, number]; // position of wall
     size: [number, number, number]; // how big it should be
     rotation?: [number, number, number]// how should wall be rotated?
+    colour?: string; // colour of the walls.
     name?: string;// name of wall
     invisible?: boolean// whether or not the wall should invisible
     enableColliders?: boolean;//  whether or not the colliders should be active or not.
 
 }
-export function Wall({ position, size,rotation,  name, invisible = false, enableColliders}: WallProps){
+export function Wall({ position, size,rotation,  name, colour, invisible = false, enableColliders}: WallProps){
 
     return(
     /* conditionally redender the rigid body; let user data be on top most mesh so it can be accessed easily by other parts of program */
@@ -26,14 +27,14 @@ export function Wall({ position, size,rotation,  name, invisible = false, enable
 
         <mesh name={name} position={position} receiveShadow castShadow visible={!invisible}>
           <boxGeometry args={size} />
-          <meshStandardMaterial color="lightgray" />
+          <meshStandardMaterial color={colour ?? "lightgray"} />
         </mesh>
       </RigidBody>
     ) : (
       <mesh name={name} position={position} rotation={rotation} receiveShadow castShadow visible={!invisible}
       userData={{permanentInvisible: invisible}}>
         <boxGeometry args={size} />
-        <meshStandardMaterial color="lightgray" />
+        <meshStandardMaterial color={colour ??"lightgray"} />
       </mesh>
     ));
 }

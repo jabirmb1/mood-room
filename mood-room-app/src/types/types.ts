@@ -53,8 +53,10 @@ export type ColliderJsonData={
   dimensions: number[]//depending on the shape it can be an array of 1, 2 or 3. (we are only using box, capsule and spheres)
 }
 
+/************ types relating to the mood room colour mapping ***********/
+
 export type HexColor = `#${string}`;
-type colourRange = [HexColor, HexColor];// a range of colours (e.g. from light to dark) for the colour palette.
+export type colourRange = [HexColor, HexColor];// a range of colours (e.g. from light to dark) for the colour palette.
 //The structure that each object colour palette will follow
 export type ObjectColourPalette = {
   primary: colourRange,// a colour range for the primary colour of the object
@@ -62,6 +64,13 @@ export type ObjectColourPalette = {
   tertiary?: colourRange;
 };
 
+// structure of resolved object colour palette (i.e no colour ranges; but the colours are already picked)
+//
+export type resolvedObjectColourPalette={
+  primary: HexColor;
+  secondary:HexColor;
+  tertiary?: HexColor
+}
 
 //The structure that each room colour paletee will follow:
 export type roomColourPalette = {
@@ -69,6 +78,14 @@ export type roomColourPalette = {
   secondary: colourRange;// colour of the floor
   tertiary: colourRange;// colour of the skirting boards
   objectColourPalettes: ObjectColourPalette[]// colour palettes for each object in the room (general)
+}
+
+// structure of a rooms colour palette that's resolved e.g. colours of everything has been picked.
+export type resolvedRoomColourPalette={
+  primary: HexColor;
+  secondary: HexColor;
+  tertiary: HexColor;
+  objectColourPalette: resolvedObjectColourPalette
 }
 
 // the different types of moods that are available in the project. (mood type)
