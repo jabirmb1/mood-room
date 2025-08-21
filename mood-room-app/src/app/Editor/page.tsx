@@ -27,6 +27,7 @@ import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canv
 import Colliders from '@/components/3d-canvas/Colliders';
 import { getManifestData } from '@/services/manifestServices';
 import { getModelColliderData } from '@/services/modelServices';
+import ShadowManager from '@/components/3d-canvas/ShadowManager';
 
 
 
@@ -73,6 +74,12 @@ export default function Editor() {
   // creating some refs for the lighting:
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const directionalRef = useRef<THREE.DirectionalLight>(null);
+  const selectedObjectDirectionalRef = useRef<THREE.DirectionalLight>(null);
+
+  // cooldown ref
+const addModelCooldown = useRef(false);// used so user can't add duplicate models in one go accidentally.
+const addModelCooldownTime = 1000;// 1 second.
+
  // const [hasRunOnce, setHasRunOnce] = useState<boolean>(false);// flag to check if a function has run once or not, used to prevent multiple updates
   const [manifestData, setManifestData] = useState<ModelItem[] | null>(null);// a cache for the manifest data to stop it from being fetched multiple times.
   const [colliderDataCache, setColliderDataCache] = useState<Map<Model['colliderDataUrl'], ColliderJsonData[] | null>>(new Map());// collider data cache for the models.
@@ -192,18 +199,30 @@ export default function Editor() {
   
   // function to add in a new model.
   async function handleAddModel(model: Omit<ModelItem, 'thumbnail'>) {
-    const tags = await getCategoryTagsFromURL(model.url); // fetch tags from url
-    const colliderDataUrl = await getModelColliderDataUrl(model.url)
-    const newModel: Model = {
-      id: uuidv4(),
-      url: model.url,
-      colourPalette: model.colourPalette,
-      position: [3, 3, 3],
-      tags: tags,
-      colliderDataUrl: colliderDataUrl,
-    };
-    setModels(prev => [...prev, newModel]);
-    setShowAddModelTab(false); // optional: close the tab
+
+    if (addModelCooldown.current) return; // if cooldown is active, do nothing
+    addModelCooldown.current = true; // set cooldown
+
+    try{
+      const tags = await getCategoryTagsFromURL(model.url); // fetch tags from url
+      const colliderDataUrl = await getModelColliderDataUrl(model.url)
+      const newModel: Model = {
+        id: uuidv4(),
+        url: model.url,
+        colourPalette: model.colourPalette,
+        position: [3, 3, 3],
+        tags: tags,
+        colliderDataUrl: colliderDataUrl,
+      };
+      setModels(prev => [...prev, newModel]);
+      setShowAddModelTab(false); // optional: close the tab
+    }
+    finally{
+      // reset aftet cooldown is over
+      setTimeout(() => {
+        addModelCooldown.current = false;
+      }, addModelCooldownTime);
+    }
   }
 
   // function to delete the selected model
@@ -224,14 +243,18 @@ export default function Editor() {
         
           <RoomContext.Provider value={{ floorRef: floorRef, wallHeight: wallHeight, wallThickness: wallThickness}}>
             <Canvas
-              shadows={false}
+              shadows={true}
               camera={{ position: defaultCameraPosition, fov: 50 }}
               className={`canvas-container sm:h-full h-[70vh] w-full bg-gray-200 z-50
               ${isHoveringObject ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default' }`} >
                 <Physics debug gravity={[0, 0, 0]}>{/* using rapier physics engine to handle collisions (no physics)*/}
                   {/* if object if being hovered over change cursor into a grab */}
                   <ambientLight ref={ambientRef} intensity={lightingConfig.ambient.intensity} color = {lightingConfig.ambient.colour} />
-                  <directionalLight ref={directionalRef} intensity={lightingConfig.directional.intensity} color = {lightingConfig.directional.colour} position={[5, 10, 5]} />
+
+                  {/* our shadow manager; which has the main directional light to our scene */}
+                  <ShadowManager staticLightRef={directionalRef} dynamicLightRef={selectedObjectDirectionalRef} 
+                  lightColour={lightingConfig.directional.colour} lightIntensity={lightingConfig.directional.intensity}
+                  lightPosition={[5, 10, 5]} selectedObject={selectedModelRef.current}/>
                   <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
                   <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />

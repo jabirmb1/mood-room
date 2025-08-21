@@ -35,6 +35,27 @@ export function makeRoughNonMetallic(object: THREE.Object3D) {
     }
   });
 }
+
+//This function will move all meshes of the passed in object into a different layer.
+//
+export function changeModelLayer(scene: THREE.Object3D, layer:number)
+{
+  if(layer <0 || layer>31) return// layers in three js are between 0 to 31
+  // traverse through all the meshes of an object and then move it's layers into the passed in layer.
+  scene.traverse((child: any) => {
+    child.layers.set(layer);
+  })
+}
+
+//This function will be used to make an object cast/ not cast shadows.
+export function toggleModelCastingShadow(scene: THREE.Object3D, castShadow:boolean)
+{
+  // traverse through all the meshes of an object and then move it's layers into the passed in layer.
+  scene.traverse((child: any) => {
+    if (child.isMesh) {
+        child.castShadow = castShadow;
+    }})
+}
 // This function fully clones a model including its material.
 //
 export function cloneModel(scene: THREE.Object3D) {
@@ -53,6 +74,9 @@ export function cloneModel(scene: THREE.Object3D) {
         if (child.isMesh && child.material) {
             child.material = child.material.clone();
             child.userData.isDraggable = true// we also want all models (except for floors and walls) to be draggable.
+            child.castShadow = true;          // Make every mesh cast shadows
+            child.receiveShadow = true;       //  make it receive shadows too
+            child.layers.set(0)
             meshesWithMaterials.push(child);
         }
         // also store the initial colours of the models, but only the parts that the user can change. (primary, secondary, tertiary).

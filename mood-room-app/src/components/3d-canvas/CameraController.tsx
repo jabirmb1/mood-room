@@ -21,6 +21,7 @@ type CameraControllerProps = {
   showDirectionLight?: boolean;// should camera controller show a direction light on selected object.
 };
 
+//TO DO: probs add a prob to allow the lights to castshadow or not
 // This component will be used to smoothly go in and out of a selected object.
 export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPosition = defaultCameraPosition, 
   showSpotlight = false, showDirectionLight = false,}: CameraControllerProps) { 
@@ -104,7 +105,7 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
 
     const spotLight = createSpotLight({position: spotlightPos, targetPosition: desiredLookAt, 
       intensity: 15,  distance: distance + 5, angle: 2 * Math.atan(radius / distance),  
-      penumbra: 0,decay: 1, colour: 0xffffff,castShadow: true,});
+      penumbra: 0,decay: 1, colour: 0xffffff,castShadow: false,});
 
     spotlightRef.current = spotLight;
     spotlightTarget.current = spotLight.target;
@@ -120,7 +121,7 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
     const directionLightPos = desiredCameraPos.clone().add(new THREE.Vector3(0, maxDim, maxDim));
     // creating the actual light now:
     const directionalLight = createDirectionalLight({ position: directionLightPos, targetPosition: desiredLookAt, 
-      intensity: 1.5, colour: 0xffffff, castShadow: true });
+      intensity: 1.5, colour: 0xffffff, castShadow: false });
     
     // syncing up the directional light to everything
     directionalLightRef.current = directionalLight;
