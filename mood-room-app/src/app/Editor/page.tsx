@@ -321,14 +321,19 @@ const addModelCooldownTime = 1000;// 1 second.
           </aside>
         </article>
 
-        {/* furnitur button and ui*/}
-        <AddModelButton show={showAddModelTab} manifestData={manifestData} className={"absolute top-4 left-4 z-60"}
-         toggle = {()=> setShowAddModelTab(p => !p)} onAddModel={handleAddModel}/>
+        {/* only show these buttons and panels when an object is not selected */}
+        {!selectedModelRef.current &&(
+          <>
+              {/* add model button and ui*/}
+            <AddModelButton show={!selectedModelRef.current && showAddModelTab} manifestData={manifestData} className={"absolute top-4 left-4 z-60"}
+            toggle = {()=> setShowAddModelTab(p => !p)} onAddModel={handleAddModel}/>
 
-        {/* Top right lighting button */}
-        <LightingButton show = {showLightingPanel} toggle={() => setShowLightingPanel(p => !p)} config={lightingConfig} 
-        onChange={setLightingConfig} className="absolute top-4 right-4 z-60"/>
+            {/* Top right lighting button */}
+            <LightingButton show = {!selectedModelRef.current && showLightingPanel} toggle={() => setShowLightingPanel(p => !p)} config={lightingConfig} 
+            onChange={setLightingConfig} className="absolute top-4 right-4 z-60"/>
 
+          </>
+        )}
         {/* Editor Panel */}
         <AnimatePresence>{/* animate the panel coming in from the side */}
           {isPopupOpen && editingMode === 'edit' && selectedModelRef.current && (
