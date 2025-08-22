@@ -11,10 +11,11 @@ type RoomFoundationProps = {
   onFloorReady?: (objects: THREE.Object3D) => void;
   collidersEnabled?: boolean; // Toggle physics colliders (e.g., disable in view mode)
   floorColour?: string;
+  enableShadows?: boolean;
   wallColour?:string
 };
 
-export default function RoomFoundation({ onFloorReady, wallColour, floorColour, collidersEnabled = false }: RoomFoundationProps) {
+export default function RoomFoundation({ onFloorReady, wallColour, floorColour, enableShadows = false, collidersEnabled = false }: RoomFoundationProps) {
   const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color:floorColour ?? 0xFFE99A }), []);
   const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFFE99A }), []);
   const [showGrid, setShowGrid] = useState(true);
@@ -38,8 +39,7 @@ export default function RoomFoundation({ onFloorReady, wallColour, floorColour, 
           <mesh
             ref={floorRef}
             name="floor"
-            receiveShadow
-            castShadow
+            receiveShadow={enableShadows}
             position={[0, 0, 0]}
             material={floorMaterial}
           >
@@ -50,8 +50,7 @@ export default function RoomFoundation({ onFloorReady, wallColour, floorColour, 
         <mesh
           ref={floorRef}
           name="floor"
-          receiveShadow
-          castShadow
+          receiveShadow={enableShadows}
           position={[0, 0, 0]}
           material={floorMaterial}
         >
@@ -61,17 +60,17 @@ export default function RoomFoundation({ onFloorReady, wallColour, floorColour, 
 
       {/* Walls */}
       <Wall name="backWall" position={[0, wallHeight / 2, -roomSize / 2]} size={wallSize} enableColliders={true}
-      colour={wallColour}/>
+      colour={wallColour} enableShadows={enableShadows}/>
       <Wall name="frontWall" position={[0, wallHeight / 2, roomSize / 2]} size={wallSize} enableColliders={true} 
-      invisible={true}/>
+      invisible={true} enableShadows={false}/>
       <Wall name="leftWall" position={[0, wallHeight / 2, -roomSize/2]} size={wallSize} enableColliders={true} 
-      rotation={rightDirection} colour={wallColour}/>
+      rotation={rightDirection} colour={wallColour} enableShadows={enableShadows}/>
       <Wall name="rightWall" position={[0, wallHeight / 2, -roomSize/2]} size={wallSize} enableColliders={true}
-       rotation={leftDirection} invisible={true} />
+       rotation={leftDirection} invisible={true} enableShadows={false}/>
 
       {/* Ceiling */}
       <Wall name="ceiling" position={[0, wallHeight, 0]} size={[roomSize, wallThickness, roomSize]}  enableColliders={true}
-      invisible={true}/>
+      invisible={true} enableShadows={false}/>
 
       {showGrid && (
         <Grid

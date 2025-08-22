@@ -258,7 +258,7 @@ const addModelCooldownTime = 1000;// 1 second.
                   <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
                   <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />
-                  <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}} collidersEnabled={true}/>
+                  <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}} collidersEnabled={true} enableShadows={true}/>
                 
                   {models.map((model) => 
                     (

@@ -11,10 +11,11 @@ type WallProps = {
     colour?: string; // colour of the walls.
     name?: string;// name of wall
     invisible?: boolean// whether or not the wall should invisible
+    enableShadows?: boolean;
     enableColliders?: boolean;//  whether or not the colliders should be active or not.
 
 }
-export function Wall({ position, size,rotation,  name, colour, invisible = false, enableColliders}: WallProps){
+export function Wall({ position, size,rotation,  name, colour, invisible = false,enableShadows = false, enableColliders}: WallProps){
 
     return(
     /* conditionally redender the rigid body; let user data be on top most mesh so it can be accessed easily by other parts of program */
@@ -25,13 +26,13 @@ export function Wall({ position, size,rotation,  name, colour, invisible = false
         (for wall specific collision logic; otherwise we will use just default collisions
         */}
 
-        <mesh name={name} position={position} receiveShadow castShadow visible={!invisible}>
+        <mesh name={name} position={position} receiveShadow={enableShadows} castShadow={enableShadows} visible={!invisible}>
           <boxGeometry args={size} />
           <meshStandardMaterial color={colour ?? "lightgray"} />
         </mesh>
       </RigidBody>
     ) : (
-      <mesh name={name} position={position} rotation={rotation} receiveShadow castShadow visible={!invisible}
+      <mesh name={name} position={position} rotation={rotation} receiveShadow={enableShadows} castShadow={enableShadows} visible={!invisible}
       userData={{permanentInvisible: invisible}}>
         <boxGeometry args={size} />
         <meshStandardMaterial color={colour ??"lightgray"} />
