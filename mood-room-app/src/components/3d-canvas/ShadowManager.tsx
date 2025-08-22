@@ -6,6 +6,8 @@ import { changeModelLayer, toggleModelCastingShadow } from "@/utils/3d-canvas/ob
 import { useThree } from "@react-three/fiber";
 import { useDevice } from "@/hooks/general/useIsDevice";
 import { logSceneObjectsShadowStatus } from "@/utils/3d-canvas/shadows";
+import { Model } from "@/types/types";
+import { updateShadowMap } from "@/utils/3d-canvas/lights";
 
 type ShadowManagerProps = {
   staticLightRef: React.RefObject<THREE.DirectionalLight | null>;// reference of our main light (light for the scene)
@@ -14,6 +16,7 @@ type ShadowManagerProps = {
   lightIntensity: LightingConfig["directional"]["intensity"];//intensity of light
   lightPosition: [number, number, number];// position of light
   selectedObject: THREE.Object3D | null;// selected object which will have dynamic shadows.
+  models: Model[]// an array of models passed in.
 };
 
 /*
@@ -25,9 +28,11 @@ type ShadowManagerProps = {
     The two lights will be practically inside each other (to not break the illusion); with same
     settings; except dynamic light will have next to no intensity; and it will have auto updates on.
 
+    //we will only show one light at a time as to stop the lights from unnecessary overlapping with each other
+
     we will turn off auto updates for the static light as it will 'bake' the entire scene
 */
-export default function ShadowManager({staticLightRef,dynamicLightRef, lightColour,lightIntensity,lightPosition,selectedObject,}: ShadowManagerProps) {
+export default function ShadowManager({staticLightRef,dynamicLightRef, lightColour,lightIntensity,lightPosition,selectedObject, models}: ShadowManagerProps) {
   const [prevSelectedObject, setPrevSelectedObject] = useState<THREE.Object3D | null>(null);
   const { scene, camera } = useThree();
   const {isDesktop} = useDevice();
@@ -64,36 +69,19 @@ export default function ShadowManager({staticLightRef,dynamicLightRef, lightColo
     if (dynamicLightRef.current) {
       dynamicLightRef.current.layers.disable(defaultLayer); // make sure it doesn’t affect frozen objects
       dynamicLightRef.current.layers.enable(selectedObjectLayer); // only affect selected
-
-      // since camera can see both layers; lighting from both layers will be added up resulting in
-      // darker than normal shadows for frozen objects when an object is selected;
-      // so we will simply reduce dynamic light's intensity to basically 0; and scale up the shadow intensity
-      // until it fits the normal static layer's shadow.
-
-      dynamicLightRef.current.shadow.intensity = 1/dynamicLightRef.current.intensity
     }
     
   
   }, [staticLightRef, dynamicLightRef]);
 
-  // to compensate dynamic light shadows increasing exponentially; make the static shadows 0 (disable them)
-  // to prevent unnessary shadow overlap; prev shadows will still exist as we have yet to update the map;
-  // but new ones won't be made.
-  useEffect(() => {
-    if (selectedObject) {
-      // Reduce static shadow intensity to minimize overlap artifacts
-      if (staticLightRef.current) {
-        staticLightRef.current.shadow.intensity = 0; // Reduced intensity
-      }
-    } else {
-      // Restore full intensity when no object selected
-      if (staticLightRef.current) {
-        staticLightRef.current.shadow.intensity = 1.0;
-      }
-    }
-  }, [selectedObject]);
+  // take a snapshot on static camera whenever the models array changes and refreeze it (
+  //e.g. adding/ removing a model)
+  //
+  useEffect(()=>{
+    updateShadowMap(staticLightRef)
+  }, [models])
 
-
+ 
   // Handle object selection/unselection
   useEffect(() => {
     // new object has been selected
@@ -106,10 +94,7 @@ export default function ShadowManager({staticLightRef,dynamicLightRef, lightColo
 
       // for a moment we remove it from the frozen shadow map in default layer, so that
       // selected object's shadow is not inside the static shadow map.
-      if(staticLightRef.current)
-      {
-        staticLightRef.current.shadow.needsUpdate = true
-      }
+      updateShadowMap(staticLightRef)
 
       // cast next frame After static map updates to not include selected object shadow; as to prevent double shadows.
       requestAnimationFrame(() => toggleModelCastingShadow(selectedObject, true));// allow casting next frame.
@@ -121,22 +106,25 @@ export default function ShadowManager({staticLightRef,dynamicLightRef, lightColo
       } catch {}
 
       // after object has been done editing; refresh the static map to include it
-      if(staticLightRef.current)
-        {
-          staticLightRef.current.shadow.needsUpdate = true
-        }
+      updateShadowMap(staticLightRef)
     }
   }, [selectedObject]);
 
   return (
     <>
+      {/* to prevent light overlap which will cause many errors; we will simply run only one light at 
+       a single time; since shadows baked in will be treated as textures; making light invisible;
+        will not affect already laid out textures; which is what we want */}
+
       {/* out static light; used to 'bake'/ 'freeze' the world in real time */}
+      {/* Static light: only visible when no object is selected */}
       <directionalLight
         ref={staticLightRef}
+        visible={!selectedObject}   // hide light when an object is selected.
         intensity={lightIntensity}
         color={lightColour}
         position={lightPosition}
-        castShadow
+        castShadow={!selectedObject} // stop recalculating while editing
         shadow-mapSize-width={shadowMapSize}
         shadow-mapSize-height={shadowMapSize}
         shadow-camera-near={0.5}
@@ -148,14 +136,14 @@ export default function ShadowManager({staticLightRef,dynamicLightRef, lightColo
         shadow-normalBias={0.05}
       />
 
-      {/* our dynamic light; used to generate shadows in real time but only for one object at a time */}
+      {/* Dynamic light: only visible when an object is selected */}
       <directionalLight
         ref={dynamicLightRef}
-        visible={selectedObject? true: false}// no need to render/ enable dynamic lights when it's not needed.
-        intensity={0.001}
+        visible={!!selectedObject}   // show only when needed (e.g. editing)
+        intensity={lightIntensity}
         color={lightColour}
         position={lightPosition}
-        castShadow
+        castShadow={!!selectedObject}
         shadow-mapSize-width={shadowMapSize}
         shadow-mapSize-height={shadowMapSize}
         shadow-camera-near={0.5}

@@ -254,7 +254,7 @@ const addModelCooldownTime = 1000;// 1 second.
                   {/* our shadow manager; which has the main directional light to our scene */}
                   <ShadowManager staticLightRef={directionalRef} dynamicLightRef={selectedObjectDirectionalRef} 
                   lightColour={lightingConfig.directional.colour} lightIntensity={lightingConfig.directional.intensity}
-                  lightPosition={[5, 10, 5]} selectedObject={selectedModelRef.current}/>
+                  lightPosition={[5, 10, 5]} selectedObject={selectedModelRef.current} models={models}/>
                   <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
                   <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />

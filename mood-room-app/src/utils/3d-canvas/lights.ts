@@ -57,3 +57,19 @@ export function createDirectionalLight({position, targetPosition, intensity, col
 
   return directionalLight;
 }
+
+
+//This function will be used to update a light's shadow map whenever it is called (assuming that
+// the light's auto update is turned off)
+//returns a boolean of whether or not it has been successfully updated or not/
+export function updateShadowMap(lightRef:  React.RefObject<THREE.DirectionalLight | null>) : boolean
+  {
+    // if the ref does not point to a null/ undefined; update shadow map
+    if(lightRef.current)
+    {
+      lightRef.current.shadow.needsUpdate = true;
+      return true
+    }
+    // otherwise return false.
+    return false;
+  }
