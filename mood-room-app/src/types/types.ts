@@ -1,5 +1,6 @@
 import { modelMaterialNames, moodTypes } from "@/utils/3d-canvas/const";
 import { useRapier } from "@react-three/rapier";
+import * as THREE from 'three';
 // model type.
 export type Model = {
     id: string;
@@ -12,7 +13,11 @@ export type Model = {
     position: [number, number, number];
     scale?: [number, number, number];
     rotation?: [number, number, number];// in radians.
-
+    light?:{// whether the object can cast a light
+      on?: boolean;// if the lights are on or not
+      intensity?: number;// intensity of the lights.
+      colour?: string// colour of the light.
+    }
     transform?: {// optional transform data for model during editing page (used to keep transform data in sync with the model)
       position: [number, number, number];
       rotation: [number, number, number];
@@ -52,6 +57,33 @@ export type ColliderJsonData={
   rotation: [number, number, number],// stored as eular
   dimensions: number[]//depending on the shape it can be an array of 1, 2 or 3. (we are only using box, capsule and spheres)
 }
+
+/**********types relating to objects that comes with their own lights included (e..g lamps; tvs) */
+
+// type to define how emissive or transparent some materials behave when their model's lights are on/ off
+export type LightMeshConfig = {
+  /** substring to match mesh names */
+  nameContains: string;
+
+  /** emissive, intensity, transparency, opacity when light is ON */
+  on: {
+     emissiveColour: THREE.Color | "meshColour"
+    emissiveIntensity: number;
+    transparent?: boolean;
+    opacity?: number;
+  };
+
+  /** emissive, intensity, transparency, opacity when light is OFF */
+  off: {
+    emissiveColour: THREE.Color | string;
+    emissiveIntensity: number;
+    transparent?: boolean;
+    opacity?: number;
+  };
+};
+
+// a type to group together all the strings via the mesh name.
+export type LightMeshGroups = Record<string, THREE.Mesh[]>;
 
 /************ types relating to the mood room colour mapping ***********/
 

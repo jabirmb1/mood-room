@@ -4,11 +4,12 @@ import { ObjectRotationPanel } from "./ObjectRotationPanel";
 import { ObjectColourPanel } from "./ObjectColourPanel";
 import { ObjectSizePanel } from "./ObjectSizePanel";
 import { Model, RotationDegrees } from "@/types/types";
-import { getObjectMaterialMap } from "@/utils/3d-canvas/object3D";
+import { getObjectLightData, getObjectMaterialMap, isObjectLight } from "@/utils/3d-canvas/object3D";
 import { RapierRigidBody } from "@react-three/rapier";
 import { getRigidBodyRotation } from "@/utils/3d-canvas/rotation";
-import { areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/3d-canvas/comparisons";
+import { areLightDataEqual, areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/3d-canvas/comparisons";
 import { globalScale } from "@/utils/3d-canvas/const";
+import { ObjectLightPanel } from "./ObjectLightPanel";
 
 /******** This panel will be used to change the properties of an object e.g. it's rotation; size; colour scheme etc. ********/
 
@@ -26,6 +27,7 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
   const initialScale = useRef<THREE.Vector3 | null>(null);
   const initialColours = useRef<Model['colourPalette'] | null>(null);
   const initialRotation = useRef<RotationDegrees | null>(null);
+  const initialLights = useRef<Model['light'] | null>(null)
   // since we are conditionally rendering this panel the life cycle of it is: mount -> unmount -> remount -> unmount last time)
   // Onthe last unmount (e.g. it visually goes away; we will want to do the clean up logic), update model with final transform data
   useEffect(() => {
@@ -37,6 +39,7 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
     initialScale.current = object.scale.clone() ?? new THREE.Vector3(globalScale, globalScale, globalScale);
     initialRotation.current = getRigidBodyRotation(rigidBodyRef);
     initialColours.current = getObjectMaterialMap(objectRef).currentcolours;
+    initialLights.current = getObjectLightData(objectRef.current)
 
     return () => {
   
@@ -60,10 +63,12 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
         rotation = object.rotation;
       }
       const { currentcolours } = getObjectMaterialMap(objectRef);
+      const currentLightData = getObjectLightData(objectRef.current)
       
       const originalScale = initialScale.current;
       const originalRotation = initialRotation.current;
       const originalColours = initialColours.current;
+      const originalLights = initialLights.current
 
       //(pass in undefined if we want to skip updating that field)
       // otherwise pass in the new value so that we can update that part
@@ -71,6 +76,7 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
         rotation: originalRotation && areRotationsEqual(originalRotation, rotation) ? undefined : [rotation.x, rotation.y, rotation.z],
         scale: originalScale && areVectorsEqual(object.scale, originalScale) ? undefined : [object.scale.x, object.scale.y, object.scale.z],
         colourPalette: originalColours && deepEqual(originalColours, currentcolours) ? undefined : currentcolours,
+        light: originalLights && areLightDataEqual(originalLights, currentLightData) ? undefined : currentLightData ?? undefined
       });
     };
   }, [objectId]);
@@ -86,6 +92,12 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
         <section className="flex gap-2 justify-center mb-4">
           <ObjectColourPanel objectRef={objectRef} />
         </section>
+
+        {isObjectLight(objectRef) && (
+          <section className="flex gap-2 justify-center mb-4">
+          <ObjectLightPanel objectRef={objectRef} />
+        </section>
+        )}
 
         <section className="flex gap-2 justify-center mb-6">
           <ObjectRotationPanel rigidBodyRef={rigidBodyRef} objectId = {objectId}/>

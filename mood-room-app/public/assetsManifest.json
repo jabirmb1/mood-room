@@ -182,6 +182,13 @@
     "meta": null
   },
   {
+    "name": "TallLamp",
+    "category": "lights",
+    "path": "/assets/Lights/TallLamp/TallLamp.glb",
+    "thumbnail": "/placeholder-thumbnail.jpg",
+    "meta": null
+  },
+  {
     "name": "WallLampBasic",
     "category": "lights",
     "path": "/assets/Lights/WallLamp/WallLampBasic/WallLampBasic.glb",

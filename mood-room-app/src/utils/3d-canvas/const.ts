@@ -1,6 +1,7 @@
 //This file will include any constants that are needed for the client side.
 
-import { MoodType } from "@/types/types";
+import { LightMeshConfig, MoodType } from "@/types/types";
+import * as THREE from 'three'
 
 export const globalScale = 0.05;// global scale to be applied to all objects so they fit our scene.
 export const modelMaterialNames = ['primary', 'secondary', 'tertiary'] as const;// names of the materilas that we want to edit colour of for objects.
@@ -16,6 +17,27 @@ export const roomSize = 13;
 export const snapDownwardsCountdown = 0// how quikcly an object should snap downwards after movement (ms) (trying to test out
 // different values to see which one fits best; so far 500 seems too late; and 0 seems too sudden (e.g. we want
 // for it to not snap when user changes movement axis; which might take a few milliseconds))
+
+/***********consts relating to internal model lights e.g. bulb of a lamp or tv ******/
+
+//maps mesh names that are supposed to change properties when a light within  model turns on/ off
+// to different mesh values.
+export const defaultLightMeshConfigs: LightMeshConfig[] = [
+    {
+      nameContains: "screen_light",
+      on: { emissiveColour: new THREE.Color('#ffffff'), emissiveIntensity: 2 },
+      off: { emissiveColour: new THREE.Color('0x000000'), emissiveIntensity: 0 },
+    },
+    {
+      nameContains: "fabric_light",
+      // make the emissive colour be the same colour as the mesh itself.
+      on: { emissiveColour: "meshColour", emissiveIntensity: 5, transparent: true, opacity: 0.7 },
+      off: { emissiveColour: new THREE.Color('0x000000'), emissiveIntensity: 0, transparent: false, opacity: 1.0 },
+    },
+  ];
+
+
+/**********consts relating to the mood aspect. ************/
 
 //the different type of moods that's in our project:
 export const moodTypes = ['happy', 'sad', 'angry', 'depressed', 'disgusted', 'love', 'pride', 'jealousy', 

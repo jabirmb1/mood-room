@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import ColourButton from '../ColourButton';
 import * as THREE from 'three';
-import { getObjectMaterialMap, resetColourPalette} from '../../../utils/3d-canvas/object3D'
+import { getObjectMaterialMap, resetColourPalette, syncMeshEmissiveWithColor} from '../../../utils/3d-canvas/object3D'
 import { ColourPickerControl } from '../../UI/ColourPickerControl';
 import './colourPicker.css';
 import { MaterialColourType } from '@/types/types';
@@ -59,6 +59,15 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
         mat.needsUpdate = true;
       }
     }
+
+    // if we change colour of a light affected material e.g. shades on lamp objects; then update the emissive
+    // property of it to reflect it;
+    // Find the mesh that owns this material and sync emissive if it's light-affected
+    objectRef?.current?.traverse((child) => {
+      if (child instanceof THREE.Mesh && mats && child.material === mats[0]) {
+        syncMeshEmissiveWithColor(objectRef.current!, child);
+      }
+    });
   }, [colours, activeColourType, materialMap]);
 
   // syncup the colour text to the current colour:

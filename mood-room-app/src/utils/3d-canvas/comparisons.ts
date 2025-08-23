@@ -1,6 +1,6 @@
 /*****This file will be used to create helper functions to compare one object/ array to another */
 
-import { RotationDegrees } from "@/types/types";
+import { Model, RotationDegrees } from "@/types/types";
 import * as THREE from "three";
 
 
@@ -25,6 +25,12 @@ export function areVectorsEqual(a: THREE.Vector3, b: THREE.Vector3,epsilon = 0.0
     );
 }
 
+// function to check if object lights are equal or not:
+export function areLightDataEqual(lightData1: Model['light'] | null, lightData2: Model['light'] | null) {
+    if (!lightData1 || !lightData2) return false;
+    return lightData1.on === lightData2.on && lightData1.intensity === lightData2.intensity &&
+    lightData1.colour === lightData2.colour;
+  }
   
 export function deepEqual<T extends Record<string, any>>(a: T, b: T): boolean {
     if (a === b) return true;// if they point to same object then return true
