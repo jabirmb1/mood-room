@@ -1,0 +1,56 @@
+#  Asset Model Collider Guidelines:
+
+This document explains how colliders must be created for our models.  
+Since our project uses **Rapier.js** for physics, we require strict **naming conventions** and **shape rules** to ensure accurate and efficient collider generation.
+
+---
+
+## 1. Alignment & Position
+- Colliders **must be built in the same orientation and location** as the original model.  
+- This ensures our program can place them correctly inside the model without manual adjustments.
+
+---
+
+## 2. Allowed Collider Shapes
+Rapier.js supports only a limited set of efficient primitive shapes.  
+All colliders **must be one of these three**:
+
+- `box` → Cubes or cuboids.  
+- `sphere` → Perfect spheres.  
+- `capsule` → A capsule formed by merging:
+  - One cuboid (the body).
+  - Two spheres (one at each end).
+  - All three merged into a single mesh.
+
+Any other shape will be **auto-converted into a box** by our program to avoid errors.  
+For best performance, **always use one of the three approved shapes**.
+
+---
+
+## 3. Naming Conventions
+Each collider mesh must be named according to its type:
+
+- Box → `box`  
+- Sphere → `sphere`  
+- Capsule → `capsule`  
+
+ DO NOT use any other names.  
+Incorrect names will default to a box collider, but **this should be avoided**.
+
+---
+
+## 4. Program Handling
+- Our program does **not use the raw collider meshes directly**.  
+- Instead, it:
+  - Reads collider mesh data.
+  - Converts it into a `.json` file containing Rapier-compatible collider definitions.
+  - Rebuilds colliders at runtime using Rapier’s API (for efficiency).
+
+---
+
+##  Summary:
+- Build colliders at the **same orientation and position** as the model.  
+- Use only **`box`**, **`sphere`**, or **`capsule`** meshes.  
+- Always name meshes exactly as their collider type.  
+- Program converts colliders → `.json` → Rapier runtime shapes.  
+- Any invalid colliders will fallback to **box**.  

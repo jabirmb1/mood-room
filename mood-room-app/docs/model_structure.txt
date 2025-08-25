@@ -1,0 +1,77 @@
+#  Asset Modelling Guidelines
+
+This document explains how each model in our project should be structured.  
+All assets are handcrafted by our modeller following these guidelines so that our program can interpret them consistently.
+
+---
+
+## 1. Model Scale & Proportion
+- All models **must be created in proportion** to each other.  
+- You can import multiple models into Blender/Maya to verify relative scaling.  
+- This ensures:
+  - Consistent sizing across all assets.
+  - We can apply a **global base scale** for uniformity.
+
+---
+
+## 2. Material Naming Convention
+Each model’s materials must follow strict naming rules so the program can correctly group and recolor them.
+
+- Allowed material names:
+  - `primary`
+  - `secondary`
+  - `tertiary`
+
+   Note: blender and maya automatically adds in numbers between material names to avoid duplication;
+   so e.g. you will get 'primary', and 'primary.001' etc etc; this is fine as our model handles it;
+   so there is no need to do anything extra; as long as the name contains primary, secondary, tertiary;
+   it's fine.
+
+- Rules:
+  - All materials with the **same name must share the same base colour**.
+  - Only `primary`, `secondary`, and `tertiary` are user-changeable/ program changeable colours.
+  - Any other material name (or unnamed material):
+    - **Will not be recolourable** in the program.
+    - Should be used for parts of the model that must stay consistent (e.g. metal parts, wood textures).
+
+---
+
+## 3. Light-Emitting Models
+Some models can emit light (lamps, TVs, candles, etc).  
+These require additional rules:
+
+### 3.1 Bulb Meshes
+- Any model that emits light must contain **one or more meshes named `bulb`**.
+- Place `bulb` meshes where the physical light source would be:
+  - Inside a lamp (the bulb itself).
+  - At the top of a candle wick.
+  - Inside a TV screen.
+
+- Notes:
+  - If the **bulb material should be recolourable**, give it a `primary` / `secondary` / `tertiary` name.  
+  - If not, any name will suffice.
+
+### 3.2 Light-Responsive Meshes
+Some meshes should visually change when the model’s light turns on/off.  
+Use these mesh naming conventions:
+
+- `fabric_light` → Mesh should **glow & fade** like light bleeding through fabric (e.g. lamp shade).  
+- `screen_light` → Mesh should **emit light strongly**, without transparency/colour change (e.g. TV screen).  
+- unnamed → Mesh will not change with light.
+
+---
+
+## 4. Material Types & Properties
+- The specific material type (Phong, Blinn, etc.) **does not matter**.  
+- Our program automatically:
+  - Converts all materials into a matte, opaque, non-reflective style.
+- This may change in the future if we add more advanced rendering.
+
+---
+
+##  Summary:
+- Keep models **to scale** with each other.  
+- Use **only `primary`, `secondary`, `tertiary`** for user-changeable colours.  
+- Use **`bulb` meshes** for light sources.  
+- Use **`fabric_light`** or **`screen_light`** for special light-responsive meshes.  
+- Leave other materials unnamed if they shouldn’t be affected by the program.  
