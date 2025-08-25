@@ -107,7 +107,6 @@ function applyLightStateToMeshType(meshes: THREE.Mesh[], config: LightMeshConfig
 
     // Handle special "meshColour" placeholder
     if (state.emissiveColour === "meshColour") {
-      console.log('hello, the mat colour is:', mat.color)
       mat.emissive.copy(mat.color);
     } else {
       mat.emissive.set(state.emissiveColour);
@@ -430,6 +429,7 @@ function toggleModelBulb(model: THREE.Object3D, isOn: boolean) {
         mat.emissive.set(isOn ? '#ffffff' : '#000000');
         mat.emissiveIntensity = isOn ? 5 : 0;
         mat.needsUpdate = true;
+        cacheEmissiveState(mat)// cache emissive state of bulb so that it does not get overwrtten by hover effects
       }
     }
   }

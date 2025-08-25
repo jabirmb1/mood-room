@@ -5,7 +5,7 @@ import * as THREE from 'three'
 //
 export function cacheEmissiveState(material: THREE.MeshStandardMaterial): void {
     material.userData.cachedEmissive = {
-      color: material.emissive.clone(),
+      colour: material.emissive.clone(),
       intensity: material.emissiveIntensity
     };
 }
@@ -16,7 +16,7 @@ export function restoreEmissiveState(material: THREE.MeshStandardMaterial): void
   const cached = material.userData.cachedEmissive;
   if (cached) {
    // console.log('trying to use cache:', cached)
-    material.emissive.copy(cached.color);
+    material.emissive.copy(cached.colour);
     material.emissiveIntensity = cached.intensity;
   } else {
     // Fallback to no emission if no cached state
@@ -41,7 +41,7 @@ export function findMeshesByPattern(object: THREE.Object3D, pattern: string): TH
 
 // Helper function to create a single point light attatched to a singular mesh.
 //
-export function createPointLightForMesh(mesh: THREE.Mesh, config = { color: '#ffffff', intensity: 0, distance: 10, decay: 2 }): THREE.PointLight | null {
+export function createPointLightForMesh(mesh: THREE.Mesh, config = { color: '#ffffff', intensity: 0, distance: 5, decay: 1 }): THREE.PointLight | null {
   try {
     const box = new THREE.Box3().setFromObject(mesh);
     const center = new THREE.Vector3();
