@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { globalScale} from "@/utils/3d-canvas/const";
 import { RapierRigidBody, useRapier} from "@react-three/rapier";
-import { applyMovement } from "@/utils/3d-canvas/movementEngine";
+import { applyMovement } from "@/utils/3d-canvas/scene/movementEngine";
 ;
 
 /*** This hook is used to move an object via keybaord controls *********/

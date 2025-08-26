@@ -3,10 +3,10 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { defaultCameraPosition } from '@/utils/3d-canvas/const';
-import { computeCameraTargetPositions } from '@/utils/3d-canvas/camera';
-import { calculateObjectBoxSize } from '@/utils/3d-canvas/object3D';
+import { computeCameraTargetPositions } from '@/utils/3d-canvas/scene/camera';
+import { calculateObjectBoxSize } from '@/utils/3d-canvas/models';
 import { useDevice } from '@/hooks/general/useIsDevice';
-import { createSpotLight, createDirectionalLight } from '@/utils/3d-canvas/lights'; // make sure both imported
+import { createSpotLight, createDirectionalLight } from '@/utils/3d-canvas/scene/lights'; // make sure both imported
 import { useOcclusionTransparency } from '@/hooks/3d-canvas/useOcclusion';
 import { RapierRigidBody } from '@react-three/rapier';
 /************ This component wil be used to control the camera to zoom in and out of a selected object, and to

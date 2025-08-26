@@ -5,30 +5,30 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei'; // the actual react component for orbital controls.
 import { OrbitControls } from 'three-stdlib'; // instance class (used as a type)
-import { Object3D } from '@/components/3d-canvas/3d/Object3D';
-import { CameraController } from '@/components/3d-canvas/CameraController';
+import { Object3D } from '@/components/3d-canvas/scene/scene-objects/Object3D';
+import { CameraController } from '@/components/3d-canvas/scene/scene-infrastructure/CameraController';
 import { v4 as uuidv4 } from 'uuid';
 import { defaultCameraPosition, globalScale, wallHeight, wallThickness } from '@/utils/3d-canvas/const';
-import { ObjectEditorPanel } from '@/components/3d-canvas/ObjectEditorPanel/ObjectEditorPanel';
+import { ObjectEditorPanel } from '@/components/3d-canvas/UI/ObjectEditorPanel/ObjectEditorPanel';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useModel} from '@/hooks/3d-canvas/useModel';
 import * as THREE from "three";
-import { LightIntensityTransition } from '@/components/3d-canvas/LightIntensityTransition';
-import { AddModelButton } from '@/components/3d-canvas/AddModelMenu/AddModelButton';
-import { ModelItem } from '@/components/3d-canvas/AddModelMenu/AddModelTab';
-import { LightingButton } from '@/components/3d-canvas/LightingPanel/LightingButton';
-import { LightingConfig } from '@/components/3d-canvas/LightingPanel/LightingPanel';
+import { LightIntensityTransition } from '@/components/3d-canvas/scene/scene-infrastructure/LightIntensityTransition';
+import { AddModelButton } from '@/components/3d-canvas/UI/AddModelMenu/AddModelButton';
+import { ModelItem } from '@/components/3d-canvas/UI/AddModelMenu/AddModelTab';
+import { LightingButton } from '@/components/3d-canvas/UI/LightingPanel/LightingButton';
+import { LightingConfig } from '@/components/3d-canvas/UI/LightingPanel/LightingPanel';
 import { ConfirmDialog } from '@/components/UI/ConfirmDialog';
-import RoomFoundation from '@/components/3d-canvas/RoomFoundation';
+import RoomFoundation from '@/components/3d-canvas/scene/scene-objects/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
 import { ColliderJsonData, Model } from '@/types/types';
 import { Physics, RigidBody } from '@react-three/rapier';
-import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/object3D';
-import Colliders from '@/components/3d-canvas/Colliders';
+import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/models';
+import Colliders from '@/components/3d-canvas/scene/scene-infrastructure/Colliders';
 import { getManifestData } from '@/services/manifestServices';
 import { getModelColliderData } from '@/services/modelServices';
-import ShadowManager from '@/components/3d-canvas/ShadowManager';
-import { BloomEffect } from '@/components/3d-canvas/BloomEffect';
+import ShadowManager from '@/components/3d-canvas/scene/scene-infrastructure/ShadowManager';
+import { BloomEffect } from '@/components/3d-canvas/scene/scene-infrastructure/BloomEffect';
 
 
 

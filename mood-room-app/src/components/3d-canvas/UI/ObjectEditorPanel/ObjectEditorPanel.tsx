@@ -4,10 +4,10 @@ import { ObjectRotationPanel } from "./ObjectRotationPanel";
 import { ObjectColourPanel } from "./ObjectColourPanel";
 import { ObjectSizePanel } from "./ObjectSizePanel";
 import { Model, RotationDegrees } from "@/types/types";
-import { getObjectLightData, getObjectMaterialMap, isObjectLight } from "@/utils/3d-canvas/object3D";
+import { getObjectLightData, getObjectMaterialMap, isObjectLight } from "@/utils/3d-canvas/models";
 import { RapierRigidBody } from "@react-three/rapier";
-import { getRigidBodyRotation } from "@/utils/3d-canvas/rotation";
-import { areLightDataEqual, areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/3d-canvas/comparisons";
+import { getRigidBodyRotation } from "@/utils/3d-canvas/helpers/rotation";
+import { areLightDataEqual, areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/3d-canvas/helpers/comparisons";
 import { globalScale } from "@/utils/3d-canvas/const";
 import { ObjectLightPanel } from "./ObjectLightPanel";
 

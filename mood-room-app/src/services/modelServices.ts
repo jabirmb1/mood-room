@@ -1,7 +1,7 @@
 /*********This file is a service layer for any logic relating to the gltf models themselves. *********/
 
 import { ColliderJsonData, Model } from "@/types/types";
-import { ModelTags } from "@/utils/3d-canvas/object3D";
+import { ModelTags } from "@/utils/3d-canvas/models";
 
 //This function will fetch the model's meta.json data from the server:
 // will get passed in a url of where the meta file lives in.

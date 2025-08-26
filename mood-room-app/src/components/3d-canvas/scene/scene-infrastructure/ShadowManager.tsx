@@ -1,13 +1,13 @@
 /***************This file will be used to handle shadows for the scene efficiently *********** */
 import * as THREE from "three";
-import { LightingConfig } from "./LightingPanel/LightingPanel";
+import { LightingConfig } from "../../UI/LightingPanel/LightingPanel";
 import React, { useEffect, useState } from "react";
-import { changeModelLayer, toggleModelCastingShadow } from "@/utils/3d-canvas/object3D";
+import { changeModelLayer, toggleModelCastingShadow } from "@/utils/3d-canvas/models";
 import { useThree } from "@react-three/fiber";
 import { useDevice } from "@/hooks/general/useIsDevice";
-import { logSceneObjectsShadowStatus } from "@/utils/3d-canvas/shadows";
+import { logSceneObjectsShadowStatus } from "@/utils/3d-canvas/scene/shadows";
 import { Model } from "@/types/types";
-import { updateShadowMap } from "@/utils/3d-canvas/lights";
+import { updateShadowMap } from "@/utils/3d-canvas/scene/lights";
 
 type ShadowManagerProps = {
   staticLightRef: React.RefObject<THREE.DirectionalLight | null>;// reference of our main light (light for the scene)

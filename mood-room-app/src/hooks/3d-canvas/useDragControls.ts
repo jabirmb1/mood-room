@@ -3,8 +3,8 @@ import * as THREE from "three";
 import { useThree, ThreeEvent } from "@react-three/fiber";// we use this library to get current camera and canvas details set up by react three fibre.
 import { useRoomContext } from "@/app/contexts/RoomContext";
 import { RapierRigidBody, useRapier } from "@react-three/rapier";
-import { getPosition} from "@/utils/3d-canvas/rapierHelpers";
-import { applyMovement } from "@/utils/3d-canvas/movementEngine";
+import { getPosition} from "@/utils/3d-canvas/physics/rapierHelpers";
+import { applyMovement } from "@/utils/3d-canvas/scene/movementEngine";
 import {RapierWorld } from "@/types/types";
 /* This hook is used to easily drag and drop any objects which call upon it */
 

@@ -1,6 +1,6 @@
 // This folder will habdle all the fetching logic that relates to the manifest.json (where a url of all model paths lives)
 
-import { ModelItem } from "@/components/3d-canvas/AddModelMenu/AddModelTab";
+import { ModelItem } from "@/components/3d-canvas/UI/AddModelMenu/AddModelTab";
 
 
 //This function will get and return the manifest data from the server.

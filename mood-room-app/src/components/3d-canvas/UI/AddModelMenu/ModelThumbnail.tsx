@@ -7,8 +7,8 @@ import * as THREE from 'three';
 import { Canvas, useFrame, useThree} from '@react-three/fiber';
 import { useInView } from 'react-intersection-observer';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { fitCameraToObject } from '@/utils/3d-canvas/camera';
-import { centerPivot, makeRoughNonMetallic } from '@/utils/3d-canvas/object3D';
+import { fitCameraToObject } from '@/utils/3d-canvas/scene/camera';
+import { centerPivot, makeRoughNonMetallic } from '@/utils/3d-canvas/models';
 
 interface ModelThumbnailProps {
   path: string;    // path to .glb

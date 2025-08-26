@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import ColourButton from '../ColourButton';
 import * as THREE from 'three';
-import { getObjectMaterialMap, resetColourPalette, syncMeshEmissiveWithColor} from '../../../utils/3d-canvas/object3D'
-import { ColourPickerControl } from '../../UI/ColourPickerControl';
+import { getObjectMaterialMap, resetColourPalette, syncMeshEmissiveWithColor} from '../../../../utils/3d-canvas/models'
+import { ColourPickerControl } from '../../../UI/ColourPickerControl';
 import './colourPicker.css';
 import { MaterialColourType } from '@/types/types';
 import { modelMaterialNames } from '@/utils/3d-canvas/const';

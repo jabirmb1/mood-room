@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { calculateObjectBoxSize } from './object3D';
+import { calculateObjectBoxSize } from '../models';
 import { RapierRigidBody } from '@react-three/rapier';
 /******** This file handles all logic relating to the camera **********/
 

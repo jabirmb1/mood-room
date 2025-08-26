@@ -1,11 +1,8 @@
-import { useState, useEffect } from "react";
 import { ColliderJsonData } from "@/types/types";
 import {BallCollider, CapsuleCollider, CuboidCollider,} from "@react-three/rapier";
 import { Euler } from "three";
-import { getRelativeColliderScale } from "@/utils/3d-canvas/collision";
+import { getRelativeColliderScale } from "@/utils/3d-canvas/physics/collision";
 import { globalScale } from "@/utils/3d-canvas/const";
-import { getModelColliderDataUrl } from "@/utils/3d-canvas/object3D";
-import { getModelColliderData } from "@/services/modelServices";
 
 /******This compoenent will be responsible to generate multiple colliders per object so we can have compound, simplifed colliders
  *  per model; keeping it efficient and accurate.

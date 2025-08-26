@@ -1,8 +1,8 @@
 'use client'
 // This componentn will handle all the UI buttons sliders that can affect an object's rotation.
 import { useEffect, useState } from "react";
-import { HorizontalSlider } from "../../UI/HorizontalSlider"; 
-import {getRigidBodyRotation, normaliseDegrees, setRigidBodyRotation} from "@/utils/3d-canvas/rotation";
+import { HorizontalSlider } from "../../../UI/HorizontalSlider"; 
+import {getRigidBodyRotation, normaliseDegrees, setRigidBodyRotation} from "@/utils/3d-canvas/helpers/rotation";
 import { RapierRigidBody } from "@react-three/rapier";
 
 type RotateComponentProps = {

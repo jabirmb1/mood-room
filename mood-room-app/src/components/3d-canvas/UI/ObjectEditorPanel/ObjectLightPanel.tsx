@@ -1,9 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { ColourPickerControl } from '../../UI/ColourPickerControl';
-import { HorizontalSlider } from '../../UI/HorizontalSlider';
-import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/object3D';
+import { ColourPickerControl } from '../../../UI/ColourPickerControl';
+import { HorizontalSlider } from '../../../UI/HorizontalSlider';
+import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/models';
 
 type ObjectLightPanelProps = {
   objectRef: React.RefObject<THREE.Object3D | null>; // linked object

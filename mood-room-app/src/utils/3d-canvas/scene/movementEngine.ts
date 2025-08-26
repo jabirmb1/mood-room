@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { getPosition, isWall, matchRigidBodyRotation, setPosition } from "@/utils/3d-canvas/rapierHelpers";
-import {checkMultiColliderOverlap} from "@/utils/3d-canvas/collision";
+import { getPosition, isWall, matchRigidBodyRotation, setPosition } from "@/utils/3d-canvas/physics/rapierHelpers";
+import {checkMultiColliderOverlap} from "@/utils/3d-canvas/physics/collision";
 import { RapierRigidBody } from "@react-three/rapier";
 import { RapierWorld} from "@/types/types";
 
