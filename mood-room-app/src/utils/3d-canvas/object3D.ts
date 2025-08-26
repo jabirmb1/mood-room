@@ -26,6 +26,7 @@ export type ModelTags = {
 //Helper function to apply hover emissive effect
 //
 function applyHoverEmissive(material: THREE.MeshStandardMaterial, hovered: boolean): void {
+  if(!material || !material.emissive) return
   if (hovered) {
     material.emissive.set('yellow');// make it glow yellow
     material.emissiveIntensity = 1.0;// default hover intensity of 1.0
@@ -364,28 +365,33 @@ export function resetColourPalette(objectRef: React.RefObject<THREE.Object3D | n
 
 // Fixed hover effect function that preserves emissive states
 //
-export function applyHoverEffect(
-  model: THREE.Object3D & { meshesWithMaterials?: THREE.Mesh[] },
-  hovered: boolean,
-  mode: 'view' | 'edit',
-): void {
-  const meshes = model.meshesWithMaterials ?? [];
+export function applyHoverEffect( model: THREE.Object3D & { meshesWithMaterials?: THREE.Mesh[] },  hovered: boolean,  mode: 'view' | 'edit',): void {
+  if (!model || mode !== 'edit') return;
 
+  const meshes = model.meshesWithMaterials ?? [];
   if (meshes.length > 0) {
     // Use cached meshes to revert back after model has stopped being hovered.
     for (const mesh of meshes) {
-      const material = mesh.material as THREE.MeshStandardMaterial;
-      if (mode === 'edit') {
-        applyHoverEmissive(material, hovered);
-        material.needsUpdate = true;
+      if (!mesh || !mesh.material) continue;
+      // Handle both single material and material arrays
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const material of materials) {
+        if (material instanceof THREE.MeshStandardMaterial) {
+          applyHoverEmissive(material, hovered);
+          material.needsUpdate = true;
+        }
       }
     }
   } else {
     // Fallback: traverse through the model
     model.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const material = child.material as THREE.MeshStandardMaterial;
-        if (mode === 'edit') {
+      if (!(child instanceof THREE.Mesh) || !child.material) return;
+      
+      // handle when material is an array of materials; or when it it singular
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      
+      for (const material of materials) {
+        if (material instanceof THREE.MeshStandardMaterial) {
           applyHoverEmissive(material, hovered);
           material.needsUpdate = true;
         }
