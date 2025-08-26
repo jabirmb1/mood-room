@@ -26,13 +26,13 @@ export const defaultLightMeshConfigs: LightMeshConfig[] = [
     {
       nameContains: "screen_light",
       on: { emissiveColour: new THREE.Color('#ffffff'), emissiveIntensity: 2 },
-      off: { emissiveColour: new THREE.Color('0x000000'), emissiveIntensity: 0 },
+      off: { emissiveColour: new THREE.Color('#000000'), emissiveIntensity: 0 },
     },
     {
       nameContains: "fabric_light",
       // make the emissive colour be the same colour as the mesh itself.
-      on: { emissiveColour: "meshColour", emissiveIntensity: 5, transparent: true, opacity: 0.7 },
-      off: { emissiveColour: new THREE.Color('0x000000'), emissiveIntensity: 0, transparent: false, opacity: 1.0 },
+      on: { emissiveColour: "meshColour", emissiveIntensity: 2, transparent: true, opacity: 0.5 },
+      off: { emissiveColour: new THREE.Color('#000000'), emissiveIntensity: 0, transparent: false, opacity: 1.0 },
     },
   ];
 

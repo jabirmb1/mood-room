@@ -41,7 +41,7 @@ export function findMeshesByPattern(object: THREE.Object3D, pattern: string): TH
 
 // Helper function to create a single point light attatched to a singular mesh.
 //
-export function createPointLightForMesh(mesh: THREE.Mesh, config = { color: '#ffffff', intensity: 0, distance: 5, decay: 1 }): THREE.PointLight | null {
+export function createPointLightForMesh(mesh: THREE.Mesh, config = { color: '#ffffff', intensity: 0, distance: 3.5, decay: 1 }): THREE.PointLight | null {
   try {
     const box = new THREE.Box3().setFromObject(mesh);
     const center = new THREE.Vector3();

@@ -11,6 +11,7 @@ import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, center
 import { ObjectFloatingPanel } from "../ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
+import { Edges } from '@react-three/drei';
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
  * , change it's position and size.
@@ -112,6 +113,15 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     applyHoverEffect(modelRef.current, hovered, mode);
   }, [hovered, mode, currentScale]);
 
+
+  // Clear hover state when object is selected and editor panel opens
+  useEffect(() => {
+    if (isSelected && editingMode === 'edit') {
+      setHovered(false);
+      setIsHoveringObject?.(false);
+    }
+  }, [isSelected, editingMode, setIsHoveringObject]);
+
   // making hover effects temporarily size up and down the objects.
   useEffect(() => {
     if (!modelRef.current) return;
@@ -190,6 +200,5 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}/>
         )}
-      
     </>)
 }  

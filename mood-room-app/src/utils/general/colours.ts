@@ -1,6 +1,7 @@
 // This script will handle all general logic that relates to colours.
 import { HexColor } from '@/types/types';
 import tinycolor from 'tinycolor2';
+import * as THREE from 'three'
 
 // This function will get a string, and if it's a valid colour it will convert it into hex and return the hex string.
 // if it's not valid, it will return an empty string.
@@ -135,3 +136,13 @@ export function hslToRgb(h: number, s: number, l: number) {
     };
   }
   
+// function to mix 2 three js colours:
+//
+export function mixColours(color1: THREE.Color, color2: THREE.Color, ratio: number): THREE.Color {
+    // clamp ratio between 0–1 to be safe
+    const t = THREE.MathUtils.clamp(ratio, 0, 1);
+  
+    // clone first color so we don't mutate it
+    return color1.clone().lerp(color2, t);
+  }
+ 

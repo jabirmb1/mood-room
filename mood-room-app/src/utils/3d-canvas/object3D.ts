@@ -4,6 +4,7 @@ import { defaultLightMeshConfigs, globalScale, modelMaterialNames } from "./cons
 import { LightMeshConfig, LightMeshGroups, MaterialColourType, Model } from "@/types/types";
 import { fetchModelMeta } from "@/services/modelServices";
 import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, restoreEmissiveState } from "./meshes";
+import { mixColours } from "../general/colours";
 
 // declaring types here:
 export type ColourPalette = {
@@ -99,7 +100,7 @@ export function syncMeshEmissiveWithColor(scene: THREE.Object3D, mesh: THREE.Mes
 
 // Helper function to apply light state to a specific mesh type
 //
-function applyLightStateToMeshType(meshes: THREE.Mesh[], config: LightMeshConfig, isOn: boolean): void {
+function applyLightStateToMeshType(meshes: THREE.Mesh[], config: LightMeshConfig, isOn: boolean, lightColour: string): void {
   const state = isOn ? config.on : config.off;
   
   for (const mesh of meshes) {
@@ -107,6 +108,18 @@ function applyLightStateToMeshType(meshes: THREE.Mesh[], config: LightMeshConfig
     if (!mat) continue;
 
     // Handle special "meshColour" placeholder
+    if (config.nameContains === 'fabric_light')
+    {
+      // as a fallback; if light colour is undefined then just make fabric light's emit the same colour as it's mesh
+      if (!lightColour){
+        mat.emissive.copy(mat.color);
+      }
+
+      // otherwise mix the two colours for a more realisitic effect
+      const fabricLightRetentionRatio = 0.55// how much the emissiveness of the fabric colour keeps it's original colour
+      // between 0 to 1; higher = light barel affects fabric colour; lower = light affects fabric colour more (tints it more)
+      mat.emissive.set(mixColours(mat.color, new THREE.Color(lightColour), fabricLightRetentionRatio))
+    }
     if (state.emissiveColour === "meshColour") {
       mat.emissive.copy(mat.color);
     } else {
@@ -417,10 +430,11 @@ export function calculateObjectBoxSize(object: THREE.Object3D) {
 export function updateModelLightAffectedMeshes(scene: THREE.Object3D, isOn: boolean): void {
   const meshGroups: LightMeshGroups = scene.userData.meshGroups ?? {};
   const lightMeshTypes: LightMeshConfig[] = scene.userData.lightMeshTypes ?? [];
+  const lightColour = scene.userData.light.colour
 
   for (const type of lightMeshTypes) {
     const meshes = meshGroups[type.nameContains] ?? [];
-    applyLightStateToMeshType(meshes, type, isOn);
+    applyLightStateToMeshType(meshes, type, isOn, lightColour);
   }
 }
 
@@ -433,7 +447,7 @@ function toggleModelBulb(model: THREE.Object3D, isOn: boolean) {
     for (const mat of materials) {
       if (mat instanceof THREE.MeshStandardMaterial) {
         mat.emissive.set(isOn ? '#ffffff' : '#000000');
-        mat.emissiveIntensity = isOn ? 5 : 0;
+        mat.emissiveIntensity = isOn ? 20 : 0;
         mat.needsUpdate = true;
         cacheEmissiveState(mat)// cache emissive state of bulb so that it does not get overwrtten by hover effects
       }

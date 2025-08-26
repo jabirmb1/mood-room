@@ -28,6 +28,7 @@ import Colliders from '@/components/3d-canvas/Colliders';
 import { getManifestData } from '@/services/manifestServices';
 import { getModelColliderData } from '@/services/modelServices';
 import ShadowManager from '@/components/3d-canvas/ShadowManager';
+import { BloomEffect } from '@/components/3d-canvas/BloomEffect';
 
 
 
@@ -255,6 +256,7 @@ const addModelCooldownTime = 1000;// 1 second.
                   <ShadowManager staticLightRef={directionalRef} dynamicLightRef={selectedObjectDirectionalRef} 
                   lightColour={lightingConfig.directional.colour} lightIntensity={lightingConfig.directional.intensity}
                   lightPosition={[5, 10, 5]} selectedObject={selectedModelRef.current} models={models}/>
+                  <BloomEffect/>
                   <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
                   <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />
