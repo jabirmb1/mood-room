@@ -2,9 +2,9 @@
  * won't affect any other object inside scene other than it's repsective model. *******/
 import * as THREE from "three";
 import { LightMeshConfig, LightMeshGroups, Model } from "@/types/types";
-import { defaultLightMeshConfigs } from "../const";
+import { baseModelLightIntensity, defaultLightMeshConfigs } from "../const";
 import { LightSystemData } from "./types";
-import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern } from "../scene/meshes";
+import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern} from "../scene/meshes";
 import { mixColours } from "@/utils/general/colours";
 
 // Helper function to initialise mesh groups for light-affected meshes (e.g.screens, lampshades.)
@@ -116,10 +116,13 @@ function updatePointLights(lights: THREE.PointLight[], lightData: { on: boolean;
 }
 
 // Main function to initialise lights into a model (e.g. lamps)
-export function initialiseLights(scene: THREE.Object3D): void {
-    const bulbMeshes = findMeshesByPattern(scene, 'bulb'); // each object that has a light will have a bulb mesh
+export function initialiseLights(scene: THREE.Object3D, lightData?: Model['light']): void {
+    const bulbMeshes = findMeshesByPattern(scene, 'bulb'); // each object that has a light will have a bulb mesh 
+
+    //TO DO: screens e.g. tv screens won't have a bulb; so we will need to extend this to use bulbmeshes OR screen meshes
     const lightMeshTypes = defaultLightMeshConfigs; // config of how certain meshes inside model will react when it's light is on/off
     
+    // if no bulb meshes; then just return as this model is not one that can produce light.
     if (bulbMeshes.length === 0) {
         scene.userData.light = null;
         return;
@@ -135,7 +138,10 @@ export function initialiseLights(scene: THREE.Object3D): void {
     
     // Create point lights for bulb meshes
     const bulbs = bulbMeshes
-        .map(mesh => createPointLightForMesh(mesh))
+        // scale the pointlight effects with mesh size
+
+        // if lightData was passed in; use it to recreate the pointlightMesh (intensity and colour)
+    .map(mesh => createPointLightForMesh(mesh,{colour: lightData?.colour, intensity:lightData?.intensity}, true, scene))
         .filter(light => light !== null);
     
     if (bulbs.length === 0) {
@@ -147,11 +153,15 @@ export function initialiseLights(scene: THREE.Object3D): void {
     const meshGroups = initialiseLightMeshGroups(scene, lightMeshTypes);
     
     // Store all data in userData
-    scene.userData.light = { on: false, intensity: 20, colour: '#ffffff' };
+    // if a lightData was passed in for this model; instead of recreating the userData; reuse the passed in data
+    scene.userData.light =lightData? lightData:  { on: false, intensity: baseModelLightIntensity, colour: '#ffffff' };
     scene.userData.bulbs = bulbs;
     scene.userData.bulbMeshes = bulbMeshes;
     scene.userData.lightMeshTypes = lightMeshTypes;
     scene.userData.meshGroups = meshGroups;
+
+    // also update all lights here as well for their initial values:
+    updateAllLights(scene, scene.userData.light)
 }
 
 // function to update model light-affected meshes

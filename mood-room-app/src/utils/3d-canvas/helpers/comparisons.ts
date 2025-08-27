@@ -26,11 +26,30 @@ export function areVectorsEqual(a: THREE.Vector3, b: THREE.Vector3,epsilon = 0.0
 }
 
 // function to check if object lights are equal or not:
-export function areLightDataEqual(lightData1: Model['light'] | null, lightData2: Model['light'] | null) {
+export function areLightDataEqual(
+    lightData1: Model['light'] | null,
+    lightData2: Model['light'] | null
+  ): boolean {
+    // both null => equal
+    if (!lightData1 && !lightData2) return true;
+    // only one null => not equal
     if (!lightData1 || !lightData2) return false;
-    return lightData1.on === lightData2.on && lightData1.intensity === lightData2.intensity &&
-    lightData1.colour === lightData2.colour;
+  
+    // compare with tolerance for floats
+    const intensityEqual =
+      Math.abs((lightData1.intensity ?? 0) - (lightData2.intensity ?? 0)) < 1e-3;
+  
+    // normalise colours for comparison
+    const normaliseColour = (c: string) =>
+      new THREE.Color(c).getHexString(); // gives lowercase hex string like 'ffffff'
+  
+    return (
+      lightData1.on === lightData2.on &&
+      intensityEqual &&
+      normaliseColour(lightData1.colour ?? '') === normaliseColour(lightData2.colour ?? '')
+    );
   }
+  
   
 export function deepEqual<T extends Record<string, any>>(a: T, b: T): boolean {
     if (a === b) return true;// if they point to same object then return true

@@ -10,6 +10,7 @@ import { getRigidBodyRotation } from "@/utils/3d-canvas/helpers/rotation";
 import { areLightDataEqual, areRotationsEqual, areVectorsEqual, deepEqual } from "@/utils/3d-canvas/helpers/comparisons";
 import { globalScale } from "@/utils/3d-canvas/const";
 import { ObjectLightPanel } from "./ObjectLightPanel";
+import { deepClone } from "@/utils/general/arrays";
 
 /******** This panel will be used to change the properties of an object e.g. it's rotation; size; colour scheme etc. ********/
 
@@ -38,8 +39,8 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
     // on mount store initial details of the object.
     initialScale.current = object.scale.clone() ?? new THREE.Vector3(globalScale, globalScale, globalScale);
     initialRotation.current = getRigidBodyRotation(rigidBodyRef);
-    initialColours.current = getObjectMaterialMap(objectRef).currentcolours;
-    initialLights.current = getObjectLightData(objectRef.current)
+    initialColours.current = getObjectMaterialMap(objectRef).currentcolours;// no need to deep clone since material map is just strings; they automatically will not point to same object if changed
+    initialLights.current = deepClone(getObjectLightData(objectRef.current));// deep clone object so it does not update automatically (need outated version for comparison.)
 
     return () => {
   
@@ -70,8 +71,7 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
       const originalColours = initialColours.current;
       const originalLights = initialLights.current
 
-      //(pass in undefined if we want to skip updating that field)
-      // otherwise pass in the new value so that we can update that part
+
       updateModelInformation(objectId, {
         rotation: originalRotation && areRotationsEqual(originalRotation, rotation) ? undefined : [rotation.x, rotation.y, rotation.z],
         scale: originalScale && areVectorsEqual(object.scale, originalScale) ? undefined : [object.scale.x, object.scale.y, object.scale.z],

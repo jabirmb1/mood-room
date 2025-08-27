@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { ColourPickerControl } from '../../../UI/ColourPickerControl';
 import { HorizontalSlider } from '../../../UI/HorizontalSlider';
 import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/models';
+import { baseModelLightIntensity } from '@/utils/3d-canvas/const';
 
 type ObjectLightPanelProps = {
   objectRef: React.RefObject<THREE.Object3D | null>; // linked object
@@ -62,7 +63,7 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
         
                     {/* Light intensity slider */}
                     <HorizontalSlider label="Intensity" value={intensity} onChange={(val) => setIntensity(val)}
-                    min={15} max={30} step={1} unit="" trackcolour="bg-gray-800" rangeLabelcolour="text-grey-300" valueTextcolour="text-grey-400" />
+                    min={Math.round(Math.max(0, baseModelLightIntensity/2))} max={Math.round(baseModelLightIntensity * 1.5)} step={1} unit="" trackcolour="bg-gray-800" rangeLabelcolour="text-grey-300" valueTextcolour="text-grey-400" />
 
                     {/* button needs styling */}
                     <button  className='mt-4 px-4 py-1 text-sm bg-blue-200 rounded hover:bg-blue-400' onClick={()=>setLightOn(false)}>

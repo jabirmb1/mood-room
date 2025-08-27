@@ -110,6 +110,7 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
           Object.entries(updates).filter(([_, value]) => value !== undefined)
         );
         const updatedModel = { ...model, ...filteredUpdates };
+       // console.log('updated model is:', updatedModel)
         
         // Force rigid body recreation if scale is updated
         if ('scale' in filteredUpdates) {// using this new syntax to avoid edge case where scale is [0, 0, 0]

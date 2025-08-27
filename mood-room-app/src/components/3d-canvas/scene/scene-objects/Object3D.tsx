@@ -7,7 +7,7 @@ import { useKeyboardMovement } from "@/hooks/3d-canvas/useKeyBoardMovement";
 import { globalScale } from "@/utils/3d-canvas/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/3d-canvas/models";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags, updateModelLightAffectedMeshes } from "@/utils/3d-canvas/models";
 import { ObjectFloatingPanel } from "../../UI/ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
@@ -26,6 +26,7 @@ type Object3DProps = {
   position?: [number, number, number];// position of the model in the scene
   scale: [number, number, number];// model's size
   rotation?: [number, number, number]// model's rotation.
+  lightData?: Model['light'];
   isSelected: boolean;// boolean flag to check if current model is the selected one or not.
   isColliding?: boolean;// if this object is inside an illegal collision state, e.g. inside a wall or floor.
   editingMode: 'edit' | 'move';//what mode the object is in, e.g. edit means that side panel will show to change the object's properties
@@ -41,7 +42,7 @@ type Object3DProps = {
 
 
 // TO DO: make position be used as default for object placement in viewer only mode so e.g. position = [num, num, num] or null(for editing)
-export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, isSelected = false, isColliding=false, editingMode = 'edit', 
+export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, lightData, isSelected = false, isColliding=false, editingMode = 'edit', 
   setSelectedId, setEditingMode, setIsHoveringObject, updateModelInformation, onDragging, onDelete, onModelUpdate}: Object3DProps) {
 
   const { scene} = useGLTF(url) as { scene: THREE.Object3D };
@@ -50,7 +51,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   // (allows us to place multiple of same model if needed)
   const clonedScene = useMemo(() => {
     if (!scene) return null;
-    const cloned = cloneModel(scene);
+    const cloned = cloneModel(scene, lightData);
     const centered = centerPivot(cloned);
     centered.userData.baseScale = scale[0]; // record what the current size is.
     // apply tags to the object during load:
@@ -103,6 +104,10 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
         }
       });
       applyColourPalette(modelRef.current, colourPalette);
+      if(lightData && lightData.on !== undefined)
+      {
+        updateModelLightAffectedMeshes(modelRef.current, lightData.on)
+      }
     }
   }, [colourPalette]);// may be an error as it may not be constant
   

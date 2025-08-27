@@ -4,6 +4,7 @@ import { globalScale, modelMaterialNames } from "../const";
 import { MaterialColourMap } from "./types";
 import { initialiseLights } from "./lightingSystem";
 import { getBaseMaterialName } from "./modelMaterialUtils";
+import { Model } from "@/types/types";
 
 // This function will make a model rough and non metallic (mimics lambert material)
 export function makeRoughNonMetallic(object: THREE.Object3D) {
@@ -37,7 +38,7 @@ export function toggleModelCastingShadow(scene: THREE.Object3D, castShadow: bool
 }
 
 // This function fully clones a model including its material
-export function cloneModel(scene: THREE.Object3D) {
+export function cloneModel(scene: THREE.Object3D, lightData?: Model['light']) {
     // cloning the scene
     const clonedModel = scene.clone(true);
     // whilst we clone the model, we can also store the initial model's colours into the userdata
@@ -67,11 +68,15 @@ export function cloneModel(scene: THREE.Object3D) {
     });
 
     // if the model has a bulb; initialise the light values
-    initialiseLights(clonedModel);
+    initialiseLights(clonedModel, lightData);
+
+    // calculate object base dimensios and store in user Data for fast access.
+    const {maxDim} = calculateObjectBoxSize(scene);
 
     // attach cached meshes to the cloned model for later reuse
     (clonedModel as any).meshesWithMaterials = meshesWithMaterials;
     clonedModel.userData.initialcolours = initialcolours;
+    clonedModel.userData.baseDim = maxDim;
 
     return clonedModel;
 }

@@ -36,7 +36,8 @@ export const defaultLightMeshConfigs: LightMeshConfig[] = [
     },
   ];
 
-
+// base light intensity for e.g. lamps; etc.
+export const baseModelLightIntensity = 3;
 /**********consts relating to the mood aspect. ************/
 
 //the different type of moods that's in our project:

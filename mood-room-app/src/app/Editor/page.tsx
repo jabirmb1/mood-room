@@ -289,6 +289,7 @@ const addModelCooldownTime = 1000;// 1 second.
                        rigidBodyRef={rigidBodyRefs.current[model.id]}
                        scale={model.scale ?? [globalScale, globalScale, globalScale]}
                        colourPalette={model.colourPalette}
+                       lightData={model.light}
                        mode="edit"
                        isSelected={selectedId === model.id}
                        isColliding={collisionMap[model.id] || false}
