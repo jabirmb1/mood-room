@@ -135,12 +135,11 @@ export function updatePointLights(object: THREE.Object3D, lights: THREE.PointLig
 // Main function to initialise lights into a model (e.g. lamps)
 export function initialiseLights(scene: THREE.Object3D, lightData?: Model['light']): void {
     const bulbMeshes = findMeshesByPattern(scene, 'bulb'); // each object that has a light will have a bulb mesh 
-
-    //TO DO: screens e.g. tv screens won't have a bulb; so we will need to extend this to use bulbmeshes OR screen meshes
+    const screenMeshes = findMeshesByPattern(scene, 'screen_light');
     const lightMeshTypes = defaultLightMeshConfigs; // config of how certain meshes inside model will react when it's light is on/off
     
     // if no bulb meshes; then just return as this model is not one that can produce light.
-    if (bulbMeshes.length === 0) {
+    if (bulbMeshes.length === 0 && screenMeshes.length == 0) {
         scene.userData.light = null;
         return;
     }
@@ -152,28 +151,45 @@ export function initialiseLights(scene: THREE.Object3D, lightData?: Model['light
             bulb.material.emissiveIntensity = 0; // Default intensity
         }
     }
+
+    for (const screen of screenMeshes)
+    {
+        if (screen.material instanceof THREE.MeshStandardMaterial)
+        {
+            screen.material.emissive.set('#ffffff');
+            screen.material.emissiveIntensity = 0;
+        }
+    }
     
     // Create point lights for bulb meshes
-    const bulbs = bulbMeshes
+
+    if (bulbMeshes.length > 0)
+    {
+        const bulbs = bulbMeshes
         // scale the pointlight effects with mesh size
 
         // if lightData was passed in; use it to recreate the pointlightMesh (intensity and colour)
-    .map(mesh => createPointLightForMesh(mesh,{colour: lightData?.colour, intensity:lightData?.intensity}))
-        .filter(light => light !== null);
+        .map(mesh => createPointLightForMesh(mesh,{colour: lightData?.colour, intensity:lightData?.intensity}))
+            .filter(light => light !== null);
+        
+        if (bulbs.length === 0) {
+            scene.userData.light = null;
+            return;
+        }
+        scene.userData.bulbs = bulbs;
+        scene.userData.bulbMeshes = bulbMeshes;
     
-    if (bulbs.length === 0) {
-        scene.userData.light = null;
-        return;
     }
-    
+    else if(screenMeshes.length > 0)
+    {
+        // we can do something here later.
+    }
     // Initialise mesh groups for light-affected meshes
     const meshGroups = initialiseLightMeshGroups(scene, lightMeshTypes);
     
     // Store all data in userData
     // if a lightData was passed in for this model; instead of recreating the userData; reuse the passed in data
     scene.userData.light =lightData? lightData:  { on: false, intensity: baseModelLightIntensity, colour: '#ffffff' };
-    scene.userData.bulbs = bulbs;
-    scene.userData.bulbMeshes = bulbMeshes;
     scene.userData.lightMeshTypes = lightMeshTypes;
     scene.userData.meshGroups = meshGroups;
 }
@@ -184,8 +200,10 @@ export function updateModelLightAffectedMeshes(scene: THREE.Object3D, isOn: bool
     const lightMeshTypes: LightMeshConfig[] = scene.userData.lightMeshTypes ?? [];
     const lightColour = scene.userData.light.colour;
 
+    // for each type inside LightMeshConfig; we will just group the meshes together.
     for (const type of lightMeshTypes) {
         const meshes = meshGroups[type.nameContains] ?? [];
+        // for each group apply the mesh specific attributes.
         applyLightStateToMeshType(meshes, type, isOn, lightColour);
     }
 }
@@ -275,4 +293,9 @@ export function getObjectLightColour(object: THREE.Object3D | null): string | nu
 export function getObjectLightData(object: THREE.Object3D | null): Model['light'] | null {
     if (!object || !object.userData.light) return null;
     return object.userData.light; // null or a lights object
+}
+
+export function doesObjectHaveBulbs(object: THREE.Object3D | null){
+    if (!object || !object.userData.light) return null;
+    return object.userData.bulbs; // return a bulbs user data (null or an actual object)
 }

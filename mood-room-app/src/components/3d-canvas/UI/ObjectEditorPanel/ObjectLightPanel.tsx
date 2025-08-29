@@ -5,6 +5,7 @@ import { ColourPickerControl } from '../../../UI/ColourPickerControl';
 import { HorizontalSlider } from '../../../UI/HorizontalSlider';
 import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/models';
 import { baseModelLightIntensity } from '@/utils/3d-canvas/const';
+import { doesObjectHaveBulbs } from '@/utils/3d-canvas/models/lightingSystem';
 
 type ObjectLightPanelProps = {
   objectRef: React.RefObject<THREE.Object3D | null>; // linked object
@@ -13,24 +14,46 @@ type ObjectLightPanelProps = {
 export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
     const [lightOn, setLightOn] = useState<boolean>(isObjectLightOn(objectRef.current) ?? false);
     const [lightColour, setLightColour] = useState<string>(getObjectLightColour(objectRef.current)??'#ffffff');
-    const [intensity, setIntensity] = useState<number>(getObjectLightIntensity(objectRef.current) ?? 1);
+    // Slider state: store the UI value (-50 to +50)
+    const [intensityUI, setIntensityUI] = useState<number>(intensityToUI(getObjectLightIntensity(objectRef.current) ?? baseModelLightIntensity))
 
     
-    // update object lights in real time:
-    // Update all bulb lights whenever colour/intensity/on changes
+    // Convert slider value (-50 to +50) → internal intensity
+    function uiToIntensity(val: number) {
+        return baseModelLightIntensity * (1 + val / 100); // -50 -> 0.5×, 0 -> 1×, +50 -> 1.5×
+    }
+  
+    // Convert internal intensity → slider value (-50 to +50)
+    function intensityToUI(intensity: number){
+        return ((intensity / baseModelLightIntensity) - 1) * 100;
+    }
+
+
+    // Update effect to map UI to real intensity
     useEffect(() => {
+        const internalIntensity = uiToIntensity(intensityUI);
         if (!objectRef.current?.userData.light) return;
-
-        //update everything at once
         updateAllLights(objectRef.current, {
-            on: lightOn,
-            intensity: intensity,
-            colour: lightColour
+        on: lightOn,
+        intensity: internalIntensity,
+        colour: lightColour
         });
+    }, [intensityUI, lightOn, lightColour, objectRef]);
 
-    }, [lightOn, lightColour, intensity, objectRef]);
+    //if intensityUI ever gows past bounds; just put them back in bounds.
+    useEffect(()=>{
+        if(intensityUI > 50)
+        {
+            setIntensityUI(50);
+        }
+        else if (intensityUI < -50)
+        {
+            setIntensityUI(-50)
+        }
+    }, [intensityUI])
+    
 
-    if(!objectRef.current || !objectRef)
+    if(!objectRef || !objectRef.current)
     {
         return null;
     }
@@ -51,21 +74,66 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
 
             {lightOn &&(
                 <>
-                        {/* Light colour picker */}
-                    <div className="colour-picker-wrapper mb-6">
-                    <ColourPickerControl
-                        value={lightColour}
-                        onChange={(newColour) => setLightColour(newColour)}
-                        colourText="light colour"
-                        showCloseButton={false}
-                    />
-                    </div>
-        
-                    {/* Light intensity slider */}
-                    <HorizontalSlider label="Intensity" value={intensity} onChange={(val) => setIntensity(val)}
-                    min={Math.round(Math.max(0, baseModelLightIntensity/2))} max={Math.round(baseModelLightIntensity * 1.5)} step={1} unit="" trackcolour="bg-gray-800" rangeLabelcolour="text-grey-300" valueTextcolour="text-grey-400" />
 
-                    {/* button needs styling */}
+                    {/*only show colour picker and intensity if the light mesh actually has a bulb/ light
+                    to config; otherwise just show the buttons */}
+
+                    {doesObjectHaveBulbs(objectRef.current) && (
+                        <>
+                            {/* Light colour picker */}
+                            <div className="colour-picker-wrapper mb-6">
+                            <ColourPickerControl
+                            value={lightColour}
+                            onChange={(newColour) => setLightColour(newColour)}
+                            colourText="light colour"
+                            showCloseButton={false}
+                            />
+                            </div>
+                
+                           
+                            {/* Light intensity slider */}
+                            <HorizontalSlider
+                            label="Intensity"
+                            value={intensityUI}
+                            onChange={setIntensityUI}
+                            min={-50}
+                            max={50}
+                            step={1}
+                            unit="%"
+                            trackcolour="bg-gray-800"
+                            rangeLabelcolour="text-grey-300"
+                            valueTextcolour="text-grey-400"
+                            />
+
+                            <div className="flex justify-center gap-4 mt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIntensityUI(intensityUI - 10)}
+                                    disabled={intensityUI <= -50}
+                                    className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                                >
+                                    -10%
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIntensityUI(intensityUI + 10)}
+                                    disabled={intensityUI >= 50}
+                                    className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                                >
+                                    +10%
+                                </button>
+                                </div>
+                            
+                                <button
+                                type="button"
+                                onClick={() => setIntensityUI(0)}
+                                className="mt-4 px-4 py-1 text-sm bg-blue-200 rounded hover:bg-blue-400"
+                                >
+                                Reset Intensity.
+                                </button>
+                        </>
+                    )}
+
                     <button  className='mt-4 px-4 py-1 text-sm bg-blue-200 rounded hover:bg-blue-400' onClick={()=>setLightOn(false)}>
                         turn off light
                     </button>
