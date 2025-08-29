@@ -7,7 +7,7 @@ import { useKeyboardMovement } from "@/hooks/3d-canvas/useKeyBoardMovement";
 import { globalScale } from "@/utils/3d-canvas/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags, updateModelLightAffectedMeshes } from "@/utils/3d-canvas/models";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags, updateModelLightAffectedMeshes, updateAllLights } from "@/utils/3d-canvas/models";
 import { ObjectFloatingPanel } from "../../UI/ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
@@ -116,6 +116,15 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     if (!modelRef.current) return;
     applyHoverEffect(modelRef.current, hovered, mode);
   }, [hovered, mode, currentScale]);
+
+  // after model has been loaded; we want to also update the lights to give them correct inital values
+  // (syncs them).
+  useEffect(()=>{
+    // if the object does cannot produce light; or it isnt ready yet; then just return
+    if (!modelRef.current || !clonedScene || !modelRef.current.userData.light) return;
+
+    updateAllLights(modelRef.current, modelRef.current.userData.light)
+  }, [clonedScene, lightData])
 
 
   // Clear hover state when object is selected and editor panel opens

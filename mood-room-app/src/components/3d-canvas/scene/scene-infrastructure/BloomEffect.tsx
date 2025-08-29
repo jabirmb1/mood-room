@@ -4,11 +4,11 @@ export function BloomEffect() {
   return (
     <EffectComposer multisampling={0}>
       <Bloom
-        luminanceThreshold={1}    // only HDR >1 glows
+        luminanceThreshold={3}    // only HDR >3 glows
         luminanceSmoothing={0.9}
-        intensity={0.6}            // bloom strength
+        intensity={0.5}            // bloom strength
         height={256}               // smaller buffer = cheaper
-        radius={0.3}               // glow spread
+        radius={0.2}               // glow spread
       />
     </EffectComposer>
   );

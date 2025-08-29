@@ -4,8 +4,9 @@ import * as THREE from "three";
 import { LightMeshConfig, LightMeshGroups, Model } from "@/types/types";
 import { baseModelLightIntensity, defaultLightMeshConfigs } from "../const";
 import { LightSystemData } from "./types";
-import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern} from "../scene/meshes";
+import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, POINTLIGHT_DECAY_SCALE_EXPONENT, POINTLIGHT_DISTANCE_SCALE_FACTOR, POINTLIGHT_MIN_DECAY} from "../scene/meshes";
 import { mixColours } from "@/utils/general/colours";
+import { calculateObjectBoxSize } from "./modelManipulation";
 
 // Helper function to initialise mesh groups for light-affected meshes (e.g.screens, lampshades.)
 function initialiseLightMeshGroups(scene: THREE.Object3D, lightMeshTypes: LightMeshConfig[]): LightMeshGroups {
@@ -31,6 +32,7 @@ function initialiseLightMeshGroups(scene: THREE.Object3D, lightMeshTypes: LightM
 }
 
 // Helper function to check if a mesh is a light-affected mesh that uses "meshColour"
+//
 function isLightAffectedMeshWithMeshColour(scene: THREE.Object3D, mesh: THREE.Mesh): boolean {
     const meshGroups: LightMeshGroups = scene.userData.meshGroups ?? {};
     const lightMeshTypes: LightMeshConfig[] = scene.userData.lightMeshTypes ?? [];
@@ -46,6 +48,7 @@ function isLightAffectedMeshWithMeshColour(scene: THREE.Object3D, mesh: THREE.Me
 }
 
 // Helper function to sync emissive color for a specific mesh when its color changes
+//
 export function syncMeshEmissiveWithColor(scene: THREE.Object3D, mesh: THREE.Mesh): void {
     const isLightOn = scene.userData.light?.on ?? false;
     
@@ -107,13 +110,27 @@ function applyLightStateToMeshType(meshes: THREE.Mesh[], config: LightMeshConfig
 }
 
 // Helper function to update all point lights
-function updatePointLights(lights: THREE.PointLight[], lightData: { on: boolean; intensity: number; colour: string }): void {
-    for (const light of lights) {
-        light.color.set(lightData.colour);
-        light.intensity = lightData.on ? lightData.intensity : 0;
-        light.visible = lightData.on;
-    }
+// it will also dynamically calculate the decay and distance based on model's light intensity and
+// model's current size.
+// 
+export function updatePointLights(object: THREE.Object3D, lights: THREE.PointLight[], lightData: { on: boolean; intensity: number; colour: string }) {
+  const { maxDim } = calculateObjectBoxSize(object);
+  const modelScale = object.scale.x; // uniform scale
+  const scaledIntensity = lightData.intensity * Math.pow(modelScale, 0.5); // we want intensity to scale based on model scale
+
+  const distance = maxDim * POINTLIGHT_DISTANCE_SCALE_FACTOR;
+  const decay = Math.max(POINTLIGHT_MIN_DECAY, Math.pow(modelScale, POINTLIGHT_DECAY_SCALE_EXPONENT));
+
+  for (const light of lights) {
+    // apply the different attirbutes to the lights.
+    light.color.set(lightData.colour);
+    light.intensity = lightData.on ? scaledIntensity : 0;
+    light.visible = lightData.on;
+    light.distance = distance;
+    light.decay = decay;
+  }
 }
+
 
 // Main function to initialise lights into a model (e.g. lamps)
 export function initialiseLights(scene: THREE.Object3D, lightData?: Model['light']): void {
@@ -141,7 +158,7 @@ export function initialiseLights(scene: THREE.Object3D, lightData?: Model['light
         // scale the pointlight effects with mesh size
 
         // if lightData was passed in; use it to recreate the pointlightMesh (intensity and colour)
-    .map(mesh => createPointLightForMesh(mesh,{colour: lightData?.colour, intensity:lightData?.intensity}, true, scene))
+    .map(mesh => createPointLightForMesh(mesh,{colour: lightData?.colour, intensity:lightData?.intensity}))
         .filter(light => light !== null);
     
     if (bulbs.length === 0) {
@@ -159,9 +176,6 @@ export function initialiseLights(scene: THREE.Object3D, lightData?: Model['light
     scene.userData.bulbMeshes = bulbMeshes;
     scene.userData.lightMeshTypes = lightMeshTypes;
     scene.userData.meshGroups = meshGroups;
-
-    // also update all lights here as well for their initial values:
-    updateAllLights(scene, scene.userData.light)
 }
 
 // function to update model light-affected meshes
@@ -194,11 +208,13 @@ function toggleModelBulb(model: THREE.Object3D, isOn: boolean) {
 }
 
 // function to update all lights (point lights only for now)
+//
 export function updateAllLights(scene: THREE.Object3D, lightData: { on: boolean; intensity: number; colour: string }): void {
+    if(!lightData) return;
     const bulbs: THREE.PointLight[] = scene.userData.bulbs ?? [];
 
     // Update point lights
-    updatePointLights(bulbs, lightData);
+    updatePointLights(scene, bulbs, lightData);
 
     // Update light-affected meshes
     updateModelLightAffectedMeshes(scene, lightData.on);

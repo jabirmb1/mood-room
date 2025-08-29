@@ -5,11 +5,18 @@ import { calculateObjectBoxSize } from '../models';
 
 //some constance that will be used to fine tune creation and updates of pointlights on meshes.
 
-export const POINTLIGHT_DISTANCE_SCALE_FACTOR = 0.035;   // how much to scale distance relative to model size
-export const POINTLIGHT_MIN_DECAY = 0.5;                // lowest allowed decay value
-export const POINTLIGHT_DECAY_SCALE_EXPONENT = 0.25;     // sqrt scaling for decay softness
-export const POINTLIGHT_CONFIG_DECAY = 1;// default values for pointlight's decay value
-export const POINTLIGHT_CONFIG_DISTANCE = 3// default values for pointLight's distance value
+export const POINTLIGHT_DISTANCE_SCALE_FACTOR = 2;   // how much to scale distance relative to model size
+// increasing value = larger light radius; decreasing = smaller light radius.
+
+export const POINTLIGHT_MIN_DECAY = 1.0;                // lowest allowed decay value
+// increase value = faster fall off (sharper light); decrease = smaller/ fainter halo.
+
+export const POINTLIGHT_DECAY_SCALE_EXPONENT = 0.5;     // n root scaling for decay softness
+// increase value =  more aggressive decay scaling as model grows (shrinks outer halo for large models).
+// decrease value = gentler scaling, outer halo grows more with larger models.
+
+export const POINTLIGHT_CONFIG_DECAY = 1.8;// default values for pointlight's decay value
+export const POINTLIGHT_CONFIG_DISTANCE = 6// default values for pointLight's distance value
 
 type pointLightConfig={
   colour?: string;
@@ -65,9 +72,10 @@ export function findMeshesByPattern(object: THREE.Object3D, pattern: string): TH
 }
 
 // Helper function to create a single point light attatched to a singular mesh.
+// NOTE: distance/decay are accepted for completeness but will be 
+// overridden during runtime updates for our models (inside updateAllLights function)
 //
-// Helper function to create a single point light attached to a singular mesh.
-export function createPointLightForMesh(mesh: THREE.Mesh, config: pointLightConfig={}, scaleWithSize: boolean = false, fullModel? : THREE.Object3D): THREE.PointLight | null {
+export function createPointLightForMesh(mesh: THREE.Mesh, config: pointLightConfig={}): THREE.PointLight | null {
   try {
 
     // merge config with default and passed in values.
@@ -82,31 +90,7 @@ export function createPointLightForMesh(mesh: THREE.Mesh, config: pointLightConf
     
     // Convert world center to local space of mesh
     mesh.worldToLocal(center);
-
-    // If we want to scale the light to the size; we want it to be in relation to entire model and not just bulb
-    // so only change distance and decay only if both values were passed in
-    if(scaleWithSize && fullModel) {
-      // Scale the distance and decay depending on the model
-      const { maxDim } = calculateObjectBoxSize(fullModel);
-      // Make the light radius scale with the model size
-      distance = finalConfig.distance * (maxDim * POINTLIGHT_DISTANCE_SCALE_FACTOR);
-
-      // Larger objects should have softer falloff (slower decay)
-      decay = Math.max(POINTLIGHT_MIN_DECAY, finalConfig.decay * (1 / Math.pow(maxDim, POINTLIGHT_DECAY_SCALE_EXPONENT)));
-    }
-    
-    const light = new THREE.PointLight(finalConfig.colour, finalConfig.intensity, distance, decay);
-    
-    // Store both current values and original unscaled values
-    light.userData.baseDistance = distance;
-    light.userData.baseDecay = decay;
-    light.userData.baseIntensity = finalConfig.intensity;
-    
-    // Store original unscaled values for reference
-    light.userData.originalBaseDistance = finalConfig.distance;
-    light.userData.originalBaseDecay = finalConfig.decay;
-    light.userData.originalBaseIntensity = finalConfig.intensity;
-    
+    const light = new THREE.PointLight(finalConfig.colour, finalConfig.intensity, distance, decay); 
     light.position.copy(center);
     mesh.add(light);// add it to the mesh; so the light moves with the mesh.
     

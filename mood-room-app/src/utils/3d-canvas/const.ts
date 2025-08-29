@@ -25,7 +25,7 @@ export const snapDownwardsCountdown = 0// how quikcly an object should snap down
 export const defaultLightMeshConfigs: LightMeshConfig[] = [
     {
       nameContains: "screen_light",
-      on: { emissiveColour: new THREE.Color('#ffffff'), emissiveIntensity: 2 },
+      on: { emissiveColour: new THREE.Color('#ffffff'), emissiveIntensity: 4 },
       off: { emissiveColour: new THREE.Color('#000000'), emissiveIntensity: 0 },
     },
     {
@@ -37,7 +37,7 @@ export const defaultLightMeshConfigs: LightMeshConfig[] = [
   ];
 
 // base light intensity for e.g. lamps; etc.
-export const baseModelLightIntensity = 3;
+export const baseModelLightIntensity = 55;
 /**********consts relating to the mood aspect. ************/
 
 //the different type of moods that's in our project:

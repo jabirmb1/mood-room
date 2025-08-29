@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { HorizontalSlider } from "../../../UI/HorizontalSlider"; 
 import { getObjectSizeDifference } from "@/utils/3d-canvas/models";
 import { globalScale } from "@/utils/3d-canvas/const";
+import { updatePointLights } from "@/utils/3d-canvas/models/lightingSystem";
 
 /************** This panel will be used to change an object's size via buttons and a slider */
 type ObjectScalePanelProps = {
@@ -29,6 +30,12 @@ export function ObjectSizePanel({ objectRef, objectId}: ObjectScalePanelProps) {
       model.userData.baseScale  = newScale;// update the base scale of the model so that the app keeps track of model's
       // current scale (also used for calculations.)
       model.scale.set(newScale, newScale, newScale);
+      
+      if (model.userData.bulbs)// if model can cast lights; increase/ decrease light radius with model scaling.
+      {
+        //TO DO: extend this to other light types
+        updatePointLights(model, model.userData.bulbs,model.userData.light )
+      }
     }
   }, [sizePercentage]);
 
