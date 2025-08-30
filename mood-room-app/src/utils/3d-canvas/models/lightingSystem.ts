@@ -1,301 +1,282 @@
 /*** contains logic for how internal lights works on models e.g. lamps, tv screens etc (local to model);
  * won't affect any other object inside scene other than it's repsective model. *******/
+
+import { LightMeshConfig, LightMeshState, LightSourceConfig, LightSystemConfig, LightSystemData, Model } from "@/types/types";
 import * as THREE from "three";
-import { LightMeshConfig, LightMeshGroups, Model } from "@/types/types";
-import { baseModelLightIntensity, defaultLightMeshConfigs } from "../const";
-import { LightSystemData } from "./types";
-import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, POINTLIGHT_DECAY_SCALE_EXPONENT, POINTLIGHT_DISTANCE_SCALE_FACTOR, POINTLIGHT_MIN_DECAY} from "../scene/meshes";
-import { mixColours } from "@/utils/general/colours";
+import { defaultLightSystemConfig } from "../const";
+import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
 
-// Helper function to initialise mesh groups for light-affected meshes (e.g.screens, lampshades.)
-function initialiseLightMeshGroups(scene: THREE.Object3D, lightMeshTypes: LightMeshConfig[]): LightMeshGroups {
-    const meshGroups: LightMeshGroups = {};
-    
-    // Initialise empty arrays for each mesh type
-    for (const type of lightMeshTypes) {
-        meshGroups[type.nameContains] = [];
+
+
+// Discover all meshes in the model based on configuration (e.g. bulbs, screens, fabrics etc)
+//
+function discoverMeshes(model: THREE.Object3D, config: LightSystemConfig): LightSystemData{
+  const lightSources = new Map<string, THREE.Mesh[]>();
+  const affectedMeshes = new Map<string, THREE.Mesh[]>();
+
+  // Discover light sources
+  for (const sourceConfig of config.lightSources) {
+    const meshes = findMeshesByPattern(model, sourceConfig.meshPattern);
+    if (meshes.length > 0) {
+      lightSources.set(sourceConfig.type, meshes);
     }
-    
-    // Collect meshes by type
-    scene.traverse((child: any) => {
-        if (!child.isMesh) return;
-        
-        for (const type of lightMeshTypes) {
-            if (child.name.toLowerCase().includes(type.nameContains.toLowerCase())) {
-                meshGroups[type.nameContains].push(child);
-            }
-        }
-    });
-    
-    return meshGroups;
+  }
+
+  // Discover affected meshes
+  for (const meshConfig of config.affectedMeshes) {
+    const meshes = findMeshesByPattern(model, meshConfig.meshPattern);
+    if (meshes.length > 0) {
+      affectedMeshes.set(meshConfig.meshPattern, meshes);
+    }
+  }
+
+  return {lightSources, affectedMeshes, pointLights: [], config};
+};
+
+// This function will Initialise default material properties for light source meshes based on the config provided
+//
+function initialiseSourceMeshes(meshes: THREE.Mesh[], config: LightSourceConfig) {
+  for (const mesh of meshes) {
+    if (mesh.material instanceof THREE.MeshStandardMaterial && config.defaultMaterial) {
+      if (config.defaultMaterial.emissiveColor) {
+        mesh.material.emissive.set(config.defaultMaterial.emissiveColor);
+      }
+      if (config.defaultMaterial.emissiveIntensity !== undefined) {
+        mesh.material.emissiveIntensity = config.defaultMaterial.emissiveIntensity;
+      }
+      mesh.material.needsUpdate = true;
+    }
+  }
+};
+
+// specialised wrapper function to create pointlights for our light emitting models
+//
+export function createPointLightsForModel(meshes: THREE.Mesh[], config: LightSourceConfig, lightData?: Model['light']): THREE.PointLight[] {
+  const pointLights: THREE.PointLight[] = [];
+
+  for (const mesh of meshes) {
+    // Merge lightData from model/user with config defaults
+    const lightConfig = {
+      colour: lightData?.colour || config.pointLightConfig?.color,
+      intensity: lightData?.intensity || config.pointLightConfig?.intensity,
+      distance: config.pointLightConfig?.distance,
+      decay: config.pointLightConfig?.decay,
+    };
+
+    const pointLight = createPointLightForMesh(mesh, lightConfig);
+
+    if (pointLight) {
+      // store all pointlights in an array
+      pointLights.push(pointLight);
+    }
+  }
+
+  return pointLights;
 }
 
-// Helper function to check if a mesh is a light-affected mesh that uses "meshColour"
-//
-function isLightAffectedMeshWithMeshColour(scene: THREE.Object3D, mesh: THREE.Mesh): boolean {
-    const meshGroups: LightMeshGroups = scene.userData.meshGroups ?? {};
-    const lightMeshTypes: LightMeshConfig[] = scene.userData.lightMeshTypes ?? [];
-    
-    for (const type of lightMeshTypes) {
-        // Check if this mesh is in this light mesh group and uses "meshColour"
-        const meshes = meshGroups[type.nameContains] ?? [];
-        if (meshes.includes(mesh) && type.on.emissiveColour === "meshColour") {
-            return true;
-        }
-    }
-    return false;
-}
 
-// Helper function to sync emissive color for a specific mesh when its color changes
+// Apply emissive color based on state configuration to the passed in material
 //
-export function syncMeshEmissiveWithColor(scene: THREE.Object3D, mesh: THREE.Mesh): void {
-    const isLightOn = scene.userData.light?.on ?? false;
-    
-    // Only sync if light is currently on and this mesh is light-affected
-    if (!isLightOn || !isLightAffectedMeshWithMeshColour(scene, mesh)) return;
+function applyEmissiveColor( material: THREE.MeshStandardMaterial, state: LightMeshState, lightColour: string): void {
+  if (state.emissiveColour === "meshColour") {
+    material.emissive.copy(material.color);
+  } else if (state.emissiveColour === "lightColour") {
+    material.emissive.set(lightColour);
+  } else if (typeof state.emissiveColour === "string") {
+    material.emissive.set(state.emissiveColour);
+  } else {
+    material.emissive.copy(state.emissiveColour);
+  }
+};
 
+// This function will simply apply a default mesh state to the passed in meshes; can also be used to update them
+//This function will be used for the light meshes of models (meshes which behaves differently depedning if internal)
+// model light is turned on/ off
+//
+function applyMeshState(meshes: THREE.Mesh[], config: LightMeshConfig, isOn: boolean, lightColour: string): void {
+  const state = isOn ? config.on : config.off;
+
+  for (const mesh of meshes) {
     const mat = mesh.material as THREE.MeshStandardMaterial;
-    if (!mat) return;
+    if (!mat) continue;
 
-    // Update emissive to match current material color
-    mat.emissive.copy(mat.color);
+    applyEmissiveColor(mat, state, lightColour);
+
+    mat.emissiveIntensity = state.emissiveIntensity;
+    cacheEmissiveState(mat)
+
+    // add in the extra mesh specific behavaiour/ attributes if provided.
+    if (state.transparent !== undefined) mat.transparent = state.transparent;
+    if (state.opacity !== undefined) mat.opacity = state.opacity;
+    if (state.metalness !== undefined) mat.metalness = state.metalness;
+    if (state.roughness !== undefined) mat.roughness = state.roughness;
+
     mat.needsUpdate = true;
+  }
+};
 
-    // Update cached emissive state
-    cacheEmissiveState(mat);
-}
+//This function will update the pointlights which are attatched to the model
+//
+function updatePointLights (model: THREE.Object3D, pointLights: THREE.PointLight[], lightData: Model['light']): void {
+  // get max dimensions for object so we can allow the lights to accuractly scale based on model size
+  if (!lightData) return;
+  const { maxDim } = calculateObjectBoxSize(model);
+  const scaledIntensity = lightData.intensity * Math.pow(maxDim, 0.5);
 
-// Helper function to apply light state to a specific mesh type
-function applyLightStateToMeshType(meshes: THREE.Mesh[], config: LightMeshConfig, isOn: boolean, lightColour: string): void {
-    const state = isOn ? config.on : config.off;
-    
-    for (const mesh of meshes) {
-        const mat = mesh.material as THREE.MeshStandardMaterial;
-        if (!mat) continue;
-
-        // Handle special "meshColour" placeholder
-        if (config.nameContains === 'fabric_light') {
-            // as a fallback; if light colour is undefined then just make fabric light's emit the same colour as it's mesh
-            if (!lightColour) {
-                mat.emissive.copy(mat.color);
-            }
-
-            // otherwise mix the two colours for a more realistic effect
-            const fabricLightRetentionRatio = 0.55; // how much the emissiveness of the fabric colour keeps it's original colour
-            // between 0 to 1; higher = light barely affects fabric colour; lower = light affects fabric colour more (tints it more)
-            mat.emissive.set(mixColours(mat.color, new THREE.Color(lightColour), fabricLightRetentionRatio));
-        }
-        if (state.emissiveColour === "meshColour") {
-            mat.emissive.copy(mat.color);
-        } else {
-            mat.emissive.set(state.emissiveColour);
-        }
-        
-        mat.emissiveIntensity = state.emissiveIntensity;
-
-        // if light is on; some materials got new emissive properties to cache it
-        if (isOn) {
-            cacheEmissiveState(mat);
-        } else {
-            // reset the cache as now they are no longer emissive (i.e null)
-            mat.userData.cachedEmissive = null;
-        }
-
-        if (state.transparent !== undefined) mat.transparent = state.transparent;
-        if (state.opacity !== undefined) mat.opacity = state.opacity;
-        
-        mat.needsUpdate = true;
-    }
-}
-
-// Helper function to update all point lights
-// it will also dynamically calculate the decay and distance based on model's light intensity and
-// model's current size.
-// 
-export function updatePointLights(object: THREE.Object3D, lights: THREE.PointLight[], lightData: { on: boolean; intensity: number; colour: string }) {
-  const { maxDim } = calculateObjectBoxSize(object);
-  const modelScale = object.scale.x; // uniform scale
-  const scaledIntensity = lightData.intensity * Math.pow(modelScale, 0.5); // we want intensity to scale based on model scale
-
-  const distance = maxDim * POINTLIGHT_DISTANCE_SCALE_FACTOR;
-  const decay = Math.max(POINTLIGHT_MIN_DECAY, Math.pow(modelScale, POINTLIGHT_DECAY_SCALE_EXPONENT));
-
-  for (const light of lights) {
-    // apply the different attirbutes to the lights.
+  // update every single light
+  for (const light of pointLights) {
     light.color.set(lightData.colour);
     light.intensity = lightData.on ? scaledIntensity : 0;
     light.visible = lightData.on;
-    light.distance = distance;
-    light.decay = decay;
   }
-}
+};
 
-
-// Main function to initialise lights into a model (e.g. lamps)
-export function initialiseLights(scene: THREE.Object3D, lightData?: Model['light']): void {
-    const bulbMeshes = findMeshesByPattern(scene, 'bulb'); // each object that has a light will have a bulb mesh 
-    const screenMeshes = findMeshesByPattern(scene, 'screen_light');
-    const lightMeshTypes = defaultLightMeshConfigs; // config of how certain meshes inside model will react when it's light is on/off
-    
-    // if no bulb meshes; then just return as this model is not one that can produce light.
-    if (bulbMeshes.length === 0 && screenMeshes.length == 0) {
-        scene.userData.light = null;
-        return;
-    }
-    
-    // initialise bulb meshes with an emissive colour of white; but make it intensity 0 by default
-    for (const bulb of bulbMeshes) {
-        if (bulb.material instanceof THREE.MeshStandardMaterial) {
-            bulb.material.emissive.set('#ffffff'); // Set emissive color to white
-            bulb.material.emissiveIntensity = 0; // Default intensity
-        }
-    }
-
-    for (const screen of screenMeshes)
-    {
-        if (screen.material instanceof THREE.MeshStandardMaterial)
-        {
-            screen.material.emissive.set('#ffffff');
-            screen.material.emissiveIntensity = 0;
-        }
-    }
-    
-    // Create point lights for bulb meshes
-
-    if (bulbMeshes.length > 0)
-    {
-        const bulbs = bulbMeshes
-        // scale the pointlight effects with mesh size
-
-        // if lightData was passed in; use it to recreate the pointlightMesh (intensity and colour)
-        .map(mesh => createPointLightForMesh(mesh,{colour: lightData?.colour, intensity:lightData?.intensity}))
-            .filter(light => light !== null);
-        
-        if (bulbs.length === 0) {
-            scene.userData.light = null;
-            return;
-        }
-        scene.userData.bulbs = bulbs;
-        scene.userData.bulbMeshes = bulbMeshes;
-    
-    }
-    else if(screenMeshes.length > 0)
-    {
-        // we can do something here later.
-    }
-    // Initialise mesh groups for light-affected meshes
-    const meshGroups = initialiseLightMeshGroups(scene, lightMeshTypes);
-    
-    // Store all data in userData
-    // if a lightData was passed in for this model; instead of recreating the userData; reuse the passed in data
-    scene.userData.light =lightData? lightData:  { on: false, intensity: baseModelLightIntensity, colour: '#ffffff' };
-    scene.userData.lightMeshTypes = lightMeshTypes;
-    scene.userData.meshGroups = meshGroups;
-}
-
-// function to update model light-affected meshes
-export function updateModelLightAffectedMeshes(scene: THREE.Object3D, isOn: boolean): void {
-    const meshGroups: LightMeshGroups = scene.userData.meshGroups ?? {};
-    const lightMeshTypes: LightMeshConfig[] = scene.userData.lightMeshTypes ?? [];
-    const lightColour = scene.userData.light.colour;
-
-    // for each type inside LightMeshConfig; we will just group the meshes together.
-    for (const type of lightMeshTypes) {
-        const meshes = meshGroups[type.nameContains] ?? [];
-        // for each group apply the mesh specific attributes.
-        applyLightStateToMeshType(meshes, type, isOn, lightColour);
-    }
-}
-
-// function to find the object's bulb and toggle it on/ off by toggling emissive properties
-function toggleModelBulb(model: THREE.Object3D, isOn: boolean) {
-    if (!model.userData.bulbMeshes) return;
-    
-    for (const bulb of model.userData.bulbMeshes) {
-        const materials = Array.isArray(bulb.material) ? bulb.material : [bulb.material];
-        for (const mat of materials) {
-            if (mat instanceof THREE.MeshStandardMaterial) {
-                mat.emissive.set(isOn ? '#ffffff' : '#000000');
-                mat.emissiveIntensity = isOn ? 20 : 0;
-                mat.needsUpdate = true;
-                cacheEmissiveState(mat); // cache emissive state of bulb so that it does not get overwritten by hover effects
-            }
-        }
-    }
-}
-
-// function to update all lights (point lights only for now)
+// Update affected light meshes of light emitting models.
 //
-export function updateAllLights(scene: THREE.Object3D, lightData: { on: boolean; intensity: number; colour: string }): void {
-    if(!lightData) return;
-    const bulbs: THREE.PointLight[] = scene.userData.bulbs ?? [];
+function updateAffectedMeshes(systemData: LightSystemData,lightData: Model['light']): void {
+  if (!lightData) return;
+  // for each type of light meshes; update them based on the passed in lightData
+  for (const meshConfig of systemData.config.affectedMeshes) {
+    const meshes = systemData.affectedMeshes.get(meshConfig.meshPattern);
+    if (!meshes) continue;
 
-    // Update point lights
-    updatePointLights(scene, bulbs, lightData);
+    applyMeshState(meshes, meshConfig, lightData.on, lightData.colour);
+  }
+};
 
-    // Update light-affected meshes
-    updateModelLightAffectedMeshes(scene, lightData.on);
+// Update light source meshes (bulbs, screens, etc.)
+//
+function updateLightSources(systemData: LightSystemData, lightData: Model['light']): void{
+  if(!lightData) return
 
-    // also update the bulb
-    if (lightData.on !== undefined) { // light has turned on/ off; so update bulb
-        toggleModelBulb(scene, lightData.on);
+  for (const [sourceType, meshes] of systemData.lightSources) {
+    const sourceConfig = systemData.config.lightSources.find(s => s.type === sourceType);
+    // there is no light source here; so move onto next light source
+    if (!sourceConfig) continue;
+
+    for (const mesh of meshes) {
+      // convert into array for a more universal way to handle materials
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const mat of materials) {
+        if (mat instanceof THREE.MeshStandardMaterial) {
+          mat.emissive.set(lightData.on ? lightData.colour : '#000000');
+          mat.emissiveIntensity = lightData.on ? 20 : 0;
+          mat.needsUpdate = true;
+          // make sure to cache the light source matierial's emissive state
+          cacheEmissiveState(mat)
+        }
+      }
     }
-    
-    // Update stored light data
-    if (scene.userData.light) {
-        Object.assign(scene.userData.light, lightData);
-    }
-}
+  }
+};
 
-// Helper function to get all light data for easy access
-export function getLightSystemData(object: THREE.Object3D | null): LightSystemData {
-    // if object or the object light user data does not exist; then return default values
-    if (!object || !object.userData.light) {
-        return {
-            lightData: null,
-            bulbs: [],
-            meshGroups: {},
-            lightMeshTypes: []
-        };
-    }
+// Main initialisation function for light emitting models
+export function initialiseLights(model: THREE.Object3D, lightData?: Model['light'], config: LightSystemConfig = defaultLightSystemConfig): void{
+  // Discover all meshes in the model
+  const systemData = discoverMeshes(model, config);
 
-    return {
-        lightData: object.userData.light,
-        bulbs: object.userData.bulbs ?? [],
-        meshGroups: object.userData.meshGroups ?? {},
-        lightMeshTypes: object.userData.lightMeshTypes ?? []
-    };
-}
+  // If no light sources found, mark as non-light object
+  if (systemData.lightSources.size === 0) {
+    model.userData.light = null;
+    return;
+  }
+
+  // Initialise light source meshes and create point lights
+  for (const [sourceType, meshes] of systemData.lightSources) {
+    const sourceConfig = config.lightSources.find(s => s.type === sourceType);
+    if (!sourceConfig) continue;
+
+    // Initialise default material properties
+    initialiseSourceMeshes(meshes, sourceConfig);
+
+    // Create point lights if needed
+    if (sourceConfig.createPointLight) {
+      const pointLights = createPointLightsForModel(meshes, sourceConfig, lightData);
+      systemData.pointLights.push(...pointLights);// push the pointlights so we can access them faster next time
+    }
+  }
+
+  // Store light data and system data in model userData
+
+  //use existing lihgt data if it exists; otherwise give it default values
+  model.userData.light = lightData || {on: false, intensity: config.defaultIntensity, colour: config.defaultColor};
+  model.userData.lightSystemData = systemData;
+};
+
+// Main update function to update everything that is needed for a light emitting model to emit light
+//
+export function updateAllLights(model: THREE.Object3D, lightData: Model['light']): void {
+  const systemData = model.userData.lightSystemData as LightSystemData;
+  if (!lightData || !systemData) return;
+
+  // update everyhting relating to lights for that specific model here 
+  updatePointLights(model, systemData.pointLights, lightData);
+  updateAffectedMeshes(systemData, lightData);
+  updateLightSources(systemData, lightData);
+
+  // Update stored light data
+  if (model.userData.light) {
+    Object.assign(model.userData.light, lightData);
+  }
+};
+
+// get the lightSystemData from an object if it exists
+//
+export function getLightSystemData(object: THREE.Object3D | null){
+  if (!object || !object.userData.lightSystemData) {
+    return null
+  }
+
+  const systemData = object.userData.lightSystemData as LightSystemData;
+  // system data contains every single information of what a light emitting model needs
+  // (e.g. lightData for user controlled data (saved in db), array of bulb meshes (for ease of access),
+  // the different mesh groups (for ease of access), etc)
+  return {lightData: object.userData.light, bulbs: systemData.pointLights,meshGroups: Object.fromEntries(systemData.affectedMeshes), lightMeshTypes: systemData.config.affectedMeshes};
+};
 
 // Light property getters
 export function isObjectLight(objectRef: React.RefObject<THREE.Object3D | null>): boolean {
-    const model = objectRef.current;
-    if (!model) return false;
-    return model.userData.light !== null; // if lights userdata is null; object cannot produce light
+  const model = objectRef.current;
+  if (!model) return false;
+  return model.userData.light !== null; // if lights userdata is null; object cannot produce light
 }
 
 export function getObjectLightIntensity(object: THREE.Object3D | null): number | null {
-    if (!object || !object.userData.light) return null;
-    return object.userData.light.intensity;
+  if (!object || !object.userData.light) return null;
+  return object.userData.light.intensity;
 }
 
 export function isObjectLightOn(object: THREE.Object3D | null): boolean | null {
-    if (!object || !object.userData.light) return null;
-    return object.userData.light.on;
+  if (!object || !object.userData.light) return null;
+  return object.userData.light.on;
 }
 
 export function getObjectLightColour(object: THREE.Object3D | null): string | null {
-    if (!object || !object.userData.light) return null;
-    return object.userData.light.colour;
+  if (!object || !object.userData.light) return null;
+  return object.userData.light.colour;
 }
 
 export function getObjectLightData(object: THREE.Object3D | null): Model['light'] | null {
-    if (!object || !object.userData.light) return null;
-    return object.userData.light; // null or a lights object
+  if (!object || !object.userData.light) return null;
+  return object.userData.light; // null or a lights object
 }
 
-export function doesObjectHaveBulbs(object: THREE.Object3D | null){
-    if (!object || !object.userData.light) return null;
-    return object.userData.bulbs; // return a bulbs user data (null or an actual object)
-}
+//Helper function to check if object has any pointlights
+//
+export function hasPointLightSources(object: THREE.Object3D | null): boolean{
+  if (!object?.userData.lightSystemData) return false;
+  
+  const systemData = object.userData.lightSystemData as LightSystemData;
+  return systemData.pointLights.length > 0;
+};
+
+// Helper function to check if object has any light sources at all; this also includes e.g. screens
+// (at this point in time screens doesn't have a three.js light linked to it yet)
+//
+export function hasAnyLightSources(object: THREE.Object3D | null): boolean{
+  if (!object?.userData.lightSystemData) return false;
+  
+  const systemData = object.userData.lightSystemData as LightSystemData;
+  return systemData.lightSources.size > 0;
+};

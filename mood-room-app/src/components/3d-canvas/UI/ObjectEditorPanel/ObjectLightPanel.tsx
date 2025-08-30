@@ -5,8 +5,11 @@ import { ColourPickerControl } from '../../../UI/ColourPickerControl';
 import { HorizontalSlider } from '../../../UI/HorizontalSlider';
 import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/models';
 import { baseModelLightIntensity } from '@/utils/3d-canvas/const';
-import { doesObjectHaveBulbs } from '@/utils/3d-canvas/models/lightingSystem';
+import { hasAnyLightSources, hasPointLightSources } from '@/utils/3d-canvas/models/lightingSystem';
 
+/********This component will handle all settings that the user can tweak to change the output of the lights
+ * that are emmitted by the model
+ */
 type ObjectLightPanelProps = {
   objectRef: React.RefObject<THREE.Object3D | null>; // linked object
 };
@@ -28,7 +31,6 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
         return ((intensity / baseModelLightIntensity) - 1) * 100;
     }
 
-
     // Update effect to map UI to real intensity
     useEffect(() => {
         const internalIntensity = uiToIntensity(intensityUI);
@@ -40,7 +42,7 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
         });
     }, [intensityUI, lightOn, lightColour, objectRef]);
 
-    //if intensityUI ever gows past bounds; just put them back in bounds.
+    //if intensityUI ever goes past bounds; just put them back in bounds.
     useEffect(()=>{
         if(intensityUI > 50)
         {
@@ -55,6 +57,11 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
 
     if(!objectRef || !objectRef.current)
     {
+        return null;
+    }
+
+    // If object doesn't have any light sources, don't show the panel
+    if (!hasAnyLightSources(objectRef.current)) {
         return null;
     }
 
@@ -75,10 +82,11 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
             {lightOn &&(
                 <>
 
-                    {/*only show colour picker and intensity if the light mesh actually has a bulb/ light
+                    {/*only show colour picker and intensity if the light mesh actually has point lights
                     to config; otherwise just show the buttons */}
 
-                    {doesObjectHaveBulbs(objectRef.current) && (
+                    {/* will extend this later to any three.js lights */}
+                    {hasPointLightSources(objectRef.current) && (
                         <>
                             {/* Light colour picker */}
                             <div className="colour-picker-wrapper mb-6">

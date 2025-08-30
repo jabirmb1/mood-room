@@ -16,9 +16,7 @@ export {
 
 // Lighting system
 export {
-    syncMeshEmissiveWithColor,
     initialiseLights,
-    updateModelLightAffectedMeshes,
     updateAllLights,
     getLightSystemData,
     isObjectLight,

@@ -7,7 +7,8 @@ import { useKeyboardMovement } from "@/hooks/3d-canvas/useKeyBoardMovement";
 import { globalScale } from "@/utils/3d-canvas/const";
 import * as THREE from "three";
 // importing types and functions
-import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags, updateModelLightAffectedMeshes, updateAllLights } from "@/utils/3d-canvas/models";
+import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/3d-canvas/models";
+import { updateAllLights } from "@/utils/3d-canvas/models/lightingSystem";
 import { ObjectFloatingPanel } from "../../UI/ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
@@ -15,7 +16,6 @@ import { Model } from "@/types/types";
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
  * , change it's position and size.
  */
-
 
 type Object3DProps = {
   url: string;// URL to the 3D model file
@@ -39,7 +39,6 @@ type Object3DProps = {
   onDelete: ()=> void;// function to delete this object.
   onModelUpdate?: (instance: THREE.Object3D | null) => void;// a callback to explicitly expose the object's internal instance to parent.
 };
-
 
 // TO DO: make position be used as default for object placement in viewer only mode so e.g. position = [num, num, num] or null(for editing)
 export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, lightData, isSelected = false, isColliding=false, editingMode = 'edit', 
@@ -67,7 +66,6 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   // to normalise models.
   const currentScale = modelRef.current?.scale.x ?? globalScale;
   // add in the dragging logic:
-
 
   const { onPointerDown, onPointerMove, onPointerUp } = useDragControls({rigidBodyRef: rigidBodyRef ?? defaultRigidBodyRef, objectRef: modelRef,
     enabled: mode === "edit" && editingMode === 'move' && isSelected,
@@ -104,9 +102,11 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
         }
       });
       applyColourPalette(modelRef.current, colourPalette);
-      if(lightData && lightData.on !== undefined)
+      
+      // Update lights when color palette changes (affects affected meshes)
+      if(lightData)
       {
-        updateModelLightAffectedMeshes(modelRef.current, lightData.on)
+        updateAllLights(modelRef.current, lightData);
       }
     }
   }, [colourPalette]);// may be an error as it may not be constant
@@ -117,15 +117,14 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     applyHoverEffect(modelRef.current, hovered, mode);
   }, [hovered, mode, currentScale]);
 
-  // after model has been loaded; we want to also update the lights to give them correct inital values
+  // after model has been loaded; we want to also update the lights to give them correct initial values
   // (syncs them).
   useEffect(()=>{
-    // if the object does cannot produce light; or it isnt ready yet; then just return
+    // if the object cannot produce light; or it isn't ready yet; then just return
     if (!modelRef.current || !clonedScene || !modelRef.current.userData.light) return;
 
     updateAllLights(modelRef.current, modelRef.current.userData.light)
   }, [clonedScene, lightData])
-
 
   // Clear hover state when object is selected and editor panel opens
   useEffect(() => {
@@ -171,7 +170,6 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
                setMode={setEditingMode}  updateModelInformation = {updateModelInformation} onDelete = {onDelete}/>
         )}
 
-
        {/* adding in an extra safeguard to only show the model when it is fully loaded / not null */}
        {clonedScene && (
         <primitive
@@ -214,4 +212,4 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
           onPointerUp={onPointerUp}/>
         )}
     </>)
-}  
+}

@@ -4,7 +4,7 @@ export function BloomEffect() {
   return (
     <EffectComposer multisampling={0}>
       <Bloom
-        luminanceThreshold={3}    // only HDR >3 glows
+        luminanceThreshold={50}    // we will make threshold extremly high to stop any artifacts
         luminanceSmoothing={0.9}
         intensity={0.5}            // bloom strength
         height={256}               // smaller buffer = cheaper

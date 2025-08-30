@@ -81,7 +81,7 @@ export function createPointLightForMesh(mesh: THREE.Mesh, config: pointLightConf
     // merge config with default and passed in values.
    const finalConfig: Required<pointLightConfig> = { ...DEFAULT_POINTLIGHT_CONFIG,  ...config };
 
-    // Initialize distance and decay based on the config.
+    // Initialise distance and decay based on the config.
     let distance = finalConfig.distance;
     let decay = finalConfig.decay;
     const box = new THREE.Box3().setFromObject(mesh);

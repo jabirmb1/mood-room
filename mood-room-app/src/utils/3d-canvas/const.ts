@@ -1,6 +1,6 @@
 //This file will include any constants that are needed for the client side.
 
-import { LightMeshConfig, MoodType } from "@/types/types";
+import { LightMeshConfig, LightSystemConfig, MoodType } from "@/types/types";
 import * as THREE from 'three'
 
 export const globalScale = 0.05;// global scale to be applied to all objects so they fit our scene.
@@ -20,24 +20,65 @@ export const snapDownwardsCountdown = 0// how quikcly an object should snap down
 
 /***********consts relating to internal model lights e.g. bulb of a lamp or tv ******/
 
-//maps mesh names that are supposed to change properties when a light within  model turns on/ off
-// to different mesh values.
-export const defaultLightMeshConfigs: LightMeshConfig[] = [
-    {
-      nameContains: "screen_light",
-      on: { emissiveColour: new THREE.Color('#ffffff'), emissiveIntensity: 4 },
-      off: { emissiveColour: new THREE.Color('#000000'), emissiveIntensity: 0 },
-    },
-    {
-      nameContains: "fabric_light",
-      // make the emissive colour be the same colour as the mesh itself.
-      on: { emissiveColour: "meshColour", emissiveIntensity: 2, transparent: true, opacity: 0.5 },
-      off: { emissiveColour: new THREE.Color('#000000'), emissiveIntensity: 0, transparent: false, opacity: 1.0 },
-    },
-  ];
-
-// base light intensity for e.g. lamps; etc.
 export const baseModelLightIntensity = 55;
+
+export const defaultLightSystemConfig: LightSystemConfig = {
+  lightSources: [
+    {
+      type: 'bulb',
+      meshPattern: 'bulb',
+      createPointLight: true,
+      defaultMaterial: {
+        emissiveColor: '#ffffff',
+        emissiveIntensity: 0
+      },
+      pointLightConfig: {
+        intensity: 1,
+        color: '#ffffff'
+      }
+    },
+    {
+      type: 'screen',
+      meshPattern: 'screen_light',
+      createPointLight: false, //screens won't use pointlights
+      defaultMaterial: {
+        emissiveColor: '#ffffff',
+        emissiveIntensity: 0
+      }
+    },
+  ],
+  affectedMeshes: [
+    {
+      meshPattern: "screen_light",
+      on: { 
+        emissiveColour: new THREE.Color('#ffffff'), 
+        emissiveIntensity: 4 
+      },
+      off: { 
+        emissiveColour: new THREE.Color('#000000'), 
+        emissiveIntensity: 0 
+      }
+    },
+    {
+      meshPattern: "fabric_light",
+      on: { 
+        emissiveColour: "meshColour", 
+        emissiveIntensity: 2, 
+        transparent: true, 
+        opacity: 0.5 
+      },
+      off: { 
+        emissiveColour: new THREE.Color('#000000'), 
+        emissiveIntensity: 0, 
+        transparent: false, 
+        opacity: 1.0 
+      }
+    },
+  ],
+  defaultIntensity: baseModelLightIntensity,
+  defaultColor: '#ffffff'
+};
+
 /**********consts relating to the mood aspect. ************/
 
 //the different type of moods that's in our project:

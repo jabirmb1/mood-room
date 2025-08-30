@@ -2,7 +2,7 @@
 
 // Type definitions for model system
 import * as THREE from "three";
-import { LightMeshConfig, LightMeshGroups, MaterialColourType, Model } from "@/types/types";
+import {MaterialColourType} from "@/types/types";
 
 export type ColourPalette = {
     primary?: string;
@@ -28,11 +28,4 @@ export type ObjectMaterialInfo = {
     currentcolours: Partial<MaterialColourMap>;
     initialcolours: Partial<MaterialColourMap>;
     availableTypes: Set<MaterialColourType>;
-};
-
-export type LightSystemData = {
-    lightData: Model['light'] | null;
-    bulbs: THREE.PointLight[];
-    meshGroups: LightMeshGroups;
-    lightMeshTypes: LightMeshConfig[];
 };

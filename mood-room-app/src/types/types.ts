@@ -14,9 +14,9 @@ export type Model = {
     scale?: [number, number, number];
     rotation?: [number, number, number];// in radians.
     light?:{// whether the object can cast a light
-      on?: boolean;// if the lights are on or not
-      intensity?: number;// intensity of the lights.
-      colour?: string// colour of the light.
+      on: boolean;// if the lights are on or not
+      intensity: number;// intensity of the lights.
+      colour: string// colour of the light.
     }
     transform?: {// optional transform data for model during editing page (used to keep transform data in sync with the model)
       position: [number, number, number];
@@ -60,30 +60,59 @@ export type ColliderJsonData={
 
 /**********types relating to objects that comes with their own lights included (e..g lamps; tvs) */
 
-// type to define how emissive or transparent some materials behave when their model's lights are on/ off
-export type LightMeshConfig = {
-  /** substring to match mesh names */
-  nameContains: string;
-
-  /** emissive, intensity, transparency, opacity when light is ON */
-  on: {
-     emissiveColour: THREE.Color | "meshColour"
-    emissiveIntensity: number;
-    transparent?: boolean;
-    opacity?: number;
+// Base type for all light source types
+export type LightSourceConfig = {
+  type: 'bulb' | 'screen';// different types of light sources (e.g. where light comes from)
+  meshPattern: string; // Pattern to match mesh names
+  defaultMaterial?: {// how the default material should act when light is on
+    emissiveColor?: string;
+    emissiveIntensity?: number;
   };
-
-  /** emissive, intensity, transparency, opacity when light is OFF */
-  off: {
-    emissiveColour: THREE.Color | string;
-    emissiveIntensity: number;
-    transparent?: boolean;
-    opacity?: number;
+  createPointLight?: boolean; // Whether this light source should create point lights
+  pointLightConfig?: {// configs on how the pointlight should be constructed
+    intensity?: number;
+    color?: string;
+    distance?: number;
+    decay?: number;
   };
+  // will be extended to use other lights later
 };
 
-// a type to group together all the strings via the mesh name.
-export type LightMeshGroups = Record<string, THREE.Mesh[]>;
+//NOTE: light mesh refers to any mesh which will behave differently depening if internal model light is
+// on/ off; e.g. screens may gorw bright when turned off; for fabric meshes may become more transparent,
+
+// structure of how each light mesh should be configured
+export type LightMeshConfig = {
+  meshPattern: string;// what  name does this mesh have (used for ease of look up)
+  on: LightMeshState;// how the mesh should act if light is on
+  off: LightMeshState;// how mesh should act if light is off
+};
+
+// different attributes which will be used to change a light meshes property
+export type LightMeshState = {
+  emissiveColour: THREE.Color | string | "meshColour" | "lightColour";
+  emissiveIntensity: number;
+  transparent?: boolean;
+  opacity?: number;
+  metalness?: number;
+  roughness?: number;
+};
+
+// Configuration for the entire light system
+export type LightSystemConfig = {
+  lightSources: LightSourceConfig[];// array of all light sources
+  affectedMeshes: LightMeshConfig[];// array of all affected Meshes
+  defaultIntensity: number;// default intenty to apply to light sources
+  defaultColor: string;// default colour on lights
+};
+
+// Data structure to store discovered meshes and lights (run time only data structure)
+export type LightSystemData = {
+  lightSources: Map<string, THREE.Mesh[]>;
+  affectedMeshes: Map<string, THREE.Mesh[]>;
+  pointLights: THREE.PointLight[];
+  config: LightSystemConfig;
+};
 
 /************ types relating to the mood room colour mapping ***********/
 
