@@ -34,17 +34,20 @@ type ShadowManagerProps = {
 */
 export default function ShadowManager({staticLightRef,dynamicLightRef, lightColour,lightIntensity,lightPosition,selectedObject, models}: ShadowManagerProps) {
   const [prevSelectedObject, setPrevSelectedObject] = useState<THREE.Object3D | null>(null);
-  const { scene, camera } = useThree();
+  const { scene,raycaster, camera } = useThree();
   const {isDesktop} = useDevice();
   const shadowMapSize = isDesktop? 2048: 512// for the live shadows in the editor; we will lower quality for phone.
   const defaultLayer = 0;// layer where all objects live (the world/scene)
   const selectedObjectLayer = 1;// a layer where the selected object will live (so we ca render
   // it's dynamic shadows indepentandly of the others; massive improvement on performance,)
 
-  // on load, make camera see both layers
+  // on load, make camera see both layers; also make raycaster see both layers; as to not
+  // interfere with any pointer events.
   useEffect(() => {
     camera.layers.enable(defaultLayer);
     camera.layers.enable(selectedObjectLayer);
+    raycaster.layers.enable(defaultLayer);
+    raycaster.layers.enable(selectedObjectLayer)
   }, [camera]);
 
   // dev use effect to see if objects are truly frozen or not:

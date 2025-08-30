@@ -41,7 +41,6 @@ type Object3DProps = {
   onModelUpdate?: (instance: THREE.Object3D | null) => void;// a callback to explicitly expose the object's internal instance to parent.
 };
 
-// TO DO: make position be used as default for object placement in viewer only mode so e.g. position = [num, num, num] or null(for editing)
 export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, lightData, isSelected = false, isColliding=false, editingMode = 'edit', 
   setSelectedId, setEditingMode, setIsHoveringObject, updateModelInformation, onDragging, onDelete, onModelUpdate}: Object3DProps) {
 
@@ -96,12 +95,6 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   // add in a custom colour palette to model if user has specfied one.
   useEffect(() => {
     if (modelRef.current) {
-      // also add in the draggable attribute as well on model load.
-      modelRef.current.traverse((child) => {
-        if (child instanceof THREE.Object3D) {
-          child.userData.isDraggable = true;
-        }
-      });
       applyColourPalette(modelRef.current, colourPalette);
       
       // Update lights when color palette changes (affects affected meshes)
