@@ -2,6 +2,7 @@ import { useRef, useState, useCallback} from "react";
 import * as THREE from "three";
 import { Model } from "@/types/types";
 import { RapierRigidBody } from "@react-three/rapier";
+import { disposeObject } from "@/utils/3d-canvas/scene/meshes";
 
 /***************This hook will be used to centralise how we handle multiple models; it will keep a record of all model's
  *  indivisual refs (both group and model refs) and also if each model are collidig or not.
@@ -129,7 +130,13 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
       rigidBodyRefs.current[id]!.current = null;
       delete rigidBodyRefs.current[id];
     }
-    // Clean up model ref
+    // Clean up model ref and free memory
+    const model = modelRefs.current[id].current;
+    // if the model exists; dispose it before removin it's ref
+    if (model)
+    {
+      disposeObject(model)
+    }
     delete modelRefs.current[id];
     
     // Update states

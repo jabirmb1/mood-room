@@ -100,3 +100,45 @@ export function createPointLightForMesh(mesh: THREE.Mesh, config: pointLightConf
     return null;
   }
 }
+
+
+ //This function disposes geometries, materials, and textures of a Three.js object
+ //and all of its descendants.
+//
+export function disposeObject(object: THREE.Object3D) {
+  object.traverse((child: any) => {
+    if (child.isMesh) {
+      // Dispose geometry
+      if (child.geometry) {
+        child.geometry.dispose();
+      }
+
+      // Dispose material(s)
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach((mat :THREE.Material) => {
+            disposeMaterial(mat);
+          });
+        } else {
+          disposeMaterial(child.material);
+        }
+      }
+    }
+  });
+}
+
+
+//This function just disposes the material from the scene to free up space.
+//
+function disposeMaterial(material: THREE.Material) {
+  // Dispose common maps if present
+  for (const key of ['map','lightMap','aoMap', 'emissiveMap', 'bumpMap', 'normalMap', 'displacementMap',
+      'roughnessMap', 'metalnessMap', 'alphaMap', 'envMap',] as const) {
+      const map = (material as any)[key];
+      if (map && map.dispose) {
+          map.dispose();
+      }
+  }
+
+  material.dispose();
+}

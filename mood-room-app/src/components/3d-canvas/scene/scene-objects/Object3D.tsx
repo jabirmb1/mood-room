@@ -12,6 +12,7 @@ import { updateAllLights } from "@/utils/3d-canvas/models/lightingSystem";
 import { ObjectFloatingPanel } from "../../UI/ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
+import { disposeObject } from "@/utils/3d-canvas/scene/meshes";
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
  * , change it's position and size.
@@ -160,6 +161,14 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
       applyColourPalette(modelRef.current, colourPalette); // reset colourpalette to what it was before.
     }
   }, [isColliding]);  
+
+  //clean up when object unmounts.
+  useEffect(()=>{
+    return(()=>{
+      if (modelRef.current)
+        disposeObject(modelRef.current)
+    })
+  },[])
   
   return (
     <>
