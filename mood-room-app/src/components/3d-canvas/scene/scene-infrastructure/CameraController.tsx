@@ -41,6 +41,8 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
 
   const { isDesktop } = useDevice();
 
+  /* uncomment this after using dynamic scaling for volumetric light mesh 
+  
   const potentialOccluders = useMemo(() => {
     // creating a list of potential occluders which filter out e.g. camera; target object ; light or invisible objects.
     return scene.children.filter((obj) => {
@@ -52,6 +54,8 @@ export function CameraController({controlsRef, rigidBodyRef, targetRef, resetPos
 
   useOcclusionTransparency({targetRef:targetRef, potentialOccluders:potentialOccluders, makeInvisible:true, sampleCount:15, throttleMs:50})
   // test out throttling speed for 250 objects; might need to increase it
+
+  */
 
    // clean up the lights unmount.
    useEffect(() => {

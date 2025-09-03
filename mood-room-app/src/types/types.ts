@@ -111,6 +111,7 @@ export type LightSystemData = {
   lightSources: Map<string, THREE.Mesh[]>;
   affectedMeshes: Map<string, THREE.Mesh[]>;
   pointLights: THREE.PointLight[];
+  cubeLightBeams: THREE.Mesh[]
   config: LightSystemConfig;
 };
 

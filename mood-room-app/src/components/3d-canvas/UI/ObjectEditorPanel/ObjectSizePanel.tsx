@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { HorizontalSlider } from "../../../UI/HorizontalSlider"; 
 import { getLightSystemData, getObjectLightData, getObjectSizeDifference, updateAllLights } from "@/utils/3d-canvas/models";
 import { globalScale } from "@/utils/3d-canvas/const";
+import { getObjectLightBeams, hasAnyThreeLights, hasScreens, updateAllLightBeamSizes } from "@/utils/3d-canvas/models/lightingSystem";
 
 /************** This panel will be used to change an object's size via buttons and a slider */
 type ObjectScalePanelProps = {
@@ -30,13 +31,29 @@ export function ObjectSizePanel({ objectRef, objectId}: ObjectScalePanelProps) {
       // current scale (also used for calculations.)
       model.scale.set(newScale, newScale, newScale);
 
-      // if the object can produce light; then scale thelight effects with the object's size
+      // if the object can produce light; then scale the light effects with the object's size
       const lightData = getObjectLightData(model);
       const lightSystemData = getLightSystemData(model);
       // Check if model has light system data and update all lights accordingly
       if (lightData && lightSystemData) {
-        updateAllLights(model, lightData);
+
+        if (hasAnyThreeLights(model)){// only update lights if any three.js lights are attatched to the model
+          updateAllLights(model, lightData);
+        }
+
+        // some models may have screens and they may have volumetric meshes that may need updating 
+        // in size
+        if (hasScreens(model))
+        {
+          const lightBeams = getObjectLightBeams(model)
+          if (!lightBeams) return
+          // function to update size of voluemtric light meshes here:
+          updateAllLightBeamSizes(lightBeams, scaleFactor)
+
+        }
       }
+
+
     }
   }, [sizePercentage]);
 

@@ -142,3 +142,37 @@ function disposeMaterial(material: THREE.Material) {
 
   material.dispose();
 }
+
+
+//This function will generate a bounding box of the passed in mesh
+//
+export function generateMeshBoundingBox(mesh: THREE.Mesh | THREE.Object3D) {
+  const box = new THREE.Box3().setFromObject(mesh); // <- full world-space bounding box
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  return { width: size.x, height: size.y, depth: size.z, center };
+}
+
+// function to toggle visibility status of meshes.
+//
+export function toggleMeshvisibility(mesh: THREE.Mesh | THREE.Object3D, visible: boolean){
+  mesh.visible = visible
+}
+
+// function to return the three.colour that is applied to the passed in mesh:
+//
+export function getMeshColour(mesh: THREE.Mesh): THREE.Color {
+  if (!mesh.material) return new THREE.Color('#fff');
+
+  // single material
+  if (!Array.isArray(mesh.material)) {
+    return (mesh.material as THREE.MeshStandardMaterial).color.clone();
+  }
+
+  // multi-material: just pick the first one
+  return (mesh.material[0] as THREE.MeshStandardMaterial).color.clone();
+}
+

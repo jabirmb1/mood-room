@@ -8,11 +8,13 @@ import { globalScale } from "@/utils/3d-canvas/const";
 import * as THREE from "three";
 // importing types and functions
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/3d-canvas/models";
-import { updateAllLights } from "@/utils/3d-canvas/models/lightingSystem";
+import { getLightSystemData, getScreens, hasScreens, isObjectLightOn, updateAllLights, updateCubeLightBeamsArray } from "@/utils/3d-canvas/models/lightingSystem";
 import { ObjectFloatingPanel } from "../../UI/ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
-import { disposeObject } from "@/utils/3d-canvas/scene/meshes";
+import { disposeObject, getMeshColour } from "@/utils/3d-canvas/scene/meshes";
+import { CubeLightBeam, getCubeLightBeamDimensions } from "../scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
  * , change it's position and size.
@@ -116,7 +118,6 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   useEffect(()=>{
     // if the object cannot produce light; or it isn't ready yet; then just return
     if (!modelRef.current || !clonedScene || !modelRef.current.userData.light) return;
-
     updateAllLights(modelRef.current, modelRef.current.userData.light)
   }, [clonedScene, lightData])
 
@@ -213,5 +214,40 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}/>
         )}
+
+        {/* models with screens also has light beams for extra affect; so conditionally render them
+        if this model has a screen */}
+        {hasScreens(modelRef.current) && (() => {
+            const screens = getScreens(modelRef.current);
+            if (!screens) return null;
+
+            return screens.map((screen, idx) => {
+               const dimensions = getCubeLightBeamDimensions(screen)
+               if (!dimensions) return null;
+                return (
+                    <CubeLightBeam
+                        key={idx}
+                        hostModelRef={modelRef}
+                        linkedMesh={screen}
+                        width={dimensions.width}
+                        height={dimensions.height}
+                        depth={dimensions.depth}
+                        position={[0, 0, dimensions.depth/2]} // center it at the screen; lightBeam 
+                        // spawns halfway inside the screen; so push it back out (the depth)
+                        colour={getMeshColour(screen)}// colour of beam is the same colour as the screen
+                        visible={isObjectLightOn(modelRef.current) ?? false}
+                        onMount={(beam) => {// on mount; add it to the lightSystemData
+                          // so that other parts of the code can access it.
+                          const lightSystem = getLightSystemData(modelRef.current);
+                          updateCubeLightBeamsArray(lightSystem, 'add', beam);
+                        }}
+                        onUnmount={(beam) => {
+                          const lightSystem = getLightSystemData(modelRef.current);
+                          updateCubeLightBeamsArray(lightSystem, 'remove', beam);
+                        }}
+                    />
+                );
+            });
+        })()}
     </>)
 }

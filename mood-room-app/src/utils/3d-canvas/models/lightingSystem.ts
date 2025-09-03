@@ -4,8 +4,9 @@
 import { LightMeshConfig, LightMeshState, LightSourceConfig, LightSystemConfig, LightSystemData, Model } from "@/types/types";
 import * as THREE from "three";
 import { defaultLightSystemConfig } from "../const";
-import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern } from "../scene/meshes";
+import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
+import { getLinkedMesh, updateLightBeamMeshColour } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
 
 
 
@@ -31,7 +32,7 @@ function discoverMeshes(model: THREE.Object3D, config: LightSystemConfig): Light
     }
   }
 
-  return {lightSources, affectedMeshes, pointLights: [], config};
+  return {lightSources, affectedMeshes, pointLights: [], cubeLightBeams: [], config};
 };
 
 // This function will Initialise default material properties for light source meshes based on the config provided
@@ -132,6 +133,19 @@ function updatePointLights (model: THREE.Object3D, pointLights: THREE.PointLight
   }
 };
 
+//function to update systems data to add/ remove the external cube beams:
+//
+export function updateCubeLightBeamsArray(systemData: LightSystemData | null, action: "add" | "remove", beam: THREE.Mesh): void {
+  if (!systemData) return
+  if (action === "add") {
+    if (!systemData.cubeLightBeams.includes(beam)) {
+      systemData.cubeLightBeams.push(beam);
+    }
+  } else if (action === "remove") {
+    systemData.cubeLightBeams = systemData.cubeLightBeams.filter(m => m !== beam);
+  }
+}
+
 // Update affected light meshes of light emitting models.
 //
 function updateAffectedMeshes(systemData: LightSystemData,lightData: Model['light']): void {
@@ -170,6 +184,60 @@ function updateLightSources(systemData: LightSystemData, lightData: Model['light
     }
   }
 };
+
+// function to toggle visibility status of all cube volumetricLightMeshes.
+//
+export function toggleCubeLightBeamsvisibility(systemData: LightSystemData, visibility: boolean)
+{
+  for (const lightBeam of systemData.cubeLightBeams)
+  {
+    toggleMeshvisibility(lightBeam, visibility)
+  }
+}
+
+//This function will take in an array of screen meshes; and update the volemetric light mesh colour
+// to be same colour as the screen meshes
+//
+function updateLightBeamColour(lightBeam: THREE.Mesh, screen : THREE.Mesh)
+{
+  const colour = getMeshColour(screen);
+  updateLightBeamMeshColour(lightBeam, colour)
+}
+
+// function to take in an array of light beam meshs (volumetric light meshes)
+//  and update their light beam's colour
+//
+function updateAllLightBeamColours(lightBeams: THREE.Mesh[]){
+  for (const lightBeam of lightBeams)
+  {
+    // light beams in our project will either be linked to a screen mesh or no mesh
+    const screen = getLinkedMesh(lightBeam)
+    if (lightBeam && screen)
+    {
+      updateLightBeamColour(lightBeam, screen)
+    }
+  }
+}
+
+//function to update a lightBeam's size.
+//
+export function updateLightBeamSize(lightBeam: THREE.Mesh, newScale: number)
+{
+  // don't use scale factor; just update dimensions
+  lightBeam.scale.set(newScale, newScale, newScale)
+}
+
+// function to upate all light's scale at once.
+//
+export function updateAllLightBeamSizes(lightBeams: THREE.Mesh[], newScale: number)
+{
+  // don't use scale factor; just update dimensions
+  if (!lightBeams) return
+  for (const lightBeam of lightBeams)
+  {
+    updateLightBeamSize(lightBeam, newScale)
+  }
+}
 
 // Main initialisation function for light emitting models
 export function initialiseLights(model: THREE.Object3D, lightData?: Model['light'], config: LightSystemConfig = defaultLightSystemConfig): void{
@@ -213,7 +281,21 @@ export function updateAllLights(model: THREE.Object3D, lightData: Model['light']
   // update everyhting relating to lights for that specific model here 
   updatePointLights(model, systemData.pointLights, lightData);
   updateAffectedMeshes(systemData, lightData);
-  updateLightSources(systemData, lightData);
+
+  // if the object has a three.js light; update it.
+  if (hasAnyThreeLights(model))
+  {
+    updateLightSources(systemData, lightData);
+  }
+
+  //if the object has a screen then it has a volumetric light mesh; update it
+  if (hasScreens(model))
+  {
+    const lightBeams = getCubeLightBeams(model)// can extend this to other shapes as well
+    if (!lightBeams) return
+    updateAllLightBeamColours(lightBeams)
+  }
+ 
 
   // Update stored light data
   if (model.userData.light) {
@@ -221,21 +303,18 @@ export function updateAllLights(model: THREE.Object3D, lightData: Model['light']
   }
 };
 
-// get the lightSystemData from an object if it exists
+/***********Light property getters *************/
+
+//function to get the lightSystem Data from the object's userData.
 //
-export function getLightSystemData(object: THREE.Object3D | null){
+export function getLightSystemData(object: THREE.Object3D | null): LightSystemData | null{
   if (!object || !object.userData.lightSystemData) {
     return null
   }
 
-  const systemData = object.userData.lightSystemData as LightSystemData;
-  // system data contains every single information of what a light emitting model needs
-  // (e.g. lightData for user controlled data (saved in db), array of bulb meshes (for ease of access),
-  // the different mesh groups (for ease of access), etc)
-  return {lightData: object.userData.light, bulbs: systemData.pointLights,meshGroups: Object.fromEntries(systemData.affectedMeshes), lightMeshTypes: systemData.config.affectedMeshes};
+  return object.userData.lightSystemData as LightSystemData;
 };
 
-// Light property getters
 export function isObjectLight(objectRef: React.RefObject<THREE.Object3D | null>): boolean {
   const model = objectRef.current;
   if (!model) return false;
@@ -248,7 +327,7 @@ export function getObjectLightIntensity(object: THREE.Object3D | null): number |
 }
 
 export function isObjectLightOn(object: THREE.Object3D | null): boolean | null {
-  if (!object || !object.userData.light) return null;
+  if (!object || !object.userData?.light) return null;
   return object.userData.light.on;
 }
 
@@ -271,6 +350,38 @@ export function hasPointLightSources(object: THREE.Object3D | null): boolean{
   return systemData.pointLights.length > 0;
 };
 
+// Helper function to check if object has any screens.
+//
+export function hasScreens(object: THREE.Object3D | null): boolean {
+  if (!object?.userData.lightSystemData) return false;
+  const lightSystemData = object.userData.lightSystemData as LightSystemData;
+  const screens = lightSystemData.lightSources.get('screen');
+  // Return true if the Map has a 'screen' key and the array has at least one mesh
+  return Array.isArray(screens) && screens.length > 0;
+}
+
+//Function to get the array of screen meshes.
+//
+export function getScreens(object: THREE.Object3D | null) :THREE.Mesh[] | null{
+  if(!object || !hasScreens(object)) return null;
+  const lightSystemData = object.userData.lightSystemData as LightSystemData;
+  return lightSystemData.lightSources.get('screen') ?? null;
+}
+
+//helper function to get the entire array of the cube light beam meshes.
+export function getCubeLightBeams(object: THREE.Object3D | null) :THREE.Mesh[] | null{
+  if(!object || !hasScreens(object)) return null;
+  const lightSystemData = object.userData.lightSystemData as LightSystemData;
+  return lightSystemData.cubeLightBeams ?? null;
+}
+
+// function to get every single light beam associated with an object (not just cube light beams)
+//
+export function getObjectLightBeams(object: THREE.Object3D | null): THREE.Mesh[] | null{
+  const lightBeams = getCubeLightBeams(object); // extend o other light beam shapes.
+  return lightBeams
+}
+
 // Helper function to check if object has any light sources at all; this also includes e.g. screens
 // (at this point in time screens doesn't have a three.js light linked to it yet)
 //
@@ -280,3 +391,10 @@ export function hasAnyLightSources(object: THREE.Object3D | null): boolean{
   const systemData = object.userData.lightSystemData as LightSystemData;
   return systemData.lightSources.size > 0;
 };
+
+//Helper function to check if model has any three.js lights to update
+//
+export function hasAnyThreeLights(object: THREE.Object3D | null): boolean{
+  // extend this for other light sources that models may have e.g. spotlight; 
+  return hasPointLightSources(object)//e.g. extend this code by:  | hasSpotLightSources(object)
+}

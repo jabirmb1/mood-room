@@ -5,7 +5,7 @@ import { ColourPickerControl } from '../../../UI/ColourPickerControl';
 import { HorizontalSlider } from '../../../UI/HorizontalSlider';
 import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/models';
 import { baseModelLightIntensity } from '@/utils/3d-canvas/const';
-import { hasAnyLightSources, hasPointLightSources } from '@/utils/3d-canvas/models/lightingSystem';
+import { getLightSystemData, hasAnyLightSources, hasPointLightSources, hasScreens, toggleCubeLightBeamsvisibility } from '@/utils/3d-canvas/models/lightingSystem';
 
 /********This component will handle all settings that the user can tweak to change the output of the lights
  * that are emmitted by the model
@@ -33,9 +33,23 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
 
     // Update effect to map UI to real intensity
     useEffect(() => {
+
+        const object = objectRef.current
+
+        // if the model has a screen; then it has a volumetricLightBeam mesh; toggle their visibility
+        // if it has changed
+        if (hasScreens(object))
+        {
+            const lightSystemData = getLightSystemData(object)
+            if (lightSystemData)
+            {
+                toggleCubeLightBeamsvisibility(lightSystemData, lightOn)
+            }
+        }
+        
         const internalIntensity = uiToIntensity(intensityUI);
-        if (!objectRef.current?.userData.light) return;
-        updateAllLights(objectRef.current, {
+        if (!object?.userData.light) return;
+        updateAllLights(object, {
         on: lightOn,
         intensity: internalIntensity,
         colour: lightColour
