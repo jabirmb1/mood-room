@@ -1,9 +1,8 @@
 import * as THREE from "three";
 import React, { useEffect, useMemo, useRef } from "react";
-import { createCuboidVolumetricLightBeamMaterial } from "@/utils/3d-canvas/shaders/volumetricLightBeam";
+import { createCuboidVolumetricLightBeamMaterial } from "@/utils/3d-canvas/custom-materials/volumetricLightBeam";
 import { isObjectLightOn } from "@/utils/3d-canvas/models";
 import { generateMeshBoundingBox } from "@/utils/3d-canvas/scene/meshes";
-import { getScreens } from "@/utils/3d-canvas/models/lightingSystem";
 
 type CubeLightBeamDimensions={
   width: number;
@@ -101,9 +100,9 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
   // Create geometry and material once, memoized by initial dimensions
   const { geometry, material } = useMemo(() => {
     const geom = new THREE.BoxGeometry(width, height, depth);
-    const mat = createCuboidVolumetricLightBeamMaterial({ width: width/2, height: height/2,depth:  depth/2, colour, opacity: 0.5});
+    const mat = createCuboidVolumetricLightBeamMaterial({ width: width, height: height,depth:  depth, colour, opacity: 0.5});
     return { geometry: geom, material: mat };
-  }, []); // Empty dependency array - create only once on mount
+  }, [width, height, depth]); // Empty dependency array - create only once on mount
 
   // on mount/ unmount; perform the passed in mount/ unmount functions if passed in
   useEffect(() => {
@@ -130,6 +129,10 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
       meshRef.current.scale.set(dimensionScaleX, dimensionScaleY, dimensionScaleZ);
     }
   }, [width, height, depth, geometry]);
+
+  useEffect(()=>{
+    console.log('beam mesh has just been remounted')
+  },[])
 
   // Update material uniforms when dimensions change
   useEffect(() => {
