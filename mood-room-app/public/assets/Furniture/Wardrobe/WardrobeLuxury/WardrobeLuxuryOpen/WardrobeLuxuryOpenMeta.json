@@ -1,0 +1,12 @@
+{
+  "name": "WardrobeLuxuryOpen",
+  "roomType": "",
+  "dimensions": {
+    "width": 0,
+    "height": 0,
+    "depth": 0
+  },
+  "priority": 1,
+  "mood": {},
+  "rules": {}
+}

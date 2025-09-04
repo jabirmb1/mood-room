@@ -1,0 +1,23 @@
+{
+    "name": "BedBasic",
+    "roomType": "BedRoom",
+    "dimensions": {
+      "width": 7.1,
+      "height": 3.5,
+      "depth": 4.2
+    },
+    "priority": 1,
+    "mood": {
+      "style": "Modern",
+      "colorHex": "#FFFFFF",
+      "keywords": ["calm", "cozy"]
+    },
+    "rules": {
+      "mustTouchWall": true,
+      "mustFaceAwayFromWall": true,
+      "mustTouchGround": true,
+      "allowStacking": false,
+      "alignWith": "BedsideTableBasic.glb" 
+    }
+  }
+  

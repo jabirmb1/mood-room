@@ -4,265 +4,265 @@
     "category": "decor",
     "path": "/assets/Decor/BookStack/BookStackBasic/BookStackBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Decor/BookStack/BookStackBasic/BookStackBasicMeta.json"
   },
   {
     "name": "WaterBottle",
     "category": "decor",
     "path": "/assets/Decor/WaterBottle/WaterBottleBasic/WaterBottle.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Decor/WaterBottle/WaterBottleBasic/WaterBottleMeta.json"
   },
   {
     "name": "armchair",
     "category": "furniture",
     "path": "/assets/Furniture/armchair.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/armchairMeta.json"
   },
   {
     "name": "BedBasic",
     "category": "furniture",
     "path": "/assets/Furniture/Bed/BedBasic/BedBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Bed/BedBasic/BedBasicMeta.json"
   },
   {
     "name": "bed",
     "category": "furniture",
     "path": "/assets/Furniture/bed.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/bedMeta.json"
   },
   {
     "name": "BedsideTableBasic",
     "category": "furniture",
     "path": "/assets/Furniture/BedsideTable/BedsideTableBasic/BedsideTableBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/BedsideTable/BedsideTableBasic/BedsideTableBasicMeta.json"
   },
   {
     "name": "BedsideTableFancy",
     "category": "furniture",
     "path": "/assets/Furniture/BedsideTable/BedsideTableFancy/BedsideTableFancy.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/BedsideTable/BedsideTableFancy/BedsideTableFancyMeta.json"
   },
   {
     "name": "BookshelfBasic",
     "category": "furniture",
     "path": "/assets/Furniture/BookShelf/BookShelfBasic/BookshelfBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/BookShelf/BookShelfBasic/BookshelfBasicMeta.json"
   },
   {
     "name": "BookShelfFancy",
     "category": "furniture",
     "path": "/assets/Furniture/BookShelf/BookShelfFancy/BookShelfFancy.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/BookShelf/BookShelfFancy/BookShelfFancyMeta.json"
   },
   {
     "name": "BookShelf",
     "category": "furniture",
     "path": "/assets/Furniture/BookShelf.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/BookShelfMeta.json"
   },
   {
     "name": "BookshelfBasic",
     "category": "furniture",
     "path": "/assets/Furniture/BookshelfBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/BookshelfBasicMeta.json"
   },
   {
     "name": "ChairBasicBroken",
     "category": "furniture",
     "path": "/assets/Furniture/Chair/ChairBasic/ChairBasicBroken/ChairBasicBroken.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Chair/ChairBasic/ChairBasicBroken/ChairBasicBrokenMeta.json"
   },
   {
     "name": "ChairBasicNormal",
     "category": "furniture",
     "path": "/assets/Furniture/Chair/ChairBasic/ChariBasicNormal/ChairBasicNormal.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Chair/ChairBasic/ChariBasicNormal/ChairBasicNormalMeta.json"
   },
   {
     "name": "DeskBasicBroken",
     "category": "furniture",
     "path": "/assets/Furniture/Desk/DeskBasic/DeskBasicBroken/DeskBasicBroken.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Desk/DeskBasic/DeskBasicBroken/DeskBasicBrokenMeta.json"
   },
   {
     "name": "DeskBasicNormal",
     "category": "furniture",
     "path": "/assets/Furniture/Desk/DeskBasic/DeskBasicNormal/DeskBasicNormal.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Desk/DeskBasic/DeskBasicNormal/DeskBasicNormalMeta.json"
   },
   {
     "name": "DrawerBasicBroken",
     "category": "furniture",
     "path": "/assets/Furniture/Drawer/DrawerBasicBroken/DrawerBasicBroken.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Drawer/DrawerBasicBroken/DrawerBasicBrokenMeta.json"
   },
   {
     "name": "DrawerFancy",
     "category": "furniture",
     "path": "/assets/Furniture/Drawer/DrawerFancy/DrawerFancy.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Drawer/DrawerFancy/DrawerFancyMeta.json"
   },
   {
     "name": "NormTable",
     "category": "furniture",
     "path": "/assets/Furniture/NormTable.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/NormTableMeta.json"
   },
   {
     "name": "sofa",
     "category": "furniture",
     "path": "/assets/Furniture/sofa.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/sofaMeta.json"
   },
   {
     "name": "TableRoundBasicBroken",
     "category": "furniture",
     "path": "/assets/Furniture/TableRound/TableRoundBasic/TableRoundBasicBroken/TableRoundBasicBroken.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/TableRound/TableRoundBasic/TableRoundBasicBroken/TableRoundBasicBrokenMeta.json"
   },
   {
     "name": "TableRoundBasicNormal",
     "category": "furniture",
     "path": "/assets/Furniture/TableRound/TableRoundBasic/TableRoundBasicNormal/TableRoundBasicNormal.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/TableRound/TableRoundBasic/TableRoundBasicNormal/TableRoundBasicNormalMeta.json"
   },
   {
     "name": "TVBasic",
     "category": "furniture",
     "path": "/assets/Furniture/TV/TVBasic/TVBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/TV/TVBasic/TVBasicMeta.json"
   },
   {
     "name": "TVFlat",
     "category": "furniture",
     "path": "/assets/Furniture/TV/TVFlat/TVFlat.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/TV/TVFlat/TVFlatMeta.json"
   },
   {
     "name": "TVOld",
     "category": "furniture",
     "path": "/assets/Furniture/TV/TVOld/TVOld.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/TV/TVOld/TVOldMeta.json"
   },
   {
     "name": "TVCabinetBasic",
     "category": "furniture",
     "path": "/assets/Furniture/TVCabinet/TVCabinetBasic/TVCabinetBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/TVCabinet/TVCabinetBasic/TVCabinetBasicMeta.json"
   },
   {
     "name": "TVcabinetBasic2",
     "category": "furniture",
     "path": "/assets/Furniture/TVCabinet/TVCabinetBasic2/TVcabinetBasic2.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/TVCabinet/TVCabinetBasic2/TVcabinetBasic2Meta.json"
   },
   {
     "name": "WardrobeBasicClosed",
     "category": "furniture",
     "path": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicClosed/WardrobeBasicClosed.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicClosed/WardrobeBasicClosedMeta.json"
   },
   {
     "name": "WardrobeBasicOpen",
     "category": "furniture",
     "path": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicOpen/WardrobeBasicOpen.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicOpen/WardrobeBasicOpenMeta.json"
   },
   {
     "name": "WardrobeBasicOpen2",
     "category": "furniture",
     "path": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicOpen2/WardrobeBasicOpen2.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Wardrobe/WardrobeBasic/WardrobeBasicOpen2/WardrobeBasicOpen2Meta.json"
   },
   {
     "name": "WardrobeLuxuryClosed",
     "category": "furniture",
     "path": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryClosed/WardrobeLuxuryClosed.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryClosed/WardrobeLuxuryClosedMeta.json"
   },
   {
     "name": "WardrobeLuxuryOpen",
     "category": "furniture",
     "path": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryOpen/WardrobeLuxuryOpen.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Furniture/Wardrobe/WardrobeLuxury/WardrobeLuxuryOpen/WardrobeLuxuryOpenMeta.json"
   },
   {
     "name": "ShadeLampBasic",
     "category": "lights",
     "path": "/assets/Lights/ShadeLamp/ShadeLampBasic/ShadeLampBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Lights/ShadeLamp/ShadeLampBasic/ShadeLampBasicMeta.json"
   },
   {
     "name": "WallLampBasic",
     "category": "lights",
     "path": "/assets/Lights/WallLamp/WallLampBasic/WallLampBasic.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Lights/WallLamp/WallLampBasic/WallLampBasicMeta.json"
   },
   {
     "name": "WallLampBasic2",
     "category": "lights",
     "path": "/assets/Lights/WallLamp/WallLampBasic2/WallLampBasic2.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Lights/WallLamp/WallLampBasic2/WallLampBasic2Meta.json"
   },
   {
     "name": "WallLampPoles",
     "category": "lights",
     "path": "/assets/Lights/WallLamp/WallLampPoles/WallLampPoles.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Lights/WallLamp/WallLampPoles/WallLampPolesMeta.json"
   },
   {
     "name": "Painting",
     "category": "uncategorized",
     "path": "/assets/wall-art/Painting.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/wall-art/PaintingMeta.json"
   },
   {
     "name": "rectangleTEST",
     "category": "uncategorized",
     "path": "/assets/wall-art/rectangleTEST.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/wall-art/rectangleTESTMeta.json"
   },
   {
     "name": "wallart",
     "category": "uncategorized",
     "path": "/assets/Wallart/wallart.glb",
     "thumbnail": "/placeholder-thumbnail.jpg",
-    "meta": null
+    "meta": "/assets/Wallart/wallartMeta.json"
   }
 ]

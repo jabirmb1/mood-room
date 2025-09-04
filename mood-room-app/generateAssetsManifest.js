@@ -1,72 +1,72 @@
 // Node.js script to get assets from public folder and create a assetsmanifest.json file
 // this also makes sure when new assets added to folder the manifest is updated automatically
 //
+// generateAssetsManifest.js
 const fs = require('fs');
 const path = require('path');
-const validCategories = ['Furniture', 'Lights', 'Decor', 'WallArt']; // valid categories for models
 
-const assetsRoot = path.join(__dirname, 'public', 'assets');   // path to assets folder
-const outputManifest = path.join(__dirname, 'public', 'assetsManifest.json'); // path to output manifest file
+const validCategories = ['Furniture', 'Lights', 'Decor', 'WallArt']; // allowed categories
+const assetsRoot = path.join(__dirname, 'public', 'assets'); 
+const outputManifest = path.join(__dirname, 'public', 'assetsManifest.json');
 
-// Function to check if a file exists
+// helper to check if file exists
 function fileExists(filePath) {
   try {
     return fs.existsSync(filePath);
-  } catch (err) {
+  } catch {
     return false;
   }
 }
 
-// function to get thumbnail path for a model, or replace it with a placeholder if it is not found.
-function findThumbnail(fullDirPath, modelName) {
-  // Look for png/jpg/jpeg in same folder as model
+// helper to find thumbnail
+function findThumbnail(modelName) {
+  const thumbDir = path.join(__dirname, 'public', 'thumbnail');
   const exts = ['.png', '.jpg', '.jpeg', '.webp'];
+  
   for (const ext of exts) {
-    const thumbPath = path.join(fullDirPath, modelName + ext);
-    if (fileExists(thumbPath)) {
-      return '/assets/' + path.relative(assetsRoot, thumbPath).replace(/\\/g, '/');
+    const thumbPath = path.join(thumbDir, modelName + ext);
+    if (fs.existsSync(thumbPath)) {
+      return '/thumbnail/' + modelName + ext; // public path
     }
   }
+
   return '/placeholder-thumbnail.jpg';
 }
 
-// function to find a model's metadata file.
+// helper to find metadata in same folder
 function findMeta(fullDirPath, modelName) {
   const metaPath = path.join(fullDirPath, modelName + 'Meta.json');
   if (fileExists(metaPath)) {
     return '/assets/' + path.relative(assetsRoot, metaPath).replace(/\\/g, '/');
   }
-  return null;
+  return '/assets/' + path.relative(assetsRoot, path.join(fullDirPath, modelName + 'Meta.json')).replace(/\\/g, '/');
 }
 
-// Function to walk through directory and generate manifest
-function walkDir(dir, baseUrl) {
+// walk directory recursively
+function walkDir(dir) {
   const items = [];
   const files = fs.readdirSync(dir);
-  
+
   for (const file of files) {
     const fullPath = path.join(dir, file);
     if (fs.statSync(fullPath).isDirectory()) {
       items.push(...walkDir(fullPath));
     } else if (file.endsWith('.glb') || file.endsWith('.gltf')) {
       const modelName = path.basename(file, path.extname(file));
-      const relPath = path.relative(assetsRoot, fullPath).replace(/\\/g, '/'); // keeps relative path e.g Categories/bed/bed.glb
-      const modelPath = '/assets/' + relPath;
+      const relPath = '/assets/' + path.relative(assetsRoot, fullPath).replace(/\\/g, '/');
 
       const thumbnailPath = findThumbnail(path.dirname(fullPath), modelName);
       const metaPath = findMeta(path.dirname(fullPath), modelName);
 
-      // Get top-level category folder (first folder inside assets)
-      const parts = relPath.split('/');
-      const topCategory = parts[0]; // e.g. 'Furniture', 'Lights', 'Decor', 'WallArt'
-
-      // Enforce clean category naming
-      const categoryName = validCategories.includes(topCategory)? topCategory : 'Uncategorized';
+      // top-level folder for category
+      const parts = path.relative(assetsRoot, fullPath).split(path.sep);
+      const topCategory = parts[0];
+      const categoryName = validCategories.includes(topCategory) ? topCategory : 'Uncategorized';
 
       items.push({
         name: modelName,
         category: categoryName.toLowerCase(),
-        path: modelPath,
+        path: relPath,
         thumbnail: thumbnailPath,
         meta: metaPath
       });
@@ -76,19 +76,12 @@ function walkDir(dir, baseUrl) {
   return items;
 }
 
-// Create assets directory if it doesn't exist
-if (!fs.existsSync(assetsRoot)) {
-  fs.mkdirSync(assetsRoot, { recursive: true });
-}
+// ensure assets folder exists
+if (!fs.existsSync(assetsRoot)) fs.mkdirSync(assetsRoot, { recursive: true });
 
-// Create placeholder image if it doesn't exist
-const placeholderPath = path.join(__dirname, 'public', 'placeholder-thumbnail.jpg');
-if (!fileExists(placeholderPath)) {
-  console.warn('Placeholder thumbnail missing:', placeholderPath);
-}
+// generate manifest
+const manifest = walkDir(assetsRoot);
 
-
-// Generate manifest
-const manifest = walkDir(assetsRoot, '');
+// write manifest
 fs.writeFileSync(outputManifest, JSON.stringify(manifest, null, 2));
 console.log('assetsManifest.json generated with', manifest.length, 'items.');
