@@ -4,9 +4,9 @@
 import { LightMeshConfig, LightMeshState, LightSourceConfig, LightSystemConfig, LightSystemData, Model } from "@/types/types";
 import * as THREE from "three";
 import { defaultLightSystemConfig } from "../const";
-import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
+import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, generateMeshBoundingBox, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
-import { getLinkedMesh, updateLightBeamMeshColour } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { createCubeLightBeamDepth, CubeLightBeamDimensions, generateCubeLightBeamDimensions, getLinkedMesh, updateLightBeamMeshColour, updateLightBeamMeshDimensions } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
 
 
 
@@ -303,6 +303,100 @@ export function updateAllLights(model: THREE.Object3D, lightData: Model['light']
   }
 };
 
+// Helper function to calculate the start offset for a light beam based on its linked mesh
+function calculateLightBeamStartOffset(linkedMesh: THREE.Mesh, beamDepth?: number): {
+  localPosition: [number, number, number]; startOffset: number;} {
+  
+    // Get the mesh's local bounding box geometry bounds, so we can correctly place beam in front of linked mesh
+  linkedMesh.geometry.computeBoundingBox();
+  const meshBBox = linkedMesh.geometry.boundingBox;
+  const epsilon = -0.1// due to some precison issues; screen starts too forward; so we will use a negative
+  // buffer to push back into the screen
+  
+  if (!meshBBox) {
+    // Fallback position if bounding box calculation fails
+    const fallbackDepth = beamDepth || 1;
+
+    // position beam so that it starts at the front of the linked mesh
+    return {localPosition: [0, 0, fallbackDepth / 2 + 0.1],startOffset: fallbackDepth / 2 + epsilon};
+  }
+  
+  // Use provided depth or calculate default offset
+  const depthForOffset = beamDepth || 1;
+  
+  // The light beam geometry is centered, so its back face is at -depth/2
+  // We need to position the beam so its back face (-depth/2) starts at the screen's front face
+  // Therefore: beam_center_z = screen_front_z + depth/2 + small_buffer
+  
+  const screenFrontZ = meshBBox.max.z;
+  const beamCenterZ = screenFrontZ + (depthForOffset / 2) + epsilon; // Small buffer to prevent z-fighting
+  
+  // Position relative to the screen mesh (local coordinates)
+  const localPosition: [number, number, number] = [0,  0, beamCenterZ];
+  
+  return {localPosition, startOffset: beamCenterZ};
+}
+
+// Updated function to generate light beam dimensions and position
+export function generateCubeLightBeamDimensionsAndPosition(linkedMesh: THREE.Mesh): {
+  dimensions: CubeLightBeamDimensions; position: [number, number, number]} | null {
+  const bbox = generateMeshBoundingBox(linkedMesh);
+  if (!bbox) return null;
+  
+  const depth = createCubeLightBeamDepth(bbox.width, bbox.height);
+  const dimensions = { width: bbox.width, height: bbox.height, depth };
+  
+  // Calculate position using helper function
+  const { localPosition } = calculateLightBeamStartOffset(linkedMesh, depth);  
+  return { dimensions, position: localPosition };
+}
+
+//  function for the lighting system to update light beam positions
+//
+export function updateAllLightBeamPositions(model: THREE.Object3D): void {
+  const lightBeams = getCubeLightBeams(model);
+  if (!lightBeams) return;
+
+  for (const lightBeam of lightBeams) {
+    const linkedMesh = getLinkedMesh(lightBeam);
+    if (linkedMesh) {
+      // Get current light beam depth from its geometry
+      const geom = lightBeam.geometry as THREE.BoxGeometry;
+      const currentDepth = geom ? geom.parameters.depth * lightBeam.scale.z : 1;
+      
+      // Calculate position using helper function
+      const { localPosition } = calculateLightBeamStartOffset(linkedMesh, currentDepth);
+      
+      lightBeam.position.set(localPosition[0], localPosition[1], localPosition[2]);
+      }
+  }
+}
+
+// function to update all light beam dimensions (width, height, depth) based on their linked meshes
+// also makes sure to update the position of the light beam as well so that it stays in front of the 
+// linked mesh.
+//
+export function updateAllLightBeamDimensions(model: THREE.Object3D): void {
+  const lightBeams = getCubeLightBeams(model);
+  if (!lightBeams) return;
+
+  for (const lightBeam of lightBeams) {
+    const linkedMesh = getLinkedMesh(lightBeam);
+    if (linkedMesh) {
+      const dimensions = generateCubeLightBeamDimensions(linkedMesh);// extend this later to other shapes as well
+      if (dimensions) {
+        // Update dimensions
+        updateLightBeamMeshDimensions(lightBeam, dimensions);
+        
+        // Update position using helper function
+        const { localPosition } = calculateLightBeamStartOffset(linkedMesh, dimensions.depth);
+        
+        lightBeam.position.set(localPosition[0], localPosition[1], localPosition[2]);
+      }
+    }
+  }
+}
+
 /***********Light property getters *************/
 
 //function to get the lightSystem Data from the object's userData.
@@ -374,11 +468,10 @@ export function getCubeLightBeams(object: THREE.Object3D | null) :THREE.Mesh[] |
   const lightSystemData = object.userData.lightSystemData as LightSystemData;
   return lightSystemData.cubeLightBeams ?? null;
 }
-
 // function to get every single light beam associated with an object (not just cube light beams)
 //
 export function getObjectLightBeams(object: THREE.Object3D | null): THREE.Mesh[] | null{
-  const lightBeams = getCubeLightBeams(object); // extend o other light beam shapes.
+  const lightBeams = getCubeLightBeams(object); // extend to other light beam shapes.
   return lightBeams
 }
 

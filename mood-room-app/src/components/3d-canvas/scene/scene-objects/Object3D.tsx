@@ -8,12 +8,12 @@ import { globalScale } from "@/utils/3d-canvas/const";
 import * as THREE from "three";
 // importing types and functions
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/3d-canvas/models";
-import { getLightSystemData, getScreens, hasScreens, isObjectLightOn, updateAllLights, updateCubeLightBeamsArray } from "@/utils/3d-canvas/models/lightingSystem";
+import { generateCubeLightBeamDimensionsAndPosition, getLightSystemData, getScreens, hasScreens, isObjectLightOn, updateAllLights, updateCubeLightBeamsArray } from "@/utils/3d-canvas/models/lightingSystem";
 import { ObjectFloatingPanel } from "../../UI/ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
 import { disposeObject, getMeshColour } from "@/utils/3d-canvas/scene/meshes";
-import { CubeLightBeam, getCubeLightBeamDimensions } from "../scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { CubeLightBeam,} from "../scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
 
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
@@ -222,8 +222,10 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
             if (!screens) return null;
 
             return screens.map((screen, idx) => {
-               const dimensions = getCubeLightBeamDimensions(screen)
-               if (!dimensions) return null;
+              const dimensionsAndPosition = generateCubeLightBeamDimensionsAndPosition(screen);
+              if (!dimensionsAndPosition) return null;
+              
+              const { dimensions, position } = dimensionsAndPosition;
                 return (
                     <CubeLightBeam
                         key={idx}
@@ -232,7 +234,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
                         width={dimensions.width}
                         height={dimensions.height}
                         depth={dimensions.depth}
-                        position={[0, 0, dimensions.depth/2]} // center it at the screen; lightBeam 
+                        position={position} // place light beam in front of screen (calculated already inside position)
                         // spawns halfway inside the screen; so push it back out (the depth)
                         colour={getMeshColour(screen)}// colour of beam is the same colour as the screen
                         visible={isObjectLightOn(modelRef.current) ?? false}

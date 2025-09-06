@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { HorizontalSlider } from "../../../UI/HorizontalSlider"; 
 import { getLightSystemData, getObjectLightData, getObjectSizeDifference, updateAllLights } from "@/utils/3d-canvas/models";
 import { globalScale } from "@/utils/3d-canvas/const";
-import { getObjectLightBeams, hasAnyThreeLights, hasScreens, updateAllLightBeamSizes } from "@/utils/3d-canvas/models/lightingSystem";
+import { hasAnyThreeLights, hasScreens, updateAllLightBeamDimensions } from "@/utils/3d-canvas/models/lightingSystem";
 
 /************** This panel will be used to change an object's size via buttons and a slider */
 type ObjectScalePanelProps = {
@@ -45,10 +45,8 @@ export function ObjectSizePanel({ objectRef, objectId}: ObjectScalePanelProps) {
         // in size
         if (hasScreens(model))
         {
-          const lightBeams = getObjectLightBeams(model)
-          if (!lightBeams) return
           // function to update size of voluemtric light meshes here:
-          updateAllLightBeamSizes(lightBeams, scaleFactor)
+          updateAllLightBeamDimensions(model)
 
         }
       }

@@ -4,7 +4,7 @@ import { createCuboidVolumetricLightBeamMaterial } from "@/utils/3d-canvas/custo
 import { isObjectLightOn } from "@/utils/3d-canvas/models";
 import { generateMeshBoundingBox } from "@/utils/3d-canvas/scene/meshes";
 
-type CubeLightBeamDimensions={
+export type CubeLightBeamDimensions={
   width: number;
   height:number;
   depth: number;
@@ -52,7 +52,7 @@ export function getCubeLightBeamHostModelRef(mesh: THREE.Object3D) {
   return mesh.userData.isCubeLightBeam ? (mesh.userData.hostModelRef as React.RefObject<THREE.Object3D | null>) : null;
 }
 
-// Update visibility depending if the linke object is 'on' or 'off'
+// Update visibility depending if the linked object is 'on' or 'off'
 //
 export function updateCubeLightBeamVisibility(mesh: THREE.Object3D) {
   const hostModelRef = getCubeLightBeamHostModelRef(mesh);
@@ -79,15 +79,47 @@ export function getLinkedMesh(lightBeam: THREE.Object3D): THREE.Mesh | null{
   return null
 }
 
-//function to get the dimensions for the light beam; by passing in a mesh for it to come out of 
+//function to generate the dimensions for the light beam; by passing in a mesh for it to come out of 
 // (e.g. screens)
 //
-export function getCubeLightBeamDimensions(linkedMesh: THREE.Mesh): CubeLightBeamDimensions | null 
+export function generateCubeLightBeamDimensions(linkedMesh: THREE.Mesh): CubeLightBeamDimensions | null 
 {
    const bbox = generateMeshBoundingBox(linkedMesh);
   if (!bbox) return null;
   const depth = createCubeLightBeamDepth(bbox.width, bbox.height);
   return {width: bbox.width, height: bbox.height, depth}
+}
+
+// function to update the light beam dimensions
+//
+export function updateLightBeamMeshDimensions(lightBeam: THREE.Mesh,dimensions: CubeLightBeamDimensions) {
+  const { width, height, depth } = dimensions;
+  if (!lightBeam) return;
+
+  // Get the original geometry parameters to calculate proper scaling
+  const geom = lightBeam.geometry as THREE.BoxGeometry;
+  if (!geom || !geom.parameters) return;
+
+  // Calculate scale factors based on original geometry dimensions
+  const scaleX = width / geom.parameters.width;
+  const scaleY = height / geom.parameters.height;
+  const scaleZ = depth / geom.parameters.depth;
+
+  // Apply scaling to the mesh
+  lightBeam.scale.set(scaleX, scaleY, scaleZ);
+
+  // Update material uniforms with the TARGET dimensions (not scaled by mesh scale)
+  const mat = lightBeam.material as THREE.ShaderMaterial;
+  if (mat && mat.uniforms) {
+    // Use the original geometry dimensions for shader calculations
+    // The shader will work with these base dimensions, and mesh scaling handles the visual size
+    if (mat.uniforms.uWidth) mat.uniforms.uWidth.value = geom.parameters.width;
+    if (mat.uniforms.uHeight) mat.uniforms.uHeight.value = geom.parameters.height;
+    if (mat.uniforms.uFadeLength) mat.uniforms.uFadeLength.value = geom.parameters.depth;
+    mat.needsUpdate = true;
+  }
+
+  lightBeam.updateMatrix();
 }
 
 
@@ -101,8 +133,9 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
   const { geometry, material } = useMemo(() => {
     const geom = new THREE.BoxGeometry(width, height, depth);
     const mat = createCuboidVolumetricLightBeamMaterial({ width: width, height: height,depth:  depth, colour, opacity: 0.5});
+    mat.depthWrite = false;
     return { geometry: geom, material: mat };
-  }, [width, height, depth]); // Empty dependency array - create only once on mount
+  }, [width, height, depth]);
 
   // on mount/ unmount; perform the passed in mount/ unmount functions if passed in
   useEffect(() => {
@@ -141,7 +174,7 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
       material.uniforms.uHeight.value = height;
       material.uniforms.uFadeLength.value = depth;
     }
-  }, [width, height, depth, material]);
+  }, [geometry, material]);
 
   // Update colour dynamically if needed
   useEffect(() => {
