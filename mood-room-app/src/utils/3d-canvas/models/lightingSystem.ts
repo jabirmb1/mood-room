@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { defaultLightSystemConfig } from "../const";
 import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, generateMeshBoundingBox, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
-import { createCubeLightBeamDepth, CubeLightBeamDimensions, generateCubeLightBeamDimensions, getLinkedMesh, updateLightBeamMeshColour, updateLightBeamMeshDimensions } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { createCubeLightBeamDepth, CubeLightBeamDimensions, generateCubeLightBeamDimensions, getLinkedMesh, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
 
 
 
@@ -392,6 +392,8 @@ export function updateAllLightBeamDimensions(model: THREE.Object3D): void {
         const { localPosition } = calculateLightBeamStartOffset(linkedMesh, dimensions.depth);
         
         lightBeam.position.set(localPosition[0], localPosition[1], localPosition[2]);
+        // also update the light beam's spotlight position if it has one
+        updateLightForLightBeam(lightBeam);
       }
     }
   }

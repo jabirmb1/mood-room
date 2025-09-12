@@ -6,8 +6,8 @@
 "use client"; 
 
 import React, { useState, useEffect } from 'react';
-import PolaroidCanvasBox from '@/components/3d-canvas/MyCreationComponent/PolaroidCanvasBox'; 
-import ViewMode from '@/components/3d-canvas/MyCreationComponent/ViewMode'; 
+import PolaroidCanvasBox from '@/components/3d-canvas/UI/MyCreationComponent/PolaroidCanvasBox'; 
+import ViewMode from '@/components/3d-canvas/UI/MyCreationComponent/ViewMode'; 
 
 
 export default function MyCreationsPage() { 

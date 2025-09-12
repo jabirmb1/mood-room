@@ -20,7 +20,8 @@ export const snapDownwardsCountdown = 0// how quikcly an object should snap down
 
 /***********consts relating to internal model lights e.g. bulb of a lamp or tv ******/
 
-export const baseModelLightIntensity = 55;
+export const baseModelPointLightIntensity = 55;
+export const baseModelSpotLightIntensity = 30;
 
 export const defaultLightSystemConfig: LightSystemConfig = {
   lightSources: [
@@ -51,6 +52,8 @@ export const defaultLightSystemConfig: LightSystemConfig = {
     {
       meshPattern: "screen_light",
       on: { 
+        // when light is on; screen needs to be same colour as its light colour
+        // e.g. emissiveColour: "lightColour" means it will take on the same colour as the light source's colour
         emissiveColour: new THREE.Color('#ffffff'), 
         emissiveIntensity: 4 
       },
@@ -75,7 +78,7 @@ export const defaultLightSystemConfig: LightSystemConfig = {
       }
     },
   ],
-  defaultIntensity: baseModelLightIntensity,
+  defaultIntensity: baseModelPointLightIntensity,
   defaultColor: '#ffffff'
 };
 

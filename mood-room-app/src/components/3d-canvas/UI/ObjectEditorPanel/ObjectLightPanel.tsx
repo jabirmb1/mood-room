@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { ColourPickerControl } from '../../../UI/ColourPickerControl';
 import { HorizontalSlider } from '../../../UI/HorizontalSlider';
 import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/models';
-import { baseModelLightIntensity } from '@/utils/3d-canvas/const';
+import { baseModelPointLightIntensity } from '@/utils/3d-canvas/const';
 import { getLightSystemData, hasAnyLightSources, hasPointLightSources, hasScreens, toggleCubeLightBeamsvisibility } from '@/utils/3d-canvas/models/lightingSystem';
 
 /********This component will handle all settings that the user can tweak to change the output of the lights
@@ -18,17 +18,17 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
     const [lightOn, setLightOn] = useState<boolean>(isObjectLightOn(objectRef.current) ?? false);
     const [lightColour, setLightColour] = useState<string>(getObjectLightColour(objectRef.current)??'#ffffff');
     // Slider state: store the UI value (-50 to +50)
-    const [intensityUI, setIntensityUI] = useState<number>(intensityToUI(getObjectLightIntensity(objectRef.current) ?? baseModelLightIntensity))
+    const [intensityUI, setIntensityUI] = useState<number>(intensityToUI(getObjectLightIntensity(objectRef.current) ?? baseModelPointLightIntensity))
 
     
     // Convert slider value (-50 to +50) → internal intensity
     function uiToIntensity(val: number) {
-        return baseModelLightIntensity * (1 + val / 100); // -50 -> 0.5×, 0 -> 1×, +50 -> 1.5×
+        return baseModelPointLightIntensity * (1 + val / 100); // -50 -> 0.5×, 0 -> 1×, +50 -> 1.5×
     }
   
     // Convert internal intensity → slider value (-50 to +50)
     function intensityToUI(intensity: number){
-        return ((intensity / baseModelLightIntensity) - 1) * 100;
+        return ((intensity / baseModelPointLightIntensity) - 1) * 100;
     }
 
     // Update effect to map UI to real intensity
@@ -100,6 +100,8 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
                     to config; otherwise just show the buttons */}
 
                     {/* will extend this later to any three.js lights */}
+                    {/* extend this to use e.g. hasUserConfigurableLights function */}
+                    {/* since e.g. spotligt inside light beams are not user configurable */}
                     {hasPointLightSources(objectRef.current) && (
                         <>
                             {/* Light colour picker */}

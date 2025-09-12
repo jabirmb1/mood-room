@@ -1,7 +1,6 @@
 /*************** utlity function to store general functions that can relate to any three js mehses */
 
 import * as THREE from 'three'
-import { calculateObjectBoxSize } from '../models';
 
 //some constance that will be used to fine tune creation and updates of pointlights on meshes.
 
@@ -18,11 +17,21 @@ export const POINTLIGHT_DECAY_SCALE_EXPONENT = 0.5;     // n root scaling for de
 export const POINTLIGHT_CONFIG_DECAY = 1.8;// default values for pointlight's decay value
 export const POINTLIGHT_CONFIG_DISTANCE = 6// default values for pointLight's distance value
 
-type pointLightConfig={
+export type pointLightConfig={
   colour?: string;
   intensity?: number;
   distance?: number;
   decay?: number;
+}
+
+export type SpotlightConfig= {
+  colour?: THREE.Color;
+  intensity?: number;
+  distance?: number;
+  angle?: number; // cone angle in radians
+  penumbra?: number; // edge softness (0-1)
+  decay?: number;
+  castShadow?: boolean;
 }
 
 // Default config values to create a pointlight
@@ -31,6 +40,17 @@ const DEFAULT_POINTLIGHT_CONFIG: Required<pointLightConfig> = {
   intensity: 1,
   distance: POINTLIGHT_CONFIG_DISTANCE,
   decay: POINTLIGHT_CONFIG_DECAY,
+};
+
+// Default spotlight configuration
+const DEFAULT_SPOTLIGHT_CONFIG: Required<SpotlightConfig> = {
+  colour: new THREE.Color('#ffffff'),
+  intensity: 1.0,
+  distance: 5,
+  angle: Math.PI / 6, // 30 degrees
+  penumbra: 0,// sharp spotlight edge
+  decay: 2,
+  castShadow: false
 };
 
 // Helper function to cache material emissive state
@@ -100,6 +120,37 @@ export function createPointLightForMesh(mesh: THREE.Mesh, config: pointLightConf
     return null;
   }
 }
+
+//helper function to attatch a spotlight to a mesh
+export function createSpotLightForMesh(mesh: THREE.Mesh, config: SpotlightConfig={}): THREE.SpotLight | null {
+  try {
+
+    // merge config with default and passed in values.
+   const finalConfig: Required<SpotlightConfig> = { ...DEFAULT_SPOTLIGHT_CONFIG,  ...config };
+
+    // Initialise distance and decay based on the config.
+    let distance = finalConfig.distance;
+    let decay = finalConfig.decay;
+    const box = new THREE.Box3().setFromObject(mesh);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    
+    // Convert world center to local space of mesh
+    mesh.worldToLocal(center);
+    const light = new THREE.SpotLight(finalConfig.colour, finalConfig.intensity, distance,
+      finalConfig.angle, finalConfig.penumbra, decay); 
+    light.position.copy(center);
+    mesh.add(light);// add it to the mesh; so the light moves with the mesh.
+    mesh.add(light.target); // must add the target to the scene as well. (so that
+    // spotlight will point to where mesh is facing/ oreinted automatically)
+    
+    return light;
+  } catch (error) {
+    console.error('Error creating light for screen mesh:', error);
+    return null;
+  }
+}
+
 
 
  //This function disposes geometries, materials, and textures of a Three.js object
