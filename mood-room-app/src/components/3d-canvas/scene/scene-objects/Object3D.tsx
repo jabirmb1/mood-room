@@ -8,7 +8,7 @@ import { globalScale } from "@/utils/3d-canvas/const";
 import * as THREE from "three";
 // importing types and functions
 import { cloneModel, applyColourPalette, applyHoverEffect, ColourPalette, centerPivot, applyCategoryTags } from "@/utils/3d-canvas/models";
-import { generateCubeLightBeamDimensionsAndPosition, getLightSystemData, getScreens, hasScreens, isObjectLightOn, updateAllLightBeamDimensions, updateAllLights, updateCubeLightBeamsArray } from "@/utils/3d-canvas/models/lightingSystem";
+import { generateCubeLightBeamDimensionsAndPosition, getLightSystemData, getObjectLightColour, getObjectLightData, getScreens, hasScreens, isObjectLightOn, updateAllLights, updateCubeLightBeamsArray } from "@/utils/3d-canvas/models/lightingSystem";
 import { ObjectFloatingPanel } from "../../UI/ObjectFloatingPanel";
 import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
@@ -137,14 +137,13 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
     const scaleFactor = hovered && mode === 'edit' ? 1.20 : 1.0;
   
     const base = model.userData.baseScale ?? scale[0];
-     
+
     model.scale.set(base * scaleFactor, base * scaleFactor, base * scaleFactor);
-    if (hasScreens(model)){
-      // function to update size of voluemtric light meshes here:
-      updateAllLightBeamDimensions(model)
-    
-    }
-  
+    const lightData = getObjectLightData(model);
+   // if model has light data; update the lights to match the new scale.
+    if (lightData){
+      updateAllLights(model, lightData);
+    }  
   }, [hovered, mode,]);
 
    //This use effect temporarily turns the object into red if it is colliding with another object.
@@ -229,6 +228,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
 
             return screens.map((screen, idx) => {
               const dimensionsAndPosition = generateCubeLightBeamDimensionsAndPosition(screen);
+              const beamColour = getObjectLightColour(modelRef.current) ?? '#ffffff';
               if (!dimensionsAndPosition) return null;
               
               const { dimensions, position } = dimensionsAndPosition;
@@ -240,9 +240,9 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
                         width={dimensions.width}
                         height={dimensions.height}
                         depth={dimensions.depth}
+                        colour={new THREE.Color(beamColour)}
                         position={position} // place light beam in front of screen (calculated already inside position)
                         // spawns halfway inside the screen; so push it back out (the depth)
-                        colour={getMeshColour(screen)}// colour of beam is the same colour as the screen
                         castLight={true}// screens always cast light
                         castShadow={false}
                         visible={isObjectLightOn(modelRef.current) ?? false}

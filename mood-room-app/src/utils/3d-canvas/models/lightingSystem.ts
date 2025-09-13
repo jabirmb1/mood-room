@@ -3,10 +3,10 @@
 
 import { LightMeshConfig, LightMeshState, LightSourceConfig, LightSystemConfig, LightSystemData, Model } from "@/types/types";
 import * as THREE from "three";
-import { defaultLightSystemConfig } from "../const";
+import { baseScreenLightIntensity, defaultLightSystemConfig } from "../const";
 import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, generateMeshBoundingBox, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
-import { createCubeLightBeamDepth, CubeLightBeamDimensions, generateCubeLightBeamDimensions, getLinkedMesh, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { createCubeLightBeamDepth, CubeLightBeamDimensions, doesLightBeamHaveLightSource, generateCubeLightBeamDimensions, getLightBeamBaseIntensity, getLinkedMesh, updateLightBeamIntensity, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
 
 
 
@@ -121,7 +121,7 @@ function applyMeshState(meshes: THREE.Mesh[], config: LightMeshConfig, isOn: boo
 //
 function updatePointLights (model: THREE.Object3D, pointLights: THREE.PointLight[], lightData: Model['light']): void {
   // get max dimensions for object so we can allow the lights to accuractly scale based on model size
-  if (!lightData) return;
+  if (!lightData || !pointLights) return;
   const { maxDim } = calculateObjectBoxSize(model);
   const scaledIntensity = lightData.intensity * Math.pow(maxDim, 0.5);
 
@@ -195,26 +195,21 @@ export function toggleCubeLightBeamsvisibility(systemData: LightSystemData, visi
   }
 }
 
-//This function will take in an array of screen meshes; and update the volemetric light mesh colour
-// to be same colour as the screen meshes
+// function to update a light beam's colour.
 //
-function updateLightBeamColour(lightBeam: THREE.Mesh, screen : THREE.Mesh)
-{
-  const colour = getMeshColour(screen);
+function updateLightBeamColour(lightBeam: THREE.Mesh, colour: THREE.Color){
   updateLightBeamMeshColour(lightBeam, colour)
 }
 
 // function to take in an array of light beam meshs (volumetric light meshes)
 //  and update their light beam's colour
 //
-function updateAllLightBeamColours(lightBeams: THREE.Mesh[]){
+function updateAllLightBeamColours(lightBeams: THREE.Mesh[], colour: THREE.Color = new THREE.Color('#ffffff')){
   for (const lightBeam of lightBeams)
   {
-    // light beams in our project will either be linked to a screen mesh or no mesh
-    const screen = getLinkedMesh(lightBeam)
-    if (lightBeam && screen)
+    if (lightBeam)
     {
-      updateLightBeamColour(lightBeam, screen)
+      updateLightBeamColour(lightBeam, colour)
     }
   }
 }
@@ -236,6 +231,17 @@ export function updateAllLightBeamSizes(lightBeams: THREE.Mesh[], newScale: numb
   for (const lightBeam of lightBeams)
   {
     updateLightBeamSize(lightBeam, newScale)
+  }
+}
+
+// function to update all light's intensities at once:
+//
+export function updateAllLightBeamIntensity(lightBeams: THREE.Mesh[], intensity: number)
+{
+  if (!lightBeams) return
+  for (const lightBeam of lightBeams)
+  {
+    updateLightBeamIntensity(lightBeam, intensity)
   }
 }
 
@@ -267,10 +273,19 @@ export function initialiseLights(model: THREE.Object3D, lightData?: Model['light
 
   // Store light data and system data in model userData
 
-  //use existing lihgt data if it exists; otherwise give it default values
-  model.userData.light = lightData || {on: false, intensity: config.defaultIntensity, colour: config.defaultColor};
-  model.userData.lightSystemData = systemData;
-};
+  //use existing light data if it exists; otherwise give it default values
+  
+  //TO DO: change default intesity based on inidivisual model; (e.g. meta data)
+  // since some uses screens; others uses bulbs etc (each has a different base intensity)
+
+  model.userData.lightSystemData = systemData;// make lightSystemData before calling e.g. hasScreens
+  //or other functions (depends on lightSystemData)
+
+  // crude method to determine base intesnity (can be improved later)
+  // if model uses a screen; use screen base intensity; otherwise use bulb base intensity
+  const baseIntensity = hasScreens(model)? baseScreenLightIntensity: config.defaultIntensity;
+  model.userData.light = lightData || {on: false, intensity: baseIntensity, colour: config.defaultColor};
+}
 
 // Main update function to update everything that is needed for a light emitting model to emit light
 //
@@ -288,14 +303,19 @@ export function updateAllLights(model: THREE.Object3D, lightData: Model['light']
     updateLightSources(systemData, lightData);
   }
 
-  //if the object has a screen then it has a volumetric light mesh; update it
+  // if the model has a screen; then it has a volumetricLightBeam mesh
+  // update it.
   if (hasScreens(model))
   {
-    const lightBeams = getCubeLightBeams(model)// can extend this to other shapes as well
-    if (!lightBeams) return
-    updateAllLightBeamColours(lightBeams)
+        
+      toggleCubeLightBeamsvisibility(systemData, lightData.on)
+      const lightBeams = getCubeLightBeams(model)// can extend this to other shapes as well
+      if (!lightBeams) return
+      updateAllLightBeamColours(lightBeams, new THREE.Color(lightData.colour))
+      updateAllLightBeamDimensions(model)
+      updateAllLightBeamIntensity(lightBeams, lightData.intensity)
+      
   }
- 
 
   // Update stored light data
   if (model.userData.light) {
@@ -446,10 +466,27 @@ export function hasPointLightSources(object: THREE.Object3D | null): boolean{
   return systemData.pointLights.length > 0;
 };
 
+// helper function to check if a a screen type object has any light sources.
+//
+export function hasScreenLightSources(object: THREE.Object3D | null): boolean{
+  if (!object?.userData.lightSystemData) return false;
+
+  // screen type objects' have their light sources stored in their seperate light beam mesh;
+  // so get it from there.
+  const lightBeams = getCubeLightBeams(object);
+  for (const beam of lightBeams ?? [])
+  {
+    // if any of the light beams has a spotlight on it; return true.
+    if (doesLightBeamHaveLightSource(beam)) return true
+  }
+  return false;
+}
+
+
 // Helper function to check if object has any screens.
 //
 export function hasScreens(object: THREE.Object3D | null): boolean {
-  if (!object?.userData.lightSystemData) return false;
+  if (!object?.userData.lightSystemData)return false;
   const lightSystemData = object.userData.lightSystemData as LightSystemData;
   const screens = lightSystemData.lightSources.get('screen');
   // Return true if the Map has a 'screen' key and the array has at least one mesh
@@ -491,5 +528,38 @@ export function hasAnyLightSources(object: THREE.Object3D | null): boolean{
 //
 export function hasAnyThreeLights(object: THREE.Object3D | null): boolean{
   // extend this for other light sources that models may have e.g. spotlight; 
-  return hasPointLightSources(object)//e.g. extend this code by:  | hasSpotLightSources(object)
+  let hasLights = false;
+  hasLights = hasPointLightSources(object) || hasScreenLightSources(object)
+  return hasLights//e.g. extend this code by:  | hasSpotLightSources(object)
+}
+
+// function to get a model's base light intensity (depending on what config a particular model has)
+//
+export function getModelBaseLightIntensity(object: THREE.Object3D | null): number {
+  const defaultIntensity = defaultLightSystemConfig.defaultIntensity
+  if (!object?.userData.lightSystemData) return defaultIntensity;
+
+  // if a model has a screen; then it works a bit differently; grab base intensity from light beam
+  //
+  if (hasScreens(object))
+  {
+    const lightBeams = getCubeLightBeams(object);
+    if (lightBeams && lightBeams.length > 0)
+    {
+      return getLightBeamBaseIntensity();
+    }
+    return defaultIntensity;// if no valid light beams; return default intensity
+    // light beams all share same intensity so just grab the first one.
+  }
+  const systemData = object.userData.lightSystemData as LightSystemData;
+
+   // Otherwise, check if any lightSources have pointLightConfig.intensity defined
+   // (our current only other light source type is bulb, we can extend this later)
+  for (const sourceConfig of systemData.config.lightSources) {
+    if (sourceConfig.pointLightConfig?.intensity !== undefined) {
+      return sourceConfig.pointLightConfig.intensity;
+    }
+  }
+
+  return defaultIntensity; // fallback to default intensity
 }

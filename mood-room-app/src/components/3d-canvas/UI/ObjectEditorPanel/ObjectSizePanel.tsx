@@ -40,15 +40,6 @@ export function ObjectSizePanel({ objectRef, objectId}: ObjectScalePanelProps) {
         if (hasAnyThreeLights(model)){// only update lights if any three.js lights are attatched to the model
           updateAllLights(model, lightData);
         }
-
-        // some models may have screens and they may have volumetric meshes that may need updating 
-        // in size
-        if (hasScreens(model))
-        {
-          // function to update size of voluemtric light meshes here:
-          updateAllLightBeamDimensions(model)
-
-        }
       }
 
 

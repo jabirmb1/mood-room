@@ -3,7 +3,7 @@ import React, {useEffect, useMemo, useRef } from "react";
 import { createCuboidVolumetricLightBeamMaterial } from "@/utils/3d-canvas/custom-materials/volumetricLightBeam";
 import { isObjectLightOn } from "@/utils/3d-canvas/models";
 import { createPointLightForMesh, createSpotLightForMesh, generateMeshBoundingBox, SpotlightConfig } from "@/utils/3d-canvas/scene/meshes";
-import { baseModelSpotLightIntensity } from "@/utils/3d-canvas/const";
+import {baseScreenLightIntensity } from "@/utils/3d-canvas/const";
 
 export type CubeLightBeamDimensions={
   width: number;
@@ -123,8 +123,19 @@ export function updateLightBeamMeshDimensions(lightBeam: THREE.Mesh,dimensions: 
   lightBeam.updateMatrix();
 }
 
+// function to get base intensity of light beam's internal light
+//
+export function getLightBeamBaseIntensity(): number {
+  return baseScreenLightIntensity;
+}
+
 /******* functions relating to the spotlight side of the light beams ********/
 
+// function to check if light beam has any lights attatched to it
+//
+export function doesLightBeamHaveLightSource(lightBeamMesh: THREE.Mesh): boolean {
+  return !!lightBeamMesh.userData.spotlight;// can extend this to other light types later
+}
 
 
 // Extract beam geometry parameters
@@ -202,14 +213,13 @@ export function createSpotlightForLightBeam(lightBeamMesh: THREE.Mesh, config: S
     const { width, height, depth } = geometryParams;
     const spread = getBeamSpreadParameter(lightBeamMesh);
     const coneAngle = calculateBeamConeAngle(width, height, depth, spread);
+    const intensity = getLightBeamBaseIntensity();
 
     // Create spotlight config with calculated cone angle
-    const spotlightConfig: SpotlightConfig = {...config, angle: coneAngle, intensity: baseModelSpotLightIntensity};
+    const spotlightConfig: SpotlightConfig = {...config, angle: coneAngle, intensity: intensity};
 
     // Use the general spotlight function
-    console.log('userdata before creating spotlight:', lightBeamMesh.userData)
     const spotlight = createSpotLightForMesh(lightBeamMesh, spotlightConfig);
-    console.log('userdata after creating spotlight:', lightBeamMesh.userData)
     if (!spotlight) return null;
 
     // Calculate and set initial positions
@@ -245,7 +255,6 @@ export function updateLightBeamIntensity(lightBeamMesh: THREE.Mesh, intensity: n
 export function updateLightForLightBeam(lightBeamMesh: THREE.Mesh, dimensions?: CubeLightBeamDimensions): void {
   try {
     const spotlight = lightBeamMesh.userData.spotlight as THREE.SpotLight;
-    console.log('updating function, userdata is:', lightBeamMesh.userData)
     if (!spotlight) return;
 
     // Get current or provided dimensions
@@ -284,7 +293,6 @@ export function removeSpotlightFromLightBeam(lightBeamMesh: THREE.Mesh): void {
     lightBeamMesh.remove(spotlight);
     lightBeamMesh.remove(spotlight.target);
     spotlight.dispose();
-    console.log('removing spotlight, userdata before:', lightBeamMesh.userData)
     delete lightBeamMesh.userData.spotlight;
   }
 }
@@ -298,7 +306,7 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
   // Create geometry and material once, memoized by initial dimensions
   const { geometry, material } = useMemo(() => {
     const geom = new THREE.BoxGeometry(width, height, depth);
-    const mat = createCuboidVolumetricLightBeamMaterial({ width: width, height: height,depth:  depth, colour, opacity: 0.5});
+    const mat = createCuboidVolumetricLightBeamMaterial({ width: width, height: height,depth:  depth, colour, opacity: 0.4});
     mat.depthWrite = true;// we don't want lights to go through our beam (our beam is solid behind the scenes)
     return { geometry: geom, material: mat };
   }, [width, height, depth]);
@@ -390,6 +398,7 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
     }
 
     // we want spotlight to be same colour as the light beam
+    // can extend this later to be independent if needed
     if (meshRef.current && castLight) {
       const spotlight = meshRef.current.userData.spotlight as THREE.SpotLight;
       if (spotlight) {

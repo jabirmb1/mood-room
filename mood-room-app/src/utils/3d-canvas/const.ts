@@ -22,6 +22,7 @@ export const snapDownwardsCountdown = 0// how quikcly an object should snap down
 
 export const baseModelPointLightIntensity = 55;
 export const baseModelSpotLightIntensity = 30;
+export const baseScreenLightIntensity = 30;// base intensity for screen light sources
 
 export const defaultLightSystemConfig: LightSystemConfig = {
   lightSources: [
@@ -34,7 +35,7 @@ export const defaultLightSystemConfig: LightSystemConfig = {
         emissiveIntensity: 0
       },
       pointLightConfig: {
-        intensity: 1,
+        intensity: baseModelPointLightIntensity,
         color: '#ffffff'
       }
     },
@@ -52,8 +53,8 @@ export const defaultLightSystemConfig: LightSystemConfig = {
     {
       meshPattern: "screen_light",
       on: { 
-        // when light is on; screen needs to be same colour as its light colour
-        // e.g. emissiveColour: "lightColour" means it will take on the same colour as the light source's colour
+        // when light is on; screen becomes emissive white
+        //TO DO: make emissive colour match light colour; but make it more white
         emissiveColour: new THREE.Color('#ffffff'), 
         emissiveIntensity: 4 
       },
