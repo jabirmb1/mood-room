@@ -307,7 +307,10 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
   const { geometry, material } = useMemo(() => {
     const geom = new THREE.BoxGeometry(width, height, depth);
     const mat = createCuboidVolumetricLightBeamMaterial({ width: width, height: height,depth:  depth, colour, opacity: 0.4});
-    mat.depthWrite = true;// we don't want lights to go through our beam (our beam is solid behind the scenes)
+    mat.depthWrite = false;// makes the edges of the light beam blend in more
+    // this means that geometry will no longer block light
+    // but we can compensate by adding a function to keep track of spotlight angle
+    // so spotlight influence is not more than the cube light beam
     return { geometry: geom, material: mat };
   }, [width, height, depth]);
 

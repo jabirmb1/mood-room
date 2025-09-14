@@ -24,6 +24,13 @@ export const baseModelPointLightIntensity = 55;
 export const baseModelSpotLightIntensity = 30;
 export const baseScreenLightIntensity = 30;// base intensity for screen light sources
 
+// const mapping every light source's default emissive value.
+export const lightSourceEmissiveMap={
+  screen_light: 100,
+  bulb: 20,
+  default: 20
+}
+
 export const defaultLightSystemConfig: LightSystemConfig = {
   lightSources: [
     {
@@ -56,7 +63,8 @@ export const defaultLightSystemConfig: LightSystemConfig = {
         // when light is on; screen becomes emissive white
         //TO DO: make emissive colour match light colour; but make it more white
         emissiveColour: new THREE.Color('#ffffff'), 
-        emissiveIntensity: 4 
+        // screen_lights are both light sources and affected meshes; so reuse emissive Intensity here
+        emissiveIntensity: lightSourceEmissiveMap.screen_light
       },
       off: { 
         emissiveColour: new THREE.Color('#000000'), 

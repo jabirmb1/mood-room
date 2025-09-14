@@ -3,7 +3,7 @@
 
 import { LightMeshConfig, LightMeshState, LightSourceConfig, LightSystemConfig, LightSystemData, Model } from "@/types/types";
 import * as THREE from "three";
-import { baseScreenLightIntensity, defaultLightSystemConfig } from "../const";
+import { baseScreenLightIntensity, defaultLightSystemConfig, lightSourceEmissiveMap} from "../const";
 import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, generateMeshBoundingBox, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
 import { createCubeLightBeamDepth, CubeLightBeamDimensions, doesLightBeamHaveLightSource, generateCubeLightBeamDimensions, getLightBeamBaseIntensity, getLinkedMesh, updateLightBeamIntensity, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
@@ -117,6 +117,17 @@ function applyMeshState(meshes: THREE.Mesh[], config: LightMeshConfig, isOn: boo
   }
 };
 
+// function to get the correct emissive value depending on mesh name (has a fallback)
+//
+function getLightSourceEmissiveValue(mesh: THREE.Mesh)
+{
+   // Try to find a matching key from the mesh's name
+   const key = Object.keys(lightSourceEmissiveMap).find(k => mesh.name.includes(k)) as keyof typeof lightSourceEmissiveMap | undefined;
+
+   // If found, return its value; otherwise return the default
+   return key ? lightSourceEmissiveMap[key] : lightSourceEmissiveMap.default
+}
+
 //This function will update the pointlights which are attatched to the model
 //
 function updatePointLights (model: THREE.Object3D, pointLights: THREE.PointLight[], lightData: Model['light']): void {
@@ -168,14 +179,17 @@ function updateLightSources(systemData: LightSystemData, lightData: Model['light
     const sourceConfig = systemData.config.lightSources.find(s => s.type === sourceType);
     // there is no light source here; so move onto next light source
     if (!sourceConfig) continue;
+   // console.log('source config is', sourceConfig)
 
     for (const mesh of meshes) {
+      // pass in our light source mesh to return the correct emissive value
+      const emissiveIntensity = getLightSourceEmissiveValue(mesh)
       // convert into array for a more universal way to handle materials
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const mat of materials) {
         if (mat instanceof THREE.MeshStandardMaterial) {
           mat.emissive.set(lightData.on ? lightData.colour : '#000000');
-          mat.emissiveIntensity = lightData.on ? 20 : 0;
+          mat.emissiveIntensity = lightData.on ? emissiveIntensity: 0
           mat.needsUpdate = true;
           // make sure to cache the light source matierial's emissive state
           cacheEmissiveState(mat)
