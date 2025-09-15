@@ -3,12 +3,19 @@
 
 import { LightMeshConfig, LightMeshState, LightSourceConfig, LightSystemConfig, LightSystemData, Model } from "@/types/types";
 import * as THREE from "three";
-import { baseScreenLightIntensity, defaultLightSystemConfig, lightSourceEmissiveMap} from "../const";
+import { baseScreenLightIntensity, defaultLightSystemConfig, globalScale, lightSourceEmissiveMap} from "../const";
 import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, generateMeshBoundingBox, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
-import { createCubeLightBeamDepth, CubeLightBeamDimensions, doesLightBeamHaveLightSource, generateCubeLightBeamDimensions, getLightBeamBaseIntensity, getLinkedMesh, updateLightBeamIntensity, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { createCubeLightBeamDepth, CubeLightBeamDimensions, doesLightBeamHaveLightSource, generateCubeLightBeamDimensions, getLightBeamBaseIntensity, getLinkedMesh, getUpdatedCubeLightBeamDimensions, updateLightBeamIntensity, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { getMeshRectangleByPCA } from "../helpers/pca";
 
 
+// type covering the dimensions of screens inside models
+type ScreenDimensions={
+  width: number,
+  height: number,
+  depth: number
+}
 
 // Discover all meshes in the model based on configuration (e.g. bulbs, screens, fabrics etc)
 //
@@ -371,10 +378,65 @@ function calculateLightBeamStartOffset(linkedMesh: THREE.Mesh, beamDepth?: numbe
   return {localPosition, startOffset: beamCenterZ};
 }
 
+// Returns the screen dimensions approximated as a rectangle (width, height, depth). 
+// The rectangle is independent of the mesh’s rotation.
+// We use PCA to compute the rectangular bounds because:
+// - Screen meshes may have inconsistent local orientations.
+// - World bounding boxes would change when rotating.
+// - Local bounding boxes may mix up width, height, and depth due to inconsistent formatting in Blender/Maya.
+// 
+// alternative: Potential use face normal analysis to find the rectangular dimensions
+export function getScreenDimensions(mesh: THREE.Mesh) {
+  const dimensions = getMeshRectangleByPCA(mesh);
+  if (!dimensions) return null;
+
+  // Get the mesh’s world scale (includes global scale)
+  const worldScale = new THREE.Vector3();
+  mesh.getWorldScale(worldScale);
+
+  // Store normalised base dimensions in userData
+  // - Allows consistent scaling across multiple instances of the same model type.
+  // - Base dimensions remain independent of the mesh’s current scale.
+  mesh.userData.dimensions = {
+    width: dimensions.width / worldScale.x,
+    height: dimensions.height / worldScale.y,
+    depth: dimensions.depth / worldScale.z,
+  } as ScreenDimensions;
+
+  return {
+    width: dimensions.width,
+    height: dimensions.height,
+    depth: dimensions.depth,
+  };
+}
+
+// function to get updated screen dimensions instead of recalculating new dimensions:
+//
+export function getUpdatedScreenDimensions(mesh: THREE.Mesh) {
+  const base = mesh.userData.dimensions as ScreenDimensions;
+  // if the userdata does not exist; then just reinitialise the user data via the get Screen Dimensions
+  // function; also return it's result.
+  if (!base) {
+    return getScreenDimensions(mesh);
+  }
+
+  const worldScale = new THREE.Vector3();
+  mesh.getWorldScale(worldScale);
+
+  // we want to include the world scale; so that it fits our scene predticably (using world scale,
+  // in case the mesh is a apart of a multi mesh model)
+  return {
+    width: base.width * worldScale.x,
+    height: base.height * worldScale.y,
+    depth: base.depth * worldScale.z,
+  };
+}
+
+
 // Updated function to generate light beam dimensions and position
 export function generateCubeLightBeamDimensionsAndPosition(linkedMesh: THREE.Mesh): {
   dimensions: CubeLightBeamDimensions; position: [number, number, number]} | null {
-  const bbox = generateMeshBoundingBox(linkedMesh);
+  const bbox = getScreenDimensions(linkedMesh)
   if (!bbox) return null;
   
   const depth = createCubeLightBeamDepth(bbox.width, bbox.height);
@@ -417,7 +479,7 @@ export function updateAllLightBeamDimensions(model: THREE.Object3D): void {
   for (const lightBeam of lightBeams) {
     const linkedMesh = getLinkedMesh(lightBeam);
     if (linkedMesh) {
-      const dimensions = generateCubeLightBeamDimensions(linkedMesh);// extend this later to other shapes as well
+      const dimensions = getUpdatedCubeLightBeamDimensions(linkedMesh);// extend this later to other shapes as well
       if (dimensions) {
         // Update dimensions
         updateLightBeamMeshDimensions(lightBeam, dimensions);

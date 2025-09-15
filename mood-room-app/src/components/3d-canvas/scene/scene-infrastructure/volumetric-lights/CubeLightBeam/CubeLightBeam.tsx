@@ -4,6 +4,7 @@ import { createCuboidVolumetricLightBeamMaterial } from "@/utils/3d-canvas/custo
 import { isObjectLightOn } from "@/utils/3d-canvas/models";
 import { createPointLightForMesh, createSpotLightForMesh, generateMeshBoundingBox, SpotlightConfig } from "@/utils/3d-canvas/scene/meshes";
 import {baseScreenLightIntensity } from "@/utils/3d-canvas/const";
+import { getScreenDimensions, getUpdatedScreenDimensions} from "@/utils/3d-canvas/models/lightingSystem";
 
 export type CubeLightBeamDimensions={
   width: number;
@@ -82,10 +83,21 @@ export function getLinkedMesh(lightBeam: THREE.Object3D): THREE.Mesh | null{
 
 //function to generate the dimensions for the light beam; by passing in a mesh for it to come out of 
 // (e.g. screens)
+// used for intialisation.
 //
 export function generateCubeLightBeamDimensions(linkedMesh: THREE.Mesh): CubeLightBeamDimensions | null 
 {
-   const bbox = generateMeshBoundingBox(linkedMesh);
+  const bbox = getScreenDimensions(linkedMesh)
+  if (!bbox) return null;
+  const depth = createCubeLightBeamDepth(bbox.width, bbox.height);
+  return {width: bbox.width, height: bbox.height, depth}
+}
+
+//function to get updated cube light beams (e.g. after initialisation, uses a more optimized approach)
+//
+export function getUpdatedCubeLightBeamDimensions(linkedMesh: THREE.Mesh): CubeLightBeamDimensions | null 
+{
+  const bbox = getUpdatedScreenDimensions(linkedMesh)
   if (!bbox) return null;
   const depth = createCubeLightBeamDepth(bbox.width, bbox.height);
   return {width: bbox.width, height: bbox.height, depth}
@@ -383,6 +395,10 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
       meshRef.current.userData.spotlight.visible = visible;
     }
   }, [visible]);
+
+  useEffect(()=>{
+    console.log('dimensions are:', width, height, depth)
+  }, [width, height, depth])
 
 
   // Update material uniforms when dimensions change
