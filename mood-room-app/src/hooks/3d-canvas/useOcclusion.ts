@@ -2,8 +2,8 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { calculateObjectBoxSize} from '@/utils/3d-canvas/models';
-import {isCubeLightBeam, updateCubeLightBeamVisibility } from '@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam';
 import { isLightBeamConnectedToObject } from '@/utils/3d-canvas/models/lightingSystem';
+import { isLightBeam, updateModelLightBeamVisability } from '@/utils/3d-canvas/scene/lightBeam/lightBeam';
 
 /****  This hook is used to make objects between target object and camera be invisible/ trasnparent via raycasting****/
 
@@ -111,10 +111,9 @@ function resetObject(obj: THREE.Object3D, makeInvisible: boolean): void {
   obj.traverse((child) => {
 
       // Special handling for cube volumetric light beams(should be reset depedning if they are on/ off)
-      // user controlled light beams ar visible by user; so respect their decision
-      //TO DO: extend this to be more general
-      if (isCubeLightBeam(child)) {
-        updateCubeLightBeamVisibility(child)
+      // user controlled light beams are visible by user; so respect their decision
+      if (isLightBeam(child)) {
+        updateModelLightBeamVisability(child)
         return; // skip normal mesh reset
       }
     if ((child as THREE.Mesh).material && !makeInvisible) {

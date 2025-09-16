@@ -3,11 +3,13 @@
 
 import { LightMeshConfig, LightMeshState, LightSourceConfig, LightSystemConfig, LightSystemData, Model } from "@/types/types";
 import * as THREE from "three";
-import { baseScreenLightIntensity, defaultLightSystemConfig, globalScale, lightSourceEmissiveMap} from "../const";
-import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, generateMeshBoundingBox, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
+import { baseScreenLightIntensity, defaultLightSystemConfig, lightSourceEmissiveMap} from "../const";
+import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
-import { createCubeLightBeamDepth, CubeLightBeamDimensions, doesLightBeamHaveLightSource, generateCubeLightBeamDimensions, getCubeLightBeamHostModelRef, getLightBeamBaseIntensity, getLinkedMesh, getUpdatedCubeLightBeamDimensions, updateLightBeamIntensity, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
 import { getMeshRectangleByPCA } from "../helpers/pca";
+import { getLinkedMesh, LightBeamDimensions, updateLightBeamMeshColour, updateLightBeamMeshDimensions } from "../scene/lightBeam/lightBeam";
+import { doesLightBeamHaveLightSource, getLightBeamBaseIntensity, updateLightBeamIntensity, updateLightForLightBeam } from "../scene/lightBeam/lights";
+import { createCubeLightBeamDepth, getCubeLightBeamHostModelRef, getUpdatedCubeLightBeamDimensions } from "../scene/lightBeam/cubeLightBeam";
 
 
 // type covering the dimensions of screens inside models
@@ -16,6 +18,8 @@ type ScreenDimensions={
   height: number,
   depth: number
 }
+
+/***********initialisation functions ***********/
 
 // Discover all meshes in the model based on configuration (e.g. bulbs, screens, fabrics etc)
 //
@@ -84,6 +88,47 @@ export function createPointLightsForModel(meshes: THREE.Mesh[], config: LightSou
 }
 
 
+// Main initialisation function for light emitting models
+export function initialiseLights(model: THREE.Object3D, lightData?: Model['light'], config: LightSystemConfig = defaultLightSystemConfig): void{
+  // Discover all meshes in the model
+  const systemData = discoverMeshes(model, config);
+
+  // If no light sources found, mark as non-light object
+  if (systemData.lightSources.size === 0) {
+    model.userData.light = null;
+    return;
+  }
+
+  // Initialise light source meshes and create point lights
+  for (const [sourceType, meshes] of systemData.lightSources) {
+    const sourceConfig = config.lightSources.find(s => s.type === sourceType);
+    if (!sourceConfig) continue;
+
+    // Initialise default material properties
+    initialiseSourceMeshes(meshes, sourceConfig);
+
+    // Create point lights if needed
+    if (sourceConfig.createPointLight) {
+      const pointLights = createPointLightsForModel(meshes, sourceConfig, lightData);
+      systemData.pointLights.push(...pointLights);// push the pointlights so we can access them faster next time
+    }
+  }
+
+  // Store light data and system data in model userData
+
+  //use existing light data if it exists; otherwise give it default values
+  model.userData.lightSystemData = systemData;// make lightSystemData before calling e.g. hasScreens
+  //or other functions (depends on lightSystemData)
+
+  // crude method to determine base intesnity (can be improved later)
+  // if model uses a screen; use screen base intensity; otherwise use bulb base intensity
+  const baseIntensity = hasScreens(model)? baseScreenLightIntensity: config.defaultIntensity;
+  model.userData.light = lightData || {on: false, intensity: baseIntensity, colour: config.defaultColor};
+}
+
+/************* functions to update data ************/
+
+
 // Apply emissive color based on state configuration to the passed in material
 //
 function applyEmissiveColor( material: THREE.MeshStandardMaterial, state: LightMeshState, lightColour: string): void {
@@ -124,16 +169,6 @@ function applyMeshState(meshes: THREE.Mesh[], config: LightMeshConfig, isOn: boo
   }
 };
 
-// function to get the correct emissive value depending on mesh name (has a fallback)
-//
-function getLightSourceEmissiveValue(mesh: THREE.Mesh)
-{
-   // Try to find a matching key from the mesh's name
-   const key = Object.keys(lightSourceEmissiveMap).find(k => mesh.name.includes(k)) as keyof typeof lightSourceEmissiveMap | undefined;
-
-   // If found, return its value; otherwise return the default
-   return key ? lightSourceEmissiveMap[key] : lightSourceEmissiveMap.default
-}
 
 //This function will update the pointlights which are attatched to the model
 //
@@ -151,18 +186,6 @@ function updatePointLights (model: THREE.Object3D, pointLights: THREE.PointLight
   }
 };
 
-//function to update systems data to add/ remove the external cube beams:
-//
-export function updateCubeLightBeamsArray(systemData: LightSystemData | null, action: "add" | "remove", beam: THREE.Mesh): void {
-  if (!systemData) return
-  if (action === "add") {
-    if (!systemData.cubeLightBeams.includes(beam)) {
-      systemData.cubeLightBeams.push(beam);
-    }
-  } else if (action === "remove") {
-    systemData.cubeLightBeams = systemData.cubeLightBeams.filter(m => m !== beam);
-  }
-}
 
 // Update affected light meshes of light emitting models.
 //
@@ -176,6 +199,7 @@ function updateAffectedMeshes(systemData: LightSystemData,lightData: Model['ligh
     applyMeshState(meshes, meshConfig, lightData.on, lightData.colour);
   }
 };
+
 
 // Update light source meshes (bulbs, screens, etc.)
 //
@@ -205,6 +229,58 @@ function updateLightSources(systemData: LightSystemData, lightData: Model['light
     }
   }
 };
+
+
+// Main update function to update everything that is needed for a light emitting model to emit light
+//
+export function updateAllLights(model: THREE.Object3D, lightData: Model['light']): void {
+  const systemData = model.userData.lightSystemData as LightSystemData;
+  if (!lightData || !systemData) return;
+
+  // update everyhting relating to lights for that specific model here 
+  updatePointLights(model, systemData.pointLights, lightData);
+  updateAffectedMeshes(systemData, lightData);
+
+  // if the object has a three.js light; update it.
+  if (hasAnyThreeLights(model))
+  {
+    updateLightSources(systemData, lightData);
+  }
+
+  // if the model has a screen; then it has a volumetricLightBeam mesh
+  // update it.
+  if (hasScreens(model))
+  {
+        
+      toggleCubeLightBeamsvisibility(systemData, lightData.on)
+      const lightBeams = getCubeLightBeams(model)// can extend this to other shapes as well
+      if (!lightBeams) return
+      updateAllLightBeamColours(lightBeams, new THREE.Color(lightData.colour))
+      updateAllLightBeamDimensions(model)
+      updateAllLightBeamIntensity(lightBeams, lightData.intensity)
+      
+  }
+
+  // Update stored light data
+  if (model.userData.light) {
+    Object.assign(model.userData.light, lightData);
+  }
+};
+
+
+/************* light beam management ***********/
+//function to update systems data to add/ remove the external cube beams:
+//
+export function updateCubeLightBeamsArray(systemData: LightSystemData | null, action: "add" | "remove", beam: THREE.Mesh): void {
+  if (!systemData) return
+  if (action === "add") {
+    if (!systemData.cubeLightBeams.includes(beam)) {
+      systemData.cubeLightBeams.push(beam);
+    }
+  } else if (action === "remove") {
+    systemData.cubeLightBeams = systemData.cubeLightBeams.filter(m => m !== beam);
+  }
+}
 
 // function to toggle visibility status of all cube volumetricLightMeshes.
 //
@@ -266,84 +342,6 @@ export function updateAllLightBeamIntensity(lightBeams: THREE.Mesh[], intensity:
   }
 }
 
-// Main initialisation function for light emitting models
-export function initialiseLights(model: THREE.Object3D, lightData?: Model['light'], config: LightSystemConfig = defaultLightSystemConfig): void{
-  // Discover all meshes in the model
-  const systemData = discoverMeshes(model, config);
-
-  // If no light sources found, mark as non-light object
-  if (systemData.lightSources.size === 0) {
-    model.userData.light = null;
-    return;
-  }
-
-  // Initialise light source meshes and create point lights
-  for (const [sourceType, meshes] of systemData.lightSources) {
-    const sourceConfig = config.lightSources.find(s => s.type === sourceType);
-    if (!sourceConfig) continue;
-
-    // Initialise default material properties
-    initialiseSourceMeshes(meshes, sourceConfig);
-
-    // Create point lights if needed
-    if (sourceConfig.createPointLight) {
-      const pointLights = createPointLightsForModel(meshes, sourceConfig, lightData);
-      systemData.pointLights.push(...pointLights);// push the pointlights so we can access them faster next time
-    }
-  }
-
-  // Store light data and system data in model userData
-
-  //use existing light data if it exists; otherwise give it default values
-  
-  //TO DO: change default intesity based on inidivisual model; (e.g. meta data)
-  // since some uses screens; others uses bulbs etc (each has a different base intensity)
-
-  model.userData.lightSystemData = systemData;// make lightSystemData before calling e.g. hasScreens
-  //or other functions (depends on lightSystemData)
-
-  // crude method to determine base intesnity (can be improved later)
-  // if model uses a screen; use screen base intensity; otherwise use bulb base intensity
-  const baseIntensity = hasScreens(model)? baseScreenLightIntensity: config.defaultIntensity;
-  model.userData.light = lightData || {on: false, intensity: baseIntensity, colour: config.defaultColor};
-}
-
-// Main update function to update everything that is needed for a light emitting model to emit light
-//
-export function updateAllLights(model: THREE.Object3D, lightData: Model['light']): void {
-  const systemData = model.userData.lightSystemData as LightSystemData;
-  if (!lightData || !systemData) return;
-
-  // update everyhting relating to lights for that specific model here 
-  updatePointLights(model, systemData.pointLights, lightData);
-  updateAffectedMeshes(systemData, lightData);
-
-  // if the object has a three.js light; update it.
-  if (hasAnyThreeLights(model))
-  {
-    updateLightSources(systemData, lightData);
-  }
-
-  // if the model has a screen; then it has a volumetricLightBeam mesh
-  // update it.
-  if (hasScreens(model))
-  {
-        
-      toggleCubeLightBeamsvisibility(systemData, lightData.on)
-      const lightBeams = getCubeLightBeams(model)// can extend this to other shapes as well
-      if (!lightBeams) return
-      updateAllLightBeamColours(lightBeams, new THREE.Color(lightData.colour))
-      updateAllLightBeamDimensions(model)
-      updateAllLightBeamIntensity(lightBeams, lightData.intensity)
-      
-  }
-
-  // Update stored light data
-  if (model.userData.light) {
-    Object.assign(model.userData.light, lightData);
-  }
-};
-
 // Helper function to calculate the start offset for a light beam based on its linked mesh
 function calculateLightBeamStartOffset(linkedMesh: THREE.Mesh, beamDepth?: number): {
   localPosition: [number, number, number]; startOffset: number;} {
@@ -378,64 +376,10 @@ function calculateLightBeamStartOffset(linkedMesh: THREE.Mesh, beamDepth?: numbe
   return {localPosition, startOffset: beamCenterZ};
 }
 
-// Returns the screen dimensions approximated as a rectangle (width, height, depth). 
-// The rectangle is independent of the mesh’s rotation.
-// We use PCA to compute the rectangular bounds because:
-// - Screen meshes may have inconsistent local orientations.
-// - World bounding boxes would change when rotating.
-// - Local bounding boxes may mix up width, height, and depth due to inconsistent formatting in Blender/Maya.
-// 
-// alternative: Potential use face normal analysis to find the rectangular dimensions
-export function getScreenDimensions(mesh: THREE.Mesh) {
-  const dimensions = getMeshRectangleByPCA(mesh);
-  if (!dimensions) return null;
-
-  // Get the mesh’s world scale (includes global scale)
-  const worldScale = new THREE.Vector3();
-  mesh.getWorldScale(worldScale);
-
-  // Store normalised base dimensions in userData
-  // - Allows consistent scaling across multiple instances of the same model type.
-  // - Base dimensions remain independent of the mesh’s current scale.
-  mesh.userData.dimensions = {
-    width: dimensions.width / worldScale.x,
-    height: dimensions.height / worldScale.y,
-    depth: dimensions.depth / worldScale.z,
-  } as ScreenDimensions;
-
-  return {
-    width: dimensions.width,
-    height: dimensions.height,
-    depth: dimensions.depth,
-  };
-}
-
-// function to get updated screen dimensions instead of recalculating new dimensions:
-//
-export function getUpdatedScreenDimensions(mesh: THREE.Mesh) {
-  const base = mesh.userData.dimensions as ScreenDimensions;
-  // if the userdata does not exist; then just reinitialise the user data via the get Screen Dimensions
-  // function; also return it's result.
-  if (!base) {
-    return getScreenDimensions(mesh);
-  }
-
-  const worldScale = new THREE.Vector3();
-  mesh.getWorldScale(worldScale);
-
-  // we want to include the world scale; so that it fits our scene predticably (using world scale,
-  // in case the mesh is a apart of a multi mesh model)
-  return {
-    width: base.width * worldScale.x,
-    height: base.height * worldScale.y,
-    depth: base.depth * worldScale.z,
-  };
-}
-
 
 // Updated function to generate light beam dimensions and position
 export function generateCubeLightBeamDimensionsAndPosition(linkedMesh: THREE.Mesh): {
-  dimensions: CubeLightBeamDimensions; position: [number, number, number]} | null {
+  dimensions: LightBeamDimensions; position: [number, number, number]} | null {
   const bbox = getScreenDimensions(linkedMesh)
   if (!bbox) return null;
   
@@ -504,11 +448,80 @@ export function updateAllLightBeamDimensions(model: THREE.Object3D): void {
 export function isLightBeamConnectedToObject(lightBeam: THREE.Object3D | null, 
   object: THREE.Object3D | null) : boolean{
   if (!lightBeam || !object) return false
-  const host = getCubeLightBeamHostModelRef(lightBeam)?.current;
+  const host = getCubeLightBeamHostModelRef(lightBeam)?.current;// TO DO: swap to general light beam
   if (!host) return false;
   return host.uuid === object.uuid// use the uuids for an accurate comparison
 }
-/***********Light property getters *************/
+
+/******* geometry helpers ********/
+
+// Returns the screen dimensions approximated as a rectangle (width, height, depth). 
+// The rectangle is independent of the mesh’s rotation.
+// We use PCA to compute the rectangular bounds because:
+// - Screen meshes may have inconsistent local orientations.
+// - World bounding boxes would change when rotating.
+// - Local bounding boxes may mix up width, height, and depth due to inconsistent formatting in Blender/Maya.
+// 
+// alternative: Potential use face normal analysis to find the rectangular dimensions
+export function getScreenDimensions(mesh: THREE.Mesh) {
+  const dimensions = getMeshRectangleByPCA(mesh);
+  if (!dimensions) return null;
+
+  // Get the mesh’s world scale (includes global scale)
+  const worldScale = new THREE.Vector3();
+  mesh.getWorldScale(worldScale);
+
+  // Store normalised base dimensions in userData
+  // - Allows consistent scaling across multiple instances of the same model type.
+  // - Base dimensions remain independent of the mesh’s current scale.
+  mesh.userData.dimensions = {
+    width: dimensions.width / worldScale.x,
+    height: dimensions.height / worldScale.y,
+    depth: dimensions.depth / worldScale.z,
+  } as ScreenDimensions;
+
+  return {
+    width: dimensions.width,
+    height: dimensions.height,
+    depth: dimensions.depth,
+  };
+}
+
+// function to get updated screen dimensions instead of recalculating new dimensions:
+//
+export function getUpdatedScreenDimensions(mesh: THREE.Mesh) {
+  const base = mesh.userData.dimensions as ScreenDimensions;
+  // if the userdata does not exist; then just reinitialise the user data via the get Screen Dimensions
+  // function; also return it's result.
+  if (!base) {
+    return getScreenDimensions(mesh);
+  }
+
+  const worldScale = new THREE.Vector3();
+  mesh.getWorldScale(worldScale);
+
+  // we want to include the world scale; so that it fits our scene predticably (using world scale,
+  // in case the mesh is a apart of a multi mesh model)
+  return {
+    width: base.width * worldScale.x,
+    height: base.height * worldScale.y,
+    depth: base.depth * worldScale.z,
+  };
+}
+
+/***********getters  and queries*************/
+
+
+// function to get the correct emissive value depending on mesh name (has a fallback)
+//
+function getLightSourceEmissiveValue(mesh: THREE.Mesh)
+{
+   // Try to find a matching key from the mesh's name
+   const key = Object.keys(lightSourceEmissiveMap).find(k => mesh.name.includes(k)) as keyof typeof lightSourceEmissiveMap | undefined;
+
+   // If found, return its value; otherwise return the default
+   return key ? lightSourceEmissiveMap[key] : lightSourceEmissiveMap.default
+}
 
 //function to get the lightSystem Data from the object's userData.
 //
