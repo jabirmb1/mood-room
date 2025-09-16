@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { baseScreenLightIntensity, defaultLightSystemConfig, globalScale, lightSourceEmissiveMap} from "../const";
 import { cacheEmissiveState, createPointLightForMesh, findMeshesByPattern, generateMeshBoundingBox, getMeshColour, toggleMeshvisibility } from "../scene/meshes";
 import { calculateObjectBoxSize } from "./modelManipulation";
-import { createCubeLightBeamDepth, CubeLightBeamDimensions, doesLightBeamHaveLightSource, generateCubeLightBeamDimensions, getLightBeamBaseIntensity, getLinkedMesh, getUpdatedCubeLightBeamDimensions, updateLightBeamIntensity, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { createCubeLightBeamDepth, CubeLightBeamDimensions, doesLightBeamHaveLightSource, generateCubeLightBeamDimensions, getCubeLightBeamHostModelRef, getLightBeamBaseIntensity, getLinkedMesh, getUpdatedCubeLightBeamDimensions, updateLightBeamIntensity, updateLightBeamMeshColour, updateLightBeamMeshDimensions, updateLightForLightBeam } from "@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
 import { getMeshRectangleByPCA } from "../helpers/pca";
 
 
@@ -495,6 +495,19 @@ export function updateAllLightBeamDimensions(model: THREE.Object3D): void {
   }
 }
 
+
+
+//This function will be used to check if a light beam is 'connected' to the passed in object
+// since light beams are not children of objects; they are connected via references in userdata
+// we will use that check for the comparison.
+//
+export function isLightBeamConnectedToObject(lightBeam: THREE.Object3D | null, 
+  object: THREE.Object3D | null) : boolean{
+  if (!lightBeam || !object) return false
+  const host = getCubeLightBeamHostModelRef(lightBeam)?.current;
+  if (!host) return false;
+  return host.uuid === object.uuid// use the uuids for an accurate comparison
+}
 /***********Light property getters *************/
 
 //function to get the lightSystem Data from the object's userData.

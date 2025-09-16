@@ -44,7 +44,7 @@ export function createCubeLightBeamDepth(width:number, height: number) : number{
 //if this mesh is a cubeLightBeam or not
 //
 export function isCubeLightBeam(mesh: THREE.Object3D): boolean {
-  return mesh.userData.isCubeLightBeam;
+  return mesh.userData?.isCubeLightBeam === true;
 }
 
 // Returns the host model ref itself (this cube mesh may be attatched to another mesh e.g. tv screen)
@@ -395,10 +395,6 @@ export function CubeLightBeam({ lightBeamRef,hostModelRef, linkedMesh, width, he
       meshRef.current.userData.spotlight.visible = visible;
     }
   }, [visible]);
-
-  useEffect(()=>{
-    console.log('dimensions are:', width, height, depth)
-  }, [width, height, depth])
 
 
   // Update material uniforms when dimensions change

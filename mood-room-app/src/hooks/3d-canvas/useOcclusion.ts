@@ -1,8 +1,9 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { calculateObjectBoxSize, isObjectLightOn } from '@/utils/3d-canvas/models';
-import { isCubeLightBeam, updateCubeLightBeamVisibility } from '@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam';
+import { calculateObjectBoxSize} from '@/utils/3d-canvas/models';
+import {isCubeLightBeam, updateCubeLightBeamVisibility } from '@/components/3d-canvas/scene/scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam';
+import { isLightBeamConnectedToObject } from '@/utils/3d-canvas/models/lightingSystem';
 
 /****  This hook is used to make objects between target object and camera be invisible/ trasnparent via raycasting****/
 
@@ -140,7 +141,7 @@ function resetObject(obj: THREE.Object3D, makeInvisible: boolean): void {
 // be more accurate. It also uses throttling to increase performance.
 //
 export function useOcclusionTransparency({targetRef, potentialOccluders, opacity = 0.2, throttleMs = 100, makeInvisible = false, sampleCount = 12,}: UseOcclusionTransparencyProps) {
-  const { camera, scene } = useThree();// current camera that is being used.
+  const { camera} = useThree();// current camera that is being used.
   const raycaster = useRef(new THREE.Raycaster());// the raycaster that we will use to fire rays.
   const modifiedObjectsRef = useRef<Set<THREE.Object3D>>(new Set());// keeps track of which objects are transparent/ invisible at a given time.
   const visibilityStability = useRef<Map<THREE.Object3D, number>>(new Map());// keeps track of for how many frames an occluder has been an occluder
@@ -199,7 +200,10 @@ export function useOcclusionTransparency({targetRef, potentialOccluders, opacity
           if (['LineSegments', 'Line'].includes(hit.object.type)) continue;// skip lines and line segments as they are not occluders. (background helper geometry that's not visible)
 
           // if the ray hit the target object (or it's child), we continue as we don't want to set the target invisible/ transparent.
-          if (isDescendantOf(hit.object, target)) continue;
+          // if there is a light beam which is connected to our selected object; also ignore
+          if (isDescendantOf(hit.object, target) || (isLightBeamConnectedToObject(hit.object, target))){
+            continue
+          }
           
           // if the object's hit distance is less than distance from target object to camera; it means that it is between the
           // points; and hence it is an occluder.
