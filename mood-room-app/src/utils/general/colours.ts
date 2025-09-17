@@ -146,3 +146,17 @@ export function mixColours(color1: THREE.Color, color2: THREE.Color, ratio: numb
     return color1.clone().lerp(color2, t);
   }
  
+// function to check if passed in string is a default colour; if not it will use a passed in fallback string
+//
+export function getThreeColour(colour: string, fallbackColour: string) : THREE.Color{
+    try{
+        const threeColour = new THREE.Color(colour);
+        return threeColour
+    }
+    catch(error){
+        const threeColour = new THREE.Color(fallbackColour);
+        console.log('unsuccessful colour')
+        return threeColour
+        
+    }
+}

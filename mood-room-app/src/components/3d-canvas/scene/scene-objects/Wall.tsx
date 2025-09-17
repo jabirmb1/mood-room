@@ -1,6 +1,7 @@
 'use client'
 
 import { RigidBody } from "@react-three/rapier";
+import * as THREE from 'three'
 
 /************This coponent will just create  three js walls efficiently with an optional flag to turn on/ off colliders. */
 
@@ -8,7 +9,7 @@ type WallProps = {
     position: [number, number, number]; // position of wall
     size: [number, number, number]; // how big it should be
     rotation?: [number, number, number]// how should wall be rotated?
-    colour?: string; // colour of the walls.
+    colour?: THREE.Color // colour of the walls.
     name?: string;// name of wall
     invisible?: boolean// whether or not the wall should invisible
     enableShadows?: boolean;
