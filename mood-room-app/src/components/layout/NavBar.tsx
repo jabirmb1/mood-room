@@ -5,6 +5,7 @@ import DropDownMenu from './UserDropDownMenu';
 import ThemeToggle from '../UI/ThemeToggle';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import { darkTheme, lightTheme } from '@/utils/UI/const';
 
 export default function NavBar() {
     const { theme } = useTheme();
@@ -20,7 +21,7 @@ export default function NavBar() {
     return (
     <nav 
     key={theme}
-    className={`w-full ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'} border-b border-gray-200 relative h-16`}>
+    className={`w-full ${theme === 'dark' ? darkTheme : lightTheme} border-b border-gray-200 relative h-16`}>
     {/* Centered nav links */}
     <div className="hidden md:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <ul className="flex space-x-8 text-base font-large">

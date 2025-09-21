@@ -1,5 +1,7 @@
 
+import { darkThemeBackground, lightThemeBackground } from "@/utils/UI/const";
 import { AddModelTab, ModelItem } from "./AddModelTab";
+import { useTheme } from "next-themes";
 
 /****** This button is used to add in models into the canvas **************/
 interface AddModelButtonProps {
@@ -11,6 +13,7 @@ interface AddModelButtonProps {
 }
 
 export function AddModelButton({ show, manifestData, className = '', toggle, onAddModel }: AddModelButtonProps) {
+  const {theme} = useTheme()
   return (
     <div className={className}>
       <div className="flex gap-2">
@@ -24,7 +27,7 @@ export function AddModelButton({ show, manifestData, className = '', toggle, onA
         </button>
       </div>
       {show && (
-        <aside className="absolute left-0 mt-2 md:w-120 w-64 bg-white p-4 rounded shadow-lg z-20">
+        <aside className={`${theme === 'dark'? darkThemeBackground: lightThemeBackground} absolute left-0 mt-2 md:w-120 w-64 p-4 rounded shadow-lg z-20`}>
           <AddModelTab manifestData={manifestData} onAddModel={onAddModel} />
         </aside>
       )}

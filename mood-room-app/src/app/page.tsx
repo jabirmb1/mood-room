@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sour_Gummy } from 'next/font/google'; // Import the Chewy font
 import { useTheme } from "next-themes";
 import { useState, useEffect } from 'react';
+import { darkTheme, darkThemeBackground, darkThemeText, lightTheme } from "@/utils/UI/const";
 // Configure the font loader
 const sourgumFont = Sour_Gummy({
   weight: '400', // Specify the weight you need (e.g., '400' for regular)
@@ -33,7 +34,7 @@ export default function Home() {
       
       <div className="flex justify-center mt-4 mb-4">
       <button 
-      className={`${sourgumFont.className} md:text-[40px] text-[20px] px-8 py-4 rounded-lg border-5 border-green-500 ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'} cursor-pointer `}
+      className={`${sourgumFont.className} md:text-[40px] text-[20px] px-8 py-4 rounded-lg border-5 border-green-500 ${theme === 'dark' ? darkTheme : lightTheme} cursor-pointer `}
       onClick={handleGenerateRoomClick}
       >
       GENERATE ROOM

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ColourPickerControl } from '../../../UI/ColourPickerControl';
+import { useTheme } from 'next-themes';
+import { darkThemeBorder, darkThemeSecondaryText, darkThemeTitle, lightThemeBorder, lightThemeSecondaryText, lightThemeTitle } from '@/utils/UI/const';
 
 export interface LightingConfig {
   ambient: { intensity: number; colour: string };// intensity and colour of ambient light
@@ -15,6 +17,7 @@ export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }
   // keeping some use states to show the respetive hex colour picker for the two lights.
   const [showAmbientPicker, setShowAmbientPicker] = useState(false);
   const [showDirectionalPicker, setShowDirectionalPicker] = useState(false);
+  const {theme} = useTheme();
 
   // This function is used to just update the light configs .
   function updateLight( type: 'ambient' | 'directional',  field: 'intensity' | 'colour', value: number | string){
@@ -26,7 +29,8 @@ export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }
 
   return (
     <section className="h-full flex flex-col rounded-lg h-[80vh]">
-        <h3 className="flex items-center justify-between mb-4 font-semibold text-gray-900">Lighting</h3>
+        <h3 className={`${theme === 'dark'? darkThemeTitle : lightThemeTitle} flex items-center 
+        justify-between mb-4 font-semibold`}>Lighting</h3>
 
       {(['ambient', 'directional'] as const).map((type) => {
         const label = type === 'ambient' ? '💡 Ambient' : '☀️ Directional';
@@ -58,9 +62,11 @@ export const LightingPanel: React.FC<LightingPanelProps> = ({ config, onChange }
 
             {/* Colour control row */}
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm text-gray-700">Current colour:</span>
+              <span className={`text-sm ${theme === 'dark'? darkThemeSecondaryText : lightThemeSecondaryText}`}>
+                Current colour:</span>
+
               <button
-                className="w-6 h-6 border rounded shadow"
+                className={` ${theme === 'dark'? darkThemeBorder: lightThemeBorder} w-6 h-6 border rounded shadow`}
                 style={{ backgroundColor: colour }}
                 onClick={() => setShowPicker(true)}
                 title="Click to edit colour"

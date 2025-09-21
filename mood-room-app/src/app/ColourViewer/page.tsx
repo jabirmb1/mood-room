@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import ColouredSquare from "@/components/dev-only/colouredSquare";
 import { moodTypes } from "@/utils/3d-canvas/const";
 import { useTheme } from "next-themes";
+import { darkTheme, lightTheme } from "@/utils/UI/const";
 
 export default function ColourViewer() {
   const [mood, setMood] = useState<MoodType>("happy");
@@ -28,7 +29,7 @@ export default function ColourViewer() {
   //NOTE:
   //This is just a dev only component; won't be in final product; hence it isn't as broken down as the normal pages.
   return (
-    <section className={`p-4 space-y-6 ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'}`}>
+    <section className={`p-4 space-y-6 ${theme === 'dark' ? darkTheme : lightTheme}`}>
       {/* Controls */}
       <div className="flex items-center gap-4">
         <label className="flex flex-col text-sm font-medium">
@@ -36,7 +37,7 @@ export default function ColourViewer() {
           <select
             value={mood}
             onChange={(e) => setMood(e.target.value as MoodType)}
-            className={`border rounded px-2 py-1 text-sm ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'}`}
+            className={`border rounded px-2 py-1 text-sm ${theme === 'dark' ? darkTheme : lightTheme}`}
           >
             {/* map all the mood types into a select so we can use them inside a drop down */}
             {moodTypes.map((m) => (

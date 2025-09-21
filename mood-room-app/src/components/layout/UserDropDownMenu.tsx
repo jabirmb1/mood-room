@@ -7,6 +7,7 @@ import * as React from "react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import {Menu} from "lucide-react"
+import { darkThemeText, lightTheme, lightThemeText } from "@/utils/UI/const"
 
 export default function UserDropDownMenu() {
   const { setTheme, theme } = useTheme();
@@ -43,8 +44,8 @@ export default function UserDropDownMenu() {
   //common css for all dropdown items (Links and the theme button)
   const commonItemBaseClasses = "block px-4 m-1 py-2 text-left rounded-xl";
   const commonItemThemeClasses = theme === 'dark' 
-    ? 'bg-neutral-900 text-white hover:bg-neutral-800 border-neutral-300' 
-    : 'bg-white text-black hover:bg-gray-100 border-gray-200';
+    ? 'bg-neutral-900' + darkThemeText+ 'hover:bg-neutral-800 border-neutral-300' 
+    : lightTheme + 'hover:bg-gray-100 border-gray-200';
 
   //css for the dropdown container itself
   const dropdownContainerClasses = `
@@ -61,7 +62,7 @@ export default function UserDropDownMenu() {
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} transition-colours"
+        className={`px-4 py-2 ${theme === 'dark' ? darkThemeText : lightThemeText} transition-colors`}
       >
         <Menu className="w-6 h-6" />
       </button>

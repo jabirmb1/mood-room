@@ -63,7 +63,7 @@ export function ObjectLightPanel({ objectRef }: ObjectLightPanelProps) {
     }
 
     return (   
-        <article className="w-full mt-6 flex flex-col items-stretch border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
+        <article className="w-full mt-6 flex flex-col items-stretch border border-gray-400 rounded-xl p-4  shadow-sm">
             <h3 className="text-lg font-semibold mb-4 text-center">Light</h3>
             {/* either show no light settings; or do show light settings depending if light is currently on/ off*/}
 

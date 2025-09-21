@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { ModelThumbnail } from './ModelThumbnail';
 import { ModelItem } from './AddModelTab';
 import { use, useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
+import { darkThemeBackground, darkThemeBackgroundSecondary, darkThemeSecondaryText, lightThemeBackground, lightThemeSecondaryText } from '@/utils/UI/const';
 
 interface ModelCardProps {
   item: ModelItem;
@@ -14,6 +16,7 @@ interface ModelCardProps {
 
 export function ModelCard({ item, hoveredModel, setHoveredModel, onClick }: ModelCardProps) {
     const [isVisible, setIsVisible] = useState(true);
+    const {theme} = useTheme();
 
     // If model failed to load, don't render the card
     if (!isVisible) return null;
@@ -48,8 +51,9 @@ export function ModelCard({ item, hoveredModel, setHoveredModel, onClick }: Mode
         </div>
 
         {/* name */}
-        <div className="p-2">
-            <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
+        <div className={`${theme=== 'dark'? darkThemeBackgroundSecondary: lightThemeBackground} p-2`}>
+            <h3 className={`${theme === 'dark'? darkThemeSecondaryText: lightThemeSecondaryText} text-sm font-medium`}>
+                {item.name}</h3>
         </div>
         </motion.div>
     );

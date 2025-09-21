@@ -7,6 +7,7 @@
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { darkTheme, lightTheme } from '@/utils/UI/const';
 
 interface ViewModeProps {
     onClose: () => void;
@@ -24,7 +25,7 @@ export default function ViewMode({ onClose }: ViewModeProps){
     
         
     return(
-        <div className={`flex flex-col rounded-2xl max-w-screen-md w-full h-150 mx-auto p-4 ${theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-black'}`}>
+        <div className={`flex flex-col rounded-2xl max-w-screen-md w-full h-150 mx-auto p-4 ${theme === 'dark' ? darkTheme : lightTheme}`}>
 
         <motion.div // Using motion.div from framer-motion (assuming it's imported correctly)
                 // Add Tailwind classes for the box's appearance and size
@@ -43,12 +44,12 @@ export default function ViewMode({ onClose }: ViewModeProps){
             <section className="flex-1">
                 <div className="w-90vw mx-auto flex gap-2">
                     <button 
-                        className={`border border-black rounded-md w-24 cursor-pointer hover:bg-gray-200 ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'} bg-opacity-80 backdrop-blur-sm transition-all`}
+                        className={`border border-black rounded-md w-24 cursor-pointer hover:bg-gray-200 ${theme === 'dark' ? darkTheme : lightTheme} bg-opacity-80 backdrop-blur-sm transition-all`}
                         >
                         Edit
                     </button>
                     <button 
-                        className={`border border-black rounded-md w-24 cursor-pointer hover:bg-gray-200 ${theme === 'dark' ? 'bg-black text-white' : 'bg-white text-black'} bg-opacity-80 backdrop-blur-sm transition-all`}
+                        className={`border border-black rounded-md w-24 cursor-pointer hover:bg-gray-200 ${theme === 'dark' ? darkTheme : lightTheme} bg-opacity-80 backdrop-blur-sm transition-all`}
                         >
                         Delete
                     </button>

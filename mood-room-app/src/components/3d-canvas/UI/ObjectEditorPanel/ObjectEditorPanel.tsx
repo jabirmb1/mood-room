@@ -11,6 +11,8 @@ import { areLightDataEqual, areRotationsEqual, areVectorsEqual, deepEqual } from
 import { globalScale } from "@/utils/3d-canvas/const";
 import { ObjectLightPanel } from "./ObjectLightPanel";
 import { deepClone } from "@/utils/general/arrays";
+import { useTheme } from "next-themes";
+import { darkThemeBackgroundSecondary, lightThemeBackground } from "@/utils/UI/const";
 
 /******** This panel will be used to change the properties of an object e.g. it's rotation; size; colour scheme etc. ********/
 
@@ -29,6 +31,7 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
   const initialColours = useRef<Model['colourPalette'] | null>(null);
   const initialRotation = useRef<RotationDegrees | null>(null);
   const initialLights = useRef<Model['light'] | null>(null)
+  const {theme} = useTheme()
   // since we are conditionally rendering this panel the life cycle of it is: mount -> unmount -> remount -> unmount last time)
   // Onthe last unmount (e.g. it visually goes away; we will want to do the clean up logic), update model with final transform data
   useEffect(() => {
@@ -86,7 +89,8 @@ export function ObjectEditorPanel({ rigidBodyRef, objectRef,objectId,updateModel
   }
 
   return (
-      <article className = "bg-white border-4 border-black p-6 flex flex-col h-full w-full overflow-y-auto">
+      <article className={`${theme === 'dark'? darkThemeBackgroundSecondary: lightThemeBackground} 
+      border-4 border-black p-6 flex flex-col h-full w-full overflow-y-auto`}>
         <h2 className="text-xl font-semibold mb- text-center">Object Controls</h2>
 
         <section className="flex gap-2 justify-center mb-4">

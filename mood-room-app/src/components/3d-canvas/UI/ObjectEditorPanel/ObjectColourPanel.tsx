@@ -85,7 +85,7 @@ export function ObjectColourPanel({ objectRef }: ColourWheelProps) {
   if (!colours) return null;
 
   return (
-    <article className="w-full mt-6 flex flex-col items-center border border-gray-400 rounded-xl p-4 bg-white shadow-sm">
+    <article className="w-full mt-6 flex flex-col items-center border border-gray-400 rounded-xl p-4 shadow-sm">
       <div className="flex flex-col items-center">
         <h3 className="text-lg font-semibold mb-4 text-center">Colour</h3>
 

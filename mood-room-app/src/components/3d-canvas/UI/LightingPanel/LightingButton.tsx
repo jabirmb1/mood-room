@@ -1,6 +1,8 @@
 // components/LightingButton.tsx
+import { useTheme } from 'next-themes';
 import { LightingConfig, LightingPanel } from './LightingPanel';
 import { Sun } from 'lucide-react';
+import { darkTheme, lightTheme } from '@/utils/UI/const';
 
 /*********** This component is just the lighting button which will show the lighting panel where user can
  * change canvas lighting if they wish.
@@ -14,6 +16,7 @@ interface LightingButtonProps {
 }
 
 export function LightingButton({ show, toggle, config, onChange, className = '' }: LightingButtonProps) {
+  const {theme} = useTheme();
   return (
         <div className = {className}>
             <div className="flex gap-2">
@@ -27,7 +30,8 @@ export function LightingButton({ show, toggle, config, onChange, className = '' 
                 </button>
             </div>
             {show && (
-                <aside className="absolute right-0 mt-2 lg:w-100 w-64 bg-white p-4 rounded shadow-lg z-20 max-h-[50vh] overflow-y-auto">
+                <aside className={`${theme === 'dark'?darkTheme: lightTheme } absolute right-0 mt-2 
+                lg:w-100 w-64 p-4 rounded shadow-lg z-20 max-h-[50vh] overflow-y-auto`}>
                 <LightingPanel config={config} onChange={onChange} />
                 </aside>
             )}

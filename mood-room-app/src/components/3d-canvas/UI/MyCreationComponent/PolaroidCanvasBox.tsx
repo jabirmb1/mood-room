@@ -10,6 +10,7 @@ import {Heart} from 'lucide-react';
 import { useTheme } from "next-themes";
 import { useState, useEffect } from 'react';
 import { Courier_Prime } from 'next/font/google';
+import { darkTheme, lightTheme } from "@/utils/UI/const";
 
 const courierNewFont = Courier_Prime({  //font for the object name
     subsets: ['latin'],
@@ -51,7 +52,7 @@ export default function PolaroidCanvasBox({ onCanvasClick }: PolaroidCanvasBoxPr
             }}              
             >             
             <div 
-            className={`flex flex-col gap-2 border border-black ${theme === 'dark' ? 'border-white bg-amber-50' : 'border-black bg-amber-50'} w-80 h-100 relative overflow-hidden rounded-sm`}
+            className={`flex flex-col gap-2 border border-black ${theme === 'dark' ? darkTheme : lightTheme} w-80 h-100 relative overflow-hidden rounded-sm`}
             onDoubleClick={onCanvasClick}
             role="button"
             tabIndex={0}
