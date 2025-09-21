@@ -1,7 +1,9 @@
 import { Model } from "@/types/types";
+import { darkThemeBackgroundSecondary, lightThemeBackground } from "@/utils/UI/const";
 import { Billboard, Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { RapierRigidBody } from "@react-three/rapier";
+import { useTheme } from "next-themes";
 import { useEffect, useState} from "react";
 import * as THREE from "three";
 /*This component will be used to provide the user different options and flexability when they are trying to move the object,
@@ -21,6 +23,7 @@ type ObjectFloatingPanelProps = {
 
 export function ObjectFloatingPanel({modelId,  rigidBodyRef, modelRef,  isHorizontalMode,  onClose,  setIsHorizontalMode, setMode, updateModelInformation, onDelete,}: ObjectFloatingPanelProps) {
   const [floatingPos, setFloatingPos] = useState(new THREE.Vector3());
+  const {theme} = useTheme();
   
   // always put panel above the object.
   useFrame(() => {
@@ -69,7 +72,7 @@ export function ObjectFloatingPanel({modelId,  rigidBodyRef, modelRef,  isHorizo
     <Billboard position={floatingPos}  lockX={false} lockY={false}  lockZ={false}>
         {/* using Html so we can create a floating bar on top of object when in move mode */}
       <Html center distanceFactor={8} transform>
-        <aside className="bg-white p-2 rounded shadow flex gap-2 md:flex-row flex-col">
+        <aside className={`${theme === 'dark'? darkThemeBackgroundSecondary: lightThemeBackground} p-2 rounded shadow flex gap-2 md:flex-row flex-col`}>
           <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded outline-none cursor-pointer" onClick={() => setMode("edit")}>Edit</button>{/* if we set the mode into 'edit' then we can open editor menu */}
             {/* This button just allows the user to move the model vertically or horizontally*/}
           <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded outline-none cursor-pointer" onClick={() => setIsHorizontalMode((prev) => !prev)}>
