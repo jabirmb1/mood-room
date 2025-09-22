@@ -2,9 +2,9 @@
   "name": "WardrobeBasicClosed",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 2.50,
+    "height": 3.81,
+    "depth": 2.06
   },
   "priority": 1,
   "mood": {},

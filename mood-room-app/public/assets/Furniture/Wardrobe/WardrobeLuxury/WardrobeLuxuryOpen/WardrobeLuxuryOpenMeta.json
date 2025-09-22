@@ -2,9 +2,9 @@
   "name": "WardrobeLuxuryOpen",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 2.54,
+    "height": 3.85,
+    "depth": 2.85
   },
   "priority": 1,
   "mood": {},

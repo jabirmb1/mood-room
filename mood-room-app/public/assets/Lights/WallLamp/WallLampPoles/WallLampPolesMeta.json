@@ -2,9 +2,9 @@
   "name": "WallLampPoles",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 0.19,
+    "height": 1.05,
+    "depth": 0.17
   },
   "priority": 1,
   "mood": {},

@@ -2,9 +2,9 @@
   "name": "WallLampBasic2",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 0.29,
+    "height": 0.38,
+    "depth": 0.58
   },
   "priority": 1,
   "mood": {},

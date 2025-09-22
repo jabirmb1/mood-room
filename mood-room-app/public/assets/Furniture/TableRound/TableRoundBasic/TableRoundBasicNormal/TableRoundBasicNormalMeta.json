@@ -2,9 +2,9 @@
   "name": "TableRoundBasicNormal",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 1.34,
+    "height": 1.07,
+    "depth": 1.34
   },
   "priority": 1,
   "mood": {},

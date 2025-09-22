@@ -2,9 +2,9 @@
   "name": "Painting",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 0.01,
+    "height": 0.00,
+    "depth": 0.01
   },
   "priority": 1,
   "mood": {},

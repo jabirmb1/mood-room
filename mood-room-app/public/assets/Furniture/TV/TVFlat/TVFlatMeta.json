@@ -2,9 +2,9 @@
   "name": "TVFlat",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 3.75,
+    "height": 2.40,
+    "depth": 0.30
   },
   "priority": 1,
   "mood": {},

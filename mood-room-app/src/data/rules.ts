@@ -2,6 +2,7 @@ export type PlacementRule =
   | { type: "mustTouchWall"; value: boolean }
   | { type: "mustFaceAwayFromWall"; value: boolean }
   | { type: "mustTouchGround"; value: boolean }
+  | { type: "mustBeNextTo"; target: string }
   | { type: "allowStacking"; value: boolean }
   | { type: "alignWith"; target: string }
   | { type: "insideOf"; target: string }
@@ -24,7 +25,7 @@ export type FurnitureRules = {
 export const furnitureRules: FurnitureRules[] = [
   {
     name: "BookStackBasic",
-    roomType: "LivingRoom",
+    roomType: "Both",
     rules: [
       { type: "mustTouchGround", value: true },
       { type: "allowStacking", value: true }
@@ -40,7 +41,7 @@ export const furnitureRules: FurnitureRules[] = [
   },
   {
     name: "armchair",
-    roomType: "LivingRoom",
+    roomType: "Livingroom",
     rules: [
       { type: "mustTouchGround", value: true },
       { type: "mustFaceAwayFromWall", value: false },
@@ -67,6 +68,7 @@ export const furnitureRules: FurnitureRules[] = [
       { type: "mustTouchGround", value: true },
       { type: "allowStacking", value: false },
       { type: "alignWith", target: "BedBasic" },
+      { type: "mustBeNextTo", target: "BedBasic" },
     ],
   },
   {

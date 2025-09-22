@@ -2,9 +2,9 @@
   "name": "TVBasic",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 3.14,
+    "height": 2.03,
+    "depth": 0.72
   },
   "priority": 1,
   "mood": {},

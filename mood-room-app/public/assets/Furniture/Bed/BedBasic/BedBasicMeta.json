@@ -2,9 +2,9 @@
   "name": "BedBasic",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 3.55,
+    "height": 1.73,
+    "depth": 2.12
   },
   "priority": 1,
   "mood": {},

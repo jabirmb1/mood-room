@@ -2,9 +2,9 @@
   "name": "WardrobeLuxuryClosed",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 2.54,
+    "height": 3.85,
+    "depth": 1.97
   },
   "priority": 1,
   "mood": {},

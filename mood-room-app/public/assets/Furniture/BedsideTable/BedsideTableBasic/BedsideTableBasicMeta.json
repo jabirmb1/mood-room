@@ -1,10 +1,10 @@
 {
   "name": "BedsideTableBasic",
-  "roomType": "",
+  "roomType": "BedRoom",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 1.60,
+    "height": 1.99,
+    "depth": 1.59
   },
   "priority": 1,
   "mood": {},

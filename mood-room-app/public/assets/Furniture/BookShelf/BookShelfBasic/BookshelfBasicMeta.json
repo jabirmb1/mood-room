@@ -1,10 +1,10 @@
 {
   "name": "BookshelfBasic",
-  "roomType": "",
+  "roomType": "LivingRoom",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 3.33,
+    "height": 3.48,
+    "depth": 1.06
   },
   "priority": 1,
   "mood": {},

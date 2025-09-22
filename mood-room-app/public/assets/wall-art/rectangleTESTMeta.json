@@ -2,9 +2,9 @@
   "name": "rectangleTEST",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 0.00,
+    "height": 0.59,
+    "depth": 0.21
   },
   "priority": 1,
   "mood": {},

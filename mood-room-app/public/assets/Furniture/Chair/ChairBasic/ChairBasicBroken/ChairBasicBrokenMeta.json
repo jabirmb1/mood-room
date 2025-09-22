@@ -2,9 +2,9 @@
   "name": "ChairBasicBroken",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 1.12,
+    "height": 2.45,
+    "depth": 1.11
   },
   "priority": 1,
   "mood": {},

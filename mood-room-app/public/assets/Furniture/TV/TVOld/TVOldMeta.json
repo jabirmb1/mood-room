@@ -2,9 +2,9 @@
   "name": "TVOld",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 1.96,
+    "height": 2.00,
+    "depth": 1.75
   },
   "priority": 1,
   "mood": {},

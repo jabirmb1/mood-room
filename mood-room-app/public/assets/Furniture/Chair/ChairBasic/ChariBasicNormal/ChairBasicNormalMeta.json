@@ -2,9 +2,9 @@
   "name": "ChairBasicNormal",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 1.12,
+    "height": 2.46,
+    "depth": 1.10
   },
   "priority": 1,
   "mood": {},

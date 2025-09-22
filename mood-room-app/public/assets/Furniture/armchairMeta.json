@@ -1,10 +1,10 @@
 {
   "name": "armchair",
-  "roomType": "",
+  "roomType": "LivingRoom",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 0.06,
+    "height": 0.06,
+    "depth": 0.05
   },
   "priority": 1,
   "mood": {},

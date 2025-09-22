@@ -1,13 +1,16 @@
 // PlacementEngine.ts
 // Drives procedural placement using your GridManager + TS rule configuration
+// places object recieved one by one.
+//
 
 import { GridManager } from "./GridManager";
 
-
+// rules types
 export type PlacementRule =
   | { type: "mustTouchWall"; value: boolean }
   | { type: "mustFaceAwayFromWall"; value: boolean }               // rotation not enforced yet; placeholder
   | { type: "mustTouchGround"; value: boolean }
+  | { type: "mustBeNextTo"; target: string}
   | { type: "allowStacking"; value: boolean }
   | { type: "alignWith"; target: string }
   | { type: "onTopOf"; target: string }
@@ -20,37 +23,42 @@ export type PlacementRule =
   | { type: "facingRelativeTo"; target: string; direction: "front" | "back" | "left" | "right" }
   | { type: "minClearance"; meters: number };
 
+
+// argument from object
 export type WorldObject = {
   name: string;
-  path?: string;                             // from manifest
-  dimensions: { width: number; depth: number; height: number }; // meters
+  path?: string;                             
+  dimensions: { width: number; depth: number; height: number }; // meters 
   rules: PlacementRule[];
-  // Optional container slots for "insideOf" (define in metadata if you have containers)
-  slots?: Array<{ x: number; y: number; base?: number }>;
+  slots?: Array<{ x: number; y: number; base?: number }>; // add slots for objects
+  rotation?: number;
 };
-
+// output object location and rotation
 export type PlacedObject = WorldObject & {
   id: string;
-  position: { x: number; y: number };        // meters on floor plane
-  base: number;                               // meters above floor (0 for floor)
-  rotation?: number;                          // radians (not enforced by grid yet)
+  position: { x: number; y: number };
+  base: number; // height or ontop
+  rotation?: number; // direction 
   dimensions: { width: number; height: number; depth: number };
+  occupiedCells?: { x: number; y: number }[];
 };
 
+// return result- move on to next or try again
 export type PlacementResult = {
   placed: PlacedObject[];
-  failures: Array<{ obj: WorldObject; reason: string }>;
+  failures: Array<{ obj: WorldObject; reason: string; details?: string[] }>;
 };
 
+
 // -------------------------------
-// Engine
+// Engine- procedural placement
 // -------------------------------
 export class PlacementEngine {
   private grid: GridManager;
-  private roomWidth: number;   // meters (same values you passed into GridManager creator)
-  private roomDepth: number;   // meters
-  private wallHeight: number;  // meters
-  private cellSize: number;    // meters (same as GridManager creator)
+  private roomWidth: number;  
+  private roomDepth: number;   
+  private wallHeight: number;  
+  private cellSize: number;   
 
   constructor(opts: {
     grid: GridManager;
@@ -66,45 +74,57 @@ export class PlacementEngine {
     this.cellSize = opts.cellSize;
   }
 
-  /**
-   * Place objects in the given order. Returns placed + failures.
-   */
-  placeSequential(objects: WorldObject[]): PlacementResult {
-    const placed: PlacedObject[] = []; // array of PlacedObject
-    const failures: PlacementResult["failures"] = []; // array of { obj: WorldObject; reason: string } why it failed
 
-    // cycle through each object
-    for (const obj of objects) {           
+  // Place objects in the given order. Returns placed + failures.
+  //
+  placeSequential(objects: WorldObject[], maxRetries = 5): PlacementResult {
+    const placed: PlacedObject[] = [];
+    const failures: PlacementResult["failures"] = [];
+  
+    for (const obj of objects) {
       const id = this.makeId(obj.name);
-      const candidates = this.generateCandidates(obj, placed);
-
-      // Validate each candidate with grid + rule checks. keep the valid set
-      const valid = candidates.filter((c) =>
-        this.isCandidateValid(obj, c, placed)
-      );
-
-      if (valid.length === 0) {
-        failures.push({ obj, reason: "No valid candidates after rule/grid checks." });
-        continue;
+      let success = false;
+  
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const candidates = this.generateCandidates(obj, placed);
+  
+        const valid = candidates.filter(c => this.isCandidateValid(obj, c, placed).valid);
+  
+        if (valid.length > 0) {
+          const choice = valid[Math.floor(Math.random() * valid.length)];
+  
+          this.occupy(choice, obj, id);
+  
+          //info about placed object
+          placed.push({
+            ...obj,
+            id,
+            position: { x: choice.x, y: choice.y },
+            base: choice.base,
+            rotation: choice.rotation,
+            occupiedCells: this.grid.getOccupiedCells({ 
+              position: { x: choice.x, y: choice.y },
+              dimensions: { width: obj.dimensions.width, depth: obj.dimensions.depth },
+            })
+          });
+  
+          success = true;
+          break; // stop retrying
+        }
       }
-
-      // Pick randomly (uniform). You can weight later if you want.
-      const choice = valid[Math.floor(Math.random() * valid.length)];
-
-      // Occupy the grid (important: use base/height for vertical stacking)
-      this.occupy(choice, obj, id);
-
-      placed.push({
-        ...obj,
-        id,
-        position: { x: choice.x, y: choice.y },
-        base: choice.base,
-        rotation: choice.rotation,
-      });
+  
+      if (!success) {
+        const candidates = this.generateCandidates(obj, placed); // regenerate to get reasons
+        failures.push({ 
+          obj, 
+          reason: `Failed after ${maxRetries} retries`,
+        });
+      }
     }
-
+  
     return { placed, failures };
   }
+  
 
   // -------------------------------
   // Candidate generation
@@ -132,8 +152,8 @@ export class PlacementEngine {
       obj.rules.every(r => !["onTopOf","insideOf","under"].includes(r.type));
 
     if (wantsFloor) {
-      const touchWall = obj.rules.find(r => r.type === "mustTouchWall" && r.value);
-      if (touchWall) {
+      const hasMustTouchWall = obj.rules.some(r => r.type === "mustTouchWall" && r.value);
+      if (hasMustTouchWall) {
         out.push(...this.generateWallCandidates(obj));
       } else {
         out.push(...this.generateFloorCandidates(obj));
@@ -146,12 +166,12 @@ export class PlacementEngine {
 
   // Floor scan over the whole room
   private generateFloorCandidates(obj: WorldObject) {
-    const res: Array<{ x:number; y:number; base:number; why:string }> = [];
+    const res: Array<{ x:number; y:number; base:number; why:string; rotation?: number }> = [];
     const step = this.cellSize; // aligned to grid cells
 
     for (let y = 0; y + obj.dimensions.depth <= this.roomDepth + 1e-6; y += step) {
       for (let x = 0; x + obj.dimensions.width <= this.roomWidth + 1e-6; x += step) {
-        res.push({ x, y, base: 0, why: "floor-scan" });
+        res.push({ x, y, base: 0, why: "floor-scan", rotation: 0 });
       }
     }
     return res;
@@ -159,29 +179,43 @@ export class PlacementEngine {
 
   // Only along the 4 walls (object fully inside room) MODIFY!!!!
   private generateWallCandidates(obj: WorldObject) {
-    const res: Array<{ x:number; y:number; base:number; why:string }> = [];
+    const res: Array<{ x: number; y: number; base: number; why: string; rotation?: number }> = [];
     const step = this.cellSize;
-
-    // North wall (y = 0), slide along X
+  
+    const mustFaceAway = obj.rules.some(r => r.type === "mustFaceAwayFromWall" && r.value);
+  
+    // ✅ North wall (y = 0) → object faces +Z
     for (let x = 0; x + obj.dimensions.width <= this.roomWidth + 1e-6; x += step) {
-      res.push({ x, y: 0, base: 0, why: "wall-north" });
+      const rotation = mustFaceAway ? 0 : undefined; // face +Z
+      res.push({
+        x,
+        y: 0,
+        base: 0,
+        why: "wall-north",
+        rotation
+      });
     }
-    // South wall (y + depth = roomDepth)
-    for (let x = 0; x + obj.dimensions.width <= this.roomWidth + 1e-6; x += step) {
-      res.push({ x, y: this.roomDepth - obj.dimensions.depth, base: 0, why: "wall-south" });
-    }
-    // West wall (x = 0), slide along Y
+  
+    // ✅ West wall (x = 0) → object faces +X
     for (let y = 0; y + obj.dimensions.depth <= this.roomDepth + 1e-6; y += step) {
-      res.push({ x: 0, y, base: 0, why: "wall-west" });
+      const rotation = mustFaceAway ? Math.PI / 2 : undefined; // face +X
+      res.push({
+        x: 0,
+        y,
+        base: 0,
+        why: "wall-west",
+        rotation
+      });
     }
-    // East wall (x + width = roomWidth)
-    for (let y = 0; y + obj.dimensions.depth <= this.roomDepth + 1e-6; y += step) {
-      res.push({ x: this.roomWidth - obj.dimensions.width, y, base: 0, why: "wall-east" });
-    }
+  
+    // ❌ Skipping South (frontWall, invisible)
+    // ❌ Skipping East (rightWall, invisible)
+  
     return res;
   }
+  
 
-  // Relative to already placed targets (onTopOf / insideOf / adjacency)
+  // Relative to already placed targets (onTopOf / insideOf / adjacency...)
   private generateRelativeCandidates(obj: WorldObject, placed: PlacedObject[]) {
     const res: Array<{ x:number; y:number; base:number; why:string }> = [];
 
@@ -285,6 +319,52 @@ export class PlacementEngine {
       res.push({ x, y, base: 0, why: `alignWith:${rule.target}` });
     }
 
+    //mustBeNextTo : place next to target
+    // mustBeNextTo : place object adjacent to target object
+    const nextToRules = obj.rules.filter(
+      (r): r is Extract<PlacementRule, { type: "mustBeNextTo" }> => r.type === "mustBeNextTo"
+    );
+
+    for (const rule of nextToRules) {
+      const t = placed.find(p => p.name === rule.target);
+      if (!t) continue;
+
+      const gap = 0.05;
+
+      // Same Y, placed to the right of target
+      res.push({
+        x: t.position.x + t.dimensions.width + gap,
+        y: t.position.y,
+        base: 0,
+        why: `mustBeNextTo:${rule.target}:right`
+      });
+
+      // Same Y, placed to the left of target
+      res.push({
+        x: t.position.x - obj.dimensions.width - gap,
+        y: t.position.y,
+        base: 0,
+        why: `mustBeNextTo:${rule.target}:left`
+      });
+
+      // Same X, placed below target
+      res.push({
+        x: t.position.x,
+        y: t.position.y + t.dimensions.depth + gap,
+        base: 0,
+        why: `mustBeNextTo:${rule.target}:below`
+      });
+
+      // Same X, placed above target
+      res.push({
+        x: t.position.x,
+        y: t.position.y - obj.dimensions.depth - gap,
+        base: 0,
+        why: `mustBeNextTo:${rule.target}:above`
+      });
+    }
+
+
     return res;
   }
 
@@ -295,48 +375,90 @@ export class PlacementEngine {
 
   private isCandidateValid(
     obj: WorldObject,
-    c: { x:number; y:number; base:number },
+    c: { x: number; y: number; base: number },
     placed: PlacedObject[]
-  ): boolean {
-
-    // 1) room bounds (meters)
-    if (c.x < 0 || c.y < 0) return false; // outside room bounds    
-    if (c.x + obj.dimensions.width  > this.roomWidth  + 1e-6) return false; 
-    if (c.y + obj.dimensions.depth  > this.roomDepth  + 1e-6) return false;
-
-    // 2) height limits 
-    if (c.base < 0) return false; // under floor
-    if (c.base + obj.dimensions.height > this.wallHeight + 1e-6) return false; // above ceiling
-
-    // 3) mustTouchGround → require base=0
-    const mustGround = obj.rules.find(r => r.type === "mustTouchGround" && r.value); // if obj has rule mustTouchGround
-    if (mustGround && Math.abs(c.base) > 1e-6) return false;
-
-    // 4) minClearance (expand obj footprint and check vs placed footprints where vertical overlap happens)
-    const clearanceRule = obj.rules.find((r): r is Extract<PlacementRule, {type:"minClearance"}> => r.type === "minClearance");
-    if (clearanceRule) {
-      if (!this.hasClearance(c, obj, placed, clearanceRule.meters)) return false;
+  ): { valid: boolean; reason?: string } {
+    // 1) room bounds
+    if (c.x < 0 || c.y < 0) return { valid: false, reason: "Outside room bounds" };
+    if (c.x + obj.dimensions.width > this.roomWidth + 1e-6)
+      return { valid: false, reason: "Exceeds room width" };
+    if (c.y + obj.dimensions.depth > this.roomDepth + 1e-6)
+      return { valid: false, reason: "Exceeds room depth" };
+  
+    // 2) height limits
+    if (c.base < 0) return { valid: false, reason: "Below floor" };
+    if (c.base + obj.dimensions.height > this.wallHeight + 1e-6)
+      return { valid: false, reason: "Above ceiling" };
+  
+    // 3) mustTouchGround
+    const mustGround = obj.rules.find(r => r.type === "mustTouchGround" && r.value);
+    if (mustGround && Math.abs(c.base) > 1e-6)
+      return { valid: false, reason: "Must touch ground but base > 0" };
+  
+    // 4) minClearance
+    const clearanceRule = obj.rules.find(
+      (r): r is Extract<PlacementRule, { type: "minClearance" }> =>
+        r.type === "minClearance"
+    );
+    if (clearanceRule && !this.hasClearance(c, obj, placed, clearanceRule.meters))
+      return { valid: false, reason: `Not enough clearance (${clearanceRule.meters}m required)` };
+  
+    // 5) base > 0 but no support
+    if (
+      c.base > 0 &&
+      !obj.rules.some(r => r.type === "onTopOf" || r.type === "insideOf")
+    ) {
+      if (!this.hasSupportUnderneath(c, obj, placed))
+        return { valid: false, reason: "No support underneath" };
     }
-
-    // 5) If base > 0 and not explicitly onTopOf/insideOf 
-    if (c.base > 0 && !obj.rules.some(r => r.type === "onTopOf" || r.type === "insideOf")) {
-      if (!this.hasSupportUnderneath(c, obj, placed)) return false;
-    }
-
-    // 6) Defer hard collision/bounds to GridManager (fast + authoritative)
-    if ( c.base === 0 &&
-    !this.grid.canPlaceOnFloor    (
+  
+    // 6) collision
+    if (
+      c.base === 0 &&
+      !this.grid.canPlaceOnFloor(
         c.x,
         c.y,
         obj.dimensions.width,
-        obj.dimensions.depth,
+        obj.dimensions.depth
       )
     ) {
-      return false;
+      return { valid: false, reason: "Grid cell occupied" };
+    }
+  
+    return { valid: true };
+  }
+
+  // PlacementEngine.ts
+  checkCandidateRules(
+    obj: WorldObject,
+    c: { x: number; y: number; base: number },
+    placed: PlacedObject[]
+  ): { rule: string; passed: boolean; reason?: string }[] {
+    const results: { rule: string; passed: boolean; reason?: string }[] = [];
+
+    // 1. Room bounds
+    const inBounds = c.x >= 0 && c.y >= 0 &&
+                    c.x + obj.dimensions.width <= this.roomWidth &&
+                    c.y + obj.dimensions.depth <= this.roomDepth;
+    results.push({ rule: "roomBounds", passed: inBounds, reason: inBounds ? undefined : "Out of room bounds" });
+
+    // 2. Must touch ground
+    const mustGround = obj.rules.find(r => r.type === "mustTouchGround" && r.value);
+    if (mustGround) {
+      const passed = Math.abs(c.base) < 1e-6;
+      results.push({ rule: "mustTouchGround", passed, reason: passed ? undefined : "Base > 0" });
     }
 
-    return true;
+    // 3. Support underneath
+    if (c.base > 0 && !obj.rules.some(r => r.type === "onTopOf" || r.type === "insideOf")) {
+      const supported = this.hasSupportUnderneath(c, obj, placed);
+      results.push({ rule: "supportUnderneath", passed: supported, reason: supported ? undefined : "No support below" });
+    }
+
+    return results;
   }
+
+  
 
   // clearance in meters between footprints when vertical intervals overlap
   private hasClearance(

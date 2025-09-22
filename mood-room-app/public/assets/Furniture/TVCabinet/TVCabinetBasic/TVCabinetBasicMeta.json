@@ -2,9 +2,9 @@
   "name": "TVCabinetBasic",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 3.87,
+    "height": 1.68,
+    "depth": 1.78
   },
   "priority": 1,
   "mood": {},

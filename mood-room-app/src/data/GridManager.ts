@@ -105,23 +105,25 @@ export class GridManager {
         };
     }
 
-    getOccupiedCells(obj: PlacedObject): { x: number; y: number }[] {
+    getOccupiedCells(obj: { position: { x: number; y: number }; dimensions: { width: number; depth: number } }) {
         const occupiedCells: { x: number; y: number }[] = [];
         const startCol = Math.floor(obj.position.x / this.cellSize);
         const startRow = Math.floor(obj.position.y / this.cellSize);
         const endCol = Math.ceil((obj.position.x + obj.dimensions.width) / this.cellSize);
         const endRow = Math.ceil((obj.position.y + obj.dimensions.depth) / this.cellSize);
-
+    
         for (let r = startRow; r < endRow; r++) {
-            for (let c = startCol; c < endCol; c++) {
-                if (this.grid[r][c].occupiedBy.length > 0) {
-                    occupiedCells.push({ x: c * this.cellSize, y: r * this.cellSize });
-                }
+          for (let c = startCol; c < endCol; c++) {
+            const cell = this.grid[r]?.[c];
+            if (cell && cell.occupiedBy.length > 0) {
+              occupiedCells.push({ x: c * this.cellSize, y: r * this.cellSize });
             }
+          }
         }
-
+    
         return occupiedCells;
-    }
+      }
+      
     checkCollision(obj1: PlacedObject, obj2: PlacedObject): boolean {
         const occupiedCells1 = this.getOccupiedCells(obj1);
         const occupiedCells2 = this.getOccupiedCells(obj2);
@@ -149,4 +151,6 @@ export class GridManager {
     private isInGrid(x: number, y: number): boolean {
         return x >= 0 && x < this.width && y >= 0 && y < this.height;
     }
+
+    
 }

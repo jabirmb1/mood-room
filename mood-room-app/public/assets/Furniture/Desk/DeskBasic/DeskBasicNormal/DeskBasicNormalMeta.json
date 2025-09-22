@@ -2,9 +2,9 @@
   "name": "DeskBasicNormal",
   "roomType": "",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 3.54,
+    "height": 1.93,
+    "depth": 2.64
   },
   "priority": 1,
   "mood": {},

@@ -1,12 +1,12 @@
 {
   "name": "WaterBottle",
-  "roomType": "",
+  "roomType": "Both",
   "dimensions": {
-    "width": 0,
-    "height": 0,
-    "depth": 0
+    "width": 0.38,
+    "height": 0.84,
+    "depth": 0.38
   },
-  "priority": 1,
+  "priority": 2,
   "mood": {},
   "rules": {}
 }
