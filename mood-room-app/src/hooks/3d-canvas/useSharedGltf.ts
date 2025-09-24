@@ -3,28 +3,60 @@ import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { useMemo } from 'react'
 
-// global cache.
+
+// Global caches
 const geometryCache = new Map<string, THREE.BufferGeometry>()
+const modelRegistry = new Map<string, number>()
 
 export function useSharedGLTF(url: string) {
   const { scene } = useGLTF(url)
 
-  return useMemo(() => {
-    const clone = scene.clone(true)
+  const clone = useMemo(() => {
+    const clonedScene = scene.clone(true)
 
-    clone.traverse((child: any) => {
+    clonedScene.traverse((child: any) => {
       if (child.isMesh) {
-        // Deduplicate geometry
-        if (!geometryCache.has(child.name)) {
-          geometryCache.set(child.name, child.geometry)
-        }
-        child.geometry = geometryCache.get(child.name)!
+          // Deduplicate geometry
+        const key = `${url}:${child.name}` // avoid name collisions
 
-        // clone material, so each object can have its own colors
+        if (!geometryCache.has(key)) {
+          geometryCache.set(key, child.geometry)
+          modelRegistry.set(key, 1) // first reference so add it to the registery.
+        } else {
+          modelRegistry.set(key, modelRegistry.get(key)! + 1)// increment counter
+        }
+
+        child.geometry = geometryCache.get(key)!
+         // clone material, so each object can have its own colors
         child.material = child.material.clone()
       }
     })
 
-    return clone
-  }, [scene])
+    return clonedScene
+  }, [scene, url])
+
+  // function to call when a model has been deleted
+  //
+  function deleteInstance(){
+    clone.traverse((child: any) => {
+      if (child.isMesh) {
+        const key = `${url}:${child.name}`
+
+        if (modelRegistry.has(key)) {
+          const count = modelRegistry.get(key)! - 1//decrement
+
+          // dispose the geometries if no model in the scene is using it; also delete the keys.
+          if (count <= 0) {
+            geometryCache.get(key)?.dispose()
+            geometryCache.delete(key)
+            modelRegistry.delete(key)
+          } else {
+            modelRegistry.set(key, count)// set the decremented count
+          }
+        }
+      }
+    })
+  }
+
+  return { scene, deleteInstance }
 }

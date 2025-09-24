@@ -135,6 +135,7 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     // if the model exists; dispose it before removin it's ref
     if (model)
     {
+      // don't dispose geometry as it may be shared by other models.
       disposeObject(model, false)
     }
     delete modelRefs.current[id];

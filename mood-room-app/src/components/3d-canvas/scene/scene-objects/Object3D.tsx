@@ -46,7 +46,7 @@ type Object3DProps = {
 export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, lightData, isSelected = false, isColliding=false, editingMode = 'edit', 
   setSelectedId, setEditingMode, setIsHoveringObject, updateModelInformation, onDragging, onDelete, onModelUpdate}: Object3DProps) {
 
-  const scene = useSharedGLTF(url)
+  const {scene, deleteInstance} = useSharedGLTF(url)
   const defaultRigidBodyRef = useRef<RapierRigidBody | null>(null);// in case rigid body is undefined.
 // we clone the model and also the material to make it fully independent of other models
   // (allows us to place multiple of same model if needed)
@@ -165,7 +165,9 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   useEffect(()=>{
     return(()=>{
       if (modelRef.current)
+        // don't dispose geometry as it may be shared by other models
         disposeObject(modelRef.current, false)
+        deleteInstance()//make sure to delete from global registery as well.
     })
   },[])
   
