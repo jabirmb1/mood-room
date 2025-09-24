@@ -156,15 +156,17 @@ export function createSpotLightForMesh(mesh: THREE.Mesh, config: SpotlightConfig
  //This function disposes geometries, materials, and textures of a Three.js object
  //and all of its descendants.
 //
-export function disposeObject(object: THREE.Object3D) {
+export function disposeObject(object: THREE.Object3D, disposegeometry = true, disposeMat = true) {
   object.traverse((child: any) => {
     if (child.isMesh) {
       // Dispose geometry
-      if (child.geometry) {
+      if (child.geometry && disposegeometry) {
         child.geometry.dispose();
       }
 
       // Dispose material(s)
+      if (!disposeMat) return;// if we want to not dispose the materials; then just return early.
+      
       if (child.material) {
         if (Array.isArray(child.material)) {
           child.material.forEach((mat :THREE.Material) => {

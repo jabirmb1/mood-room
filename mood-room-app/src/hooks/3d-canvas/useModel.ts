@@ -135,7 +135,7 @@ export function useModel(initialModels: Model[] = [],  floorRef: React.RefObject
     // if the model exists; dispose it before removin it's ref
     if (model)
     {
-      disposeObject(model)
+      disposeObject(model, false)
     }
     delete modelRefs.current[id];
     

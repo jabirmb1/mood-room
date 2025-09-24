@@ -1,5 +1,4 @@
 'use client';
-import { useGLTF} from "@react-three/drei";
 import { useEffect, useState, useRef, useMemo} from "react";
 import { useDragControls } from "@/hooks/3d-canvas/useDragControls";
 import {ThreeEvent } from "@react-three/fiber";
@@ -14,6 +13,7 @@ import { RapierRigidBody } from "@react-three/rapier";
 import { Model } from "@/types/types";
 import { disposeObject, getMeshColour } from "@/utils/3d-canvas/scene/meshes";
 import { CubeLightBeam,} from "../scene-infrastructure/volumetric-lights/CubeLightBeam/CubeLightBeam";
+import { useSharedGLTF } from "@/hooks/3d-canvas/useSharedGltf";
 
 
 /**** This is a loader that loads in models and returns it, props are passed into this component to change a model's default colour
@@ -46,7 +46,7 @@ type Object3DProps = {
 export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position = [0, 0, 0], scale, rotation, lightData, isSelected = false, isColliding=false, editingMode = 'edit', 
   setSelectedId, setEditingMode, setIsHoveringObject, updateModelInformation, onDragging, onDelete, onModelUpdate}: Object3DProps) {
 
-  const { scene} = useGLTF(url) as { scene: THREE.Object3D };
+  const scene = useSharedGLTF(url)
   const defaultRigidBodyRef = useRef<RapierRigidBody | null>(null);// in case rigid body is undefined.
 // we clone the model and also the material to make it fully independent of other models
   // (allows us to place multiple of same model if needed)
@@ -165,7 +165,7 @@ export function Object3D({ url, id, rigidBodyRef, mode, colourPalette, position 
   useEffect(()=>{
     return(()=>{
       if (modelRef.current)
-        disposeObject(modelRef.current)
+        disposeObject(modelRef.current, false)
     })
   },[])
   
