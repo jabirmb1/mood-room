@@ -2,10 +2,11 @@
 //
 
 'use client';
-
 import { Courier_Prime } from 'next/font/google';
 import { useRef, useState, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send } from 'lucide-react';;
+import { loadLLM, runModel } from '@/services/LLMServices';
+
 
 const courierNewFont = Courier_Prime({  //font for the object name
     subsets: ['latin'],
@@ -16,21 +17,46 @@ const courierNewFont = Courier_Prime({  //font for the object name
 export default function GenerationPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [mounted, setMounted] = useState(false)
-  
-    useEffect(() => {
-      setMounted(true)
-    }, [])
-  
-    if (!mounted) return null 
+  const [userInput, setUserInput] = useState<string>("");// default to empty string
+  const [output, setOutput] = useState<String>("");
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-    // auto adjust textarea height for clean look
-  const handleInput = () => {
+  // on mount load the LLM (initialises it)
+  useEffect(()=>{
+    if (mounted){
+     loadLLM();
+     // if loadLLM fails; inform user here.
+
+    }}, [mounted])
+
+   // auto adjust textarea height for clean look
+   function handleInput(){
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto"; // Reset height
       textarea.style.height = `${textarea.scrollHeight}px`; // Set to scrollHeight
+      setUserInput(textarea.value)
     }
-  };
+   }
+
+   async function handleRunModel() {
+    if (!userInput.trim()) {
+      return;
+    }
+
+    const result = await runModel(userInput);
+    if (result !== null) {
+      setOutput(result);
+      console.log("output is:", result);
+    } else {
+      console.error("Model failed to produce output.");
+      // inform user here:
+    }
+  }
+
+  if (!mounted) return null 
 
   return (
     <div className="flex items-center justify-center your-element w-full h-[90vh]">
@@ -55,7 +81,9 @@ export default function GenerationPage() {
               rows={1}
               onInput={handleInput}
             ></textarea>
-            <button className="ml-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            <button className="ml-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            type='button' onClick={handleRunModel}>
               <Send className="w-4 h-4" />
             </button>
           </div>

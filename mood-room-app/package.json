@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.7.3",
     "@radix-ui/react-dialog": "^1.1.14",
     "@react-three/drei": "^10.1.2",
     "@react-three/fiber": "^9.2.0",
