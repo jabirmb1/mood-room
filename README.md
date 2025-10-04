@@ -38,15 +38,3 @@ credits:
 
 License:
 This project is licensed under the MIT License
-
-
-
-
-
-
-
-contributers:
-- Jabir Begg (programmer)
-- Fahi Sabab, Al (programmer)
-- Romas B
-
