@@ -1,5 +1,5 @@
 /****** file which willl act as our service layer between UI and our actual LLM logic *****/
-import { generatorType } from "@/utils/3d-canvas/procedural-generation/LLM/LLMTesting";
+import { generatorType } from "@/utils/3d-canvas/procedural-generation/LLM/LLMRaw";
 
 // constant variables (we only want one LLM running at one time; otherwise program may crash)
 let generator: generatorType | null = null;
@@ -16,7 +16,7 @@ export async function loadLLM(onProgress?: (percent: number)=> void): Promise<bo
 
     try {
         const { createLLMGenerator, generateText } = await import(
-            "@/utils/3d-canvas/procedural-generation/LLM/LLMTesting"
+            "@/utils/3d-canvas/procedural-generation/LLM/LLMRaw"
         );
 
         generator = await createLLMGenerator(onProgress);
