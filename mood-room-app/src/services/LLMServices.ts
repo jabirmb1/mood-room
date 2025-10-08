@@ -9,20 +9,24 @@ let isInitialised = false;
 
 //Initialises the generator and function from the LLM module.
 //Should be called once in the UI lifecycle (e.g., useEffect).
+// optional onProgress callback to report loading progress (0-100).
 //
-export async function loadLLM(): Promise<void> {
-    if (isInitialised) return;
+export async function loadLLM(onProgress?: (percent: number)=> void): Promise<boolean> {
+    if (isInitialised) return isInitialised; // already initialised
 
     try {
         const { createLLMGenerator, generateText } = await import(
             "@/utils/3d-canvas/procedural-generation/LLM/LLMTesting"
         );
 
-        generator = await createLLMGenerator();
+        generator = await createLLMGenerator(onProgress);
         generateTextFn = generateText;
         isInitialised = true;
+        return isInitialised;
     } catch (err) {
         console.error("Error loading LLM:", err);
+        isInitialised = false;
+        return false;
     }
 }
 

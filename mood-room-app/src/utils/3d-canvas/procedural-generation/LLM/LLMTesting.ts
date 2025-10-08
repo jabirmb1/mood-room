@@ -23,13 +23,21 @@ export type generatorOutputType = TextClassificationOutput;
 // we have a predefined model for this project; but we can extend this function later to 
 // get passed in model types etc etc.
 //
-export async function createLLMGenerator(){
+export async function createLLMGenerator(onProgress?: (percent: number) => void): Promise<generatorType> {
     console.log('attempting to get a LLM');
 
     // we will use a text classification since it's light weight and works with most of our moods
     // (need to do adapt and map to other models however).
-    const generator = await pipeline('text-classification', 'MicahB/roberta-base-go_emotions')
-    console.log('Model loaded!');
+    const generator = await pipeline('text-classification', 'MicahB/roberta-base-go_emotions',
+        {progress_callback: (progressEvent : any) => {//TO DO: FIX TYPING
+            // progressEvent.progress is already a numbe between 0 and 100
+            // we want to show users how long until model is loaded.
+           const percent = Math.round(progressEvent.progress)
+
+           // if the user wants the progres of the model loading; then give it to them
+              if (onProgress) onProgress(percent)
+        }},)
+
     return generator
 }
 

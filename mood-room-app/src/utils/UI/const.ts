@@ -22,3 +22,10 @@ export const lightThemeBorder = 'border-black'
 
 export const darkTheme = darkThemeBackground + ' ' + darkThemeText;
 export const lightTheme = lightThemeBackground + ' ' + lightThemeText;
+
+
+/**** const relating to visuals of actual html elements *******/
+
+// style for error messages:
+export const errorMessageStyle = "mt-4 p-3 border-red-700 border-2 bg-red-900/50 text-white" + 
+" rounded-2xl w-full text-center"
