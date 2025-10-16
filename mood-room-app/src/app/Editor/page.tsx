@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei'; // the actual react component for orbital controls.
 import { OrbitControls } from 'three-stdlib'; // instance class (used as a type)
@@ -21,7 +23,7 @@ import { LightingConfig } from '@/components/3d-canvas/UI/LightingPanel/Lighting
 import { ConfirmDialog } from '@/components/UI/ConfirmDialog';
 import RoomFoundation from '@/components/3d-canvas/scene/scene-objects/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
-import { ColliderJsonData, Model } from '@/types/types';
+import { ColliderJsonData, Model, MoodType } from '@/types/types';
 import { Physics, RigidBody } from '@react-three/rapier';
 import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/models';
 import Colliders from '@/components/3d-canvas/scene/scene-infrastructure/Colliders';
@@ -29,6 +31,7 @@ import { getManifestData } from '@/services/manifestServices';
 import { getModelColliderData } from '@/services/modelServices';
 import ShadowManager from '@/components/3d-canvas/scene/scene-infrastructure/ShadowManager';
 import { BloomEffect } from '@/components/3d-canvas/scene/scene-infrastructure/BloomEffect';
+import { generateMoodRoomColourPalette } from '@/utils/3d-canvas/procedural-generation/colour-mapping/logic/roomThemeMapper';
 
 
 
@@ -40,8 +43,12 @@ export async function loadInitialModels(): Promise<Model[]> {
 
 export default function Editor() {
 
-   // State to hold floor returned from RoomFoundation
-   const floorRef = useRef<THREE.Object3D | null>(null);   
+  // set up the routing logic
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // State to hold floor returned from RoomFoundation
+  const floorRef = useRef<THREE.Object3D | null>(null);   
   // getting all references for all current models, each model has two refs, group and model, group is used for e.g.
   // rotation, movement, dragging, camera, and model is e.g. changing colour:
   const { models, setModels, modelRefs, rigidBodyRefs,rigidBodyVersions, updateModelInformation, areModelRefsReady, collisionMap, getModelInstanceUpdateHandler, getRigidBodyInstanceUpdateHandler, 
@@ -85,12 +92,33 @@ const addModelCooldownTime = 1000;// 1 second.
   const [manifestData, setManifestData] = useState<ModelItem[] | null>(null);// a cache for the manifest data to stop it from being fetched multiple times.
   const [colliderDataCache, setColliderDataCache] = useState<Map<Model['colliderDataUrl'], ColliderJsonData[] | null>>(new Map());// collider data cache for the models.
 
-  // function to validate all object's collisions on load:
-  //
-  /*useEffect(() => {
-    if (areModelRefsReady)
-    console.log("hello");
-  }, [areModelRefsReady]); */
+  // testing out moods
+  const [mood, setMood] = useState<MoodType | null>(null)
+  const [roomColourPalette, setRoomPalette] = useState();
+  
+  // useEffect to get mood from query params:
+  useEffect(() => {
+    if (searchParams){
+      const mood = searchParams.get('mood') as MoodType | null;
+      if (mood){
+        setMood(mood);
+        const palette = generateMoodRoomColourPalette(mood);
+        if (palette)
+        {
+          setRoomPalette(palette);
+        }
+        else{
+          router.back()
+        }
+      }
+      else{
+        router.back()
+      }
+    }
+    else{
+      router.back()
+    }
+  }, [searchParams]);
 
   // useEffect to get the manifest data from the server once per page mount.
   //
@@ -105,10 +133,6 @@ const addModelCooldownTime = 1000;// 1 second.
     fetchData();
   },[])
 
-
-  useEffect(()=>{
-    console.log('selected model ref is:', selectedModelRef)
-  }, [selectedModelRef])
 
   // function to update selectedModelRef to be as up to date as possible:
   useEffect(() => {
@@ -260,7 +284,11 @@ const addModelCooldownTime = 1000;// 1 second.
                   <LightIntensityTransition lightRef={ambientRef} targetIntensity={lightingConfig.ambient.intensity} />
                   <LightIntensityTransition lightRef={directionalRef} targetIntensity={lightingConfig.directional.intensity} />
                   <DreiOrbitControls enabled={!isDragging} ref={orbitControlsRef} />
-                  <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}} collidersEnabled={true} enableShadows={true}/>
+                  <RoomFoundation onFloorReady={(floorObj) => { floorRef.current = floorObj;}} 
+                  collidersEnabled={true} enableShadows={true}
+                  wallColour={roomColourPalette?.primary}
+                  floorColour={roomColourPalette?.secondary}
+                  skirtingColour={roomColourPalette?.tertiary}/>
                 
                   {models.map((model) => 
                     (

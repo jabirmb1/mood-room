@@ -4,9 +4,11 @@
 'use client';
 import { Courier_Prime } from 'next/font/google';
 import { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Send } from 'lucide-react';
 import { ProgressBar } from '@/components/UI/ProgressBar';
 import { ErrorMessage } from '@/components/UI/ErrorMessage';
+import { MoodType } from '@/types/types';
 
 
 const courierNewFont = Courier_Prime({  //font for the object name
@@ -21,12 +23,14 @@ const courierNewFont = Courier_Prime({  //font for the object name
 // TO DO: when model has failed to load; give user option to retry loading it. (they can also refresh page to do this currently).
 
 export default function GenerationPage() {
+  const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [mounted, setMounted] = useState(false)
   const [userInput, setUserInput] = useState<string>("");// default to empty string
   const [worker, setWorker] = useState<Worker | null>(null);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [modelLoaded, setModelLoaded] = useState<boolean>(false);// initial loading state of model.
+  const [modelOutput, setModelOutput] = useState<MoodType | null>(null);// result from model
   const [isProcessing, setIsProcessing] = useState<boolean>(false);// if the model is currently processing input
   const [errorMessage, setErrorMessage] = useState<string | null>(null);// error message to show user if model or worker fails.
   // add in a result state later so we can block input after result is done and swap to another page.
@@ -50,6 +54,7 @@ export default function GenerationPage() {
   }, [])
 
 
+
   // on mount load the LLM (initialises it), as well as setting up the web worker message handler
   useEffect(()=>{
     if (mounted && worker){
@@ -57,6 +62,15 @@ export default function GenerationPage() {
      worker.postMessage({ type: 'LOAD_MODEL'});
 
     }}, [mounted, worker])
+
+  // useEffect to check if model output is valid or not
+  useEffect(()=>{
+    if (modelOutput){
+      console.log('model output is:', modelOutput);
+      // move onto next page with result
+      router.push(`/Editor?mood=${modelOutput}`)
+    }
+  }, [modelOutput])
 
     /******* functions ********/
     
@@ -73,7 +87,7 @@ export default function GenerationPage() {
     }
     else if (type === 'MODEL_RESULT'){
       setIsProcessing(false);// model has finished processing
-      console.log('model result is:', payload);
+      setModelOutput(payload as MoodType | null);
       // we will pass down result to other parts of the app later
     }
     else if (type === 'ERROR'){

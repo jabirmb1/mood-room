@@ -28,7 +28,7 @@ export default function RoomFoundation({ onFloorReady, wallColour, floorColour, 
 
   const floorMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color:threeFloorColour }), []);
   const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color:threeWallColour }), []);
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
   const wallSize: [number, number, number] = [roomSize, wallHeight, wallThickness]
   const rightDirection : [number, number, number] = [0, Math.PI/2, 0];
   const leftDirection : [number, number, number]= [0, -Math.PI/2, 0]
