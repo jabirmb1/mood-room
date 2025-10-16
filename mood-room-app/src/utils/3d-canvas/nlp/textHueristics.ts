@@ -41,7 +41,6 @@ export function isSelfEmotionalExpression(text: string, targetWords: string[]): 
 //Preprocesses user input to detect special emotion cases before sending to LLM.
 // Returns a MoodType if detected, otherwise null (fallback to LLM).
 //TO DO: handle typos.
-//TO DO: get synonyms of our target words using some APIs e.g. thesauraus API
 //
 export function preProcessInput(userInput: string): MoodType | null {
     const input = userInput.trim().toLowerCase();
@@ -49,10 +48,20 @@ export function preProcessInput(userInput: string): MoodType | null {
     // handles gibberish.
     if (/^[^a-zA-Z]+$/.test(input)) return 'confusion';
   
-    // Keywords for special cases
-    const depressedWords = ['depressed', 'hopeless', 'empty', 'worthless'];
-    const lonelyWords = ['lonely', 'alone', 'isolated', 'abandoned'];
-    const boredWords = ['bored', 'boredom', 'nothing to do', 'restless', 'tired of this'];
+    // Keywords for special cases (trying to cover 80% of responses)
+    const depressedWords = ['depressed', 'hopeless', 'empty', 'worthless', 'helpless', 'depressing',
+      'depression', 'emptyness', 'hopelessness'];
+    const lonelyWords = ['lonely', 'alone', 'isolated', 'abandoned', 'solitary', 'solitude', 'solo',
+      'left out', 'left behind', 'friendless', 'unloved', 'unwanted', 'cut off', 'isolated',
+      'loneSome'];
+    const boredWords = ['bored', 'boredom', 'boring','bore', 'nothing to do', 'restless',
+       'tired of this','uninterested', 'dull', 'monotonous'];
+
+    const stressedWords = ['stressed', 'overwhelmed', 'tense', 'pressured', 'pressure', 'frazzled',
+       'on edge', 'stressing'];
+      
+    const guiltWords = ['guilty', 'remorse', 'remorseful', 'sorry', 'regret', 'regretful', 'guilt']
+
     // Depressed context
     if (isSelfEmotionalExpression(input, depressedWords)) return 'depressed';
   
@@ -61,6 +70,14 @@ export function preProcessInput(userInput: string): MoodType | null {
   
     // Bored context
     if (isSelfEmotionalExpression(input, boredWords)) return 'bored';
+
+    // stressed context
+    if (isSelfEmotionalExpression(input, stressedWords)) return 'stressed';
+
+    // guilt context
+    if (isSelfEmotionalExpression(input, guiltWords)) return 'guilt';
+
+
   
     return null; // fallback to LLM
 }

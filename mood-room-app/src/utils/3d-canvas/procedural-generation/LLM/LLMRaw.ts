@@ -77,25 +77,25 @@ export function mapLLMOutputToMood(output: GoEmotionLabel | null): MoodType | nu
         'admiration': 'inspired',
         'amusement': 'happy',
         'approval': 'content',
-        'caring': 'love',           // Changed from 'calm' - caring is closer to love
-        'desire': 'excited',        // Changed from array - desire has energy/anticipation
+        'caring': 'love',          
+        'desire': 'excited',      
         'excitement': 'excited',
-        'gratitude': 'content',     // Changed from array - gratitude is peaceful satisfaction
+        'gratitude': 'content',    
         'joy': 'happy',
         'love': 'love',
-        'optimism': 'inspired',     // Changed from array - optimism is forward-looking
+        'optimism': 'inspired',    
         'pride': 'pride',
         'relief': 'calm',
         
         // Negative emotions
         'anger': 'angry',
-        'annoyance': 'stressed',    // Changed from array - annoyance is low-level stress
+        'annoyance': 'stressed',    //annoyance is low-level stress
         'disappointment': 'sad',
-        'disapproval': 'disgusted', // Changed from 'angry' - disapproval has disgust element
+        'disapproval': 'disgusted', // disapproval has disgust element
         'disgust': 'disgusted',
         'embarrassment': 'embarrassed',
         'fear': 'fearful',
-        'grief': 'depressed',       // Changed from 'sad' - grief is deeper than sadness
+        'grief': 'depressed',     
         'nervousness': 'anxious',
         'remorse': 'guilt',
         'sadness': 'sad',
@@ -103,8 +103,8 @@ export function mapLLMOutputToMood(output: GoEmotionLabel | null): MoodType | nu
         // Ambiguous/Neutral emotions
         'confusion': 'confusion',    
         'curiosity': 'curious',
-        'realization': 'inspired',  // Changed from array - realizations are inspiring moments
-        'surprise': 'excited',      // Changed from array - surprise is high-energy
+        'realization': 'inspired', 
+        'surprise': 'excited',    
         'neutral': 'content'
     };
 
