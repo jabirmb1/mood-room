@@ -96,7 +96,7 @@ export const defaultLightSystemConfig: LightSystemConfig = {
 //the different type of moods that's in our project:
 export const moodTypes = ['happy', 'sad', 'angry', 'depressed', 'disgusted', 'love', 'pride', 'jealousy', 
     'guilt', 'stressed', 'calm', 'lonely', 'excited', 'anxious', 'content', 'inspired', 'nostalgic','fearful',
-     'bored', 'adventurous', 'embarrassed', 'curious'] as const;// moods that are available in the project.
+     'bored', 'adventurous', 'embarrassed', 'curious', 'confusion'] as const;// moods that are available in the project.
 
 export const defaultMoodType: MoodType = 'content'// default mood type to use if no mood is selected.
 

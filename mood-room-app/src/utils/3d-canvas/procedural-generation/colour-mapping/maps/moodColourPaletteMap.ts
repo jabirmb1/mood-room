@@ -711,5 +711,29 @@ export const moodColourPaletteEmotionMap: Record<MoodType, roomColourPalette[]> 
                 { primary: ["#FF1493", "#DC143C"], secondary: ["#00FF00", "#32CD32"] } // cartoony vibe
             ]
         }
+    ],
+    confusion: [
+        // Clashing colours.
+        {
+            primary: ["#9B59B6", "#8E44AD"],        // purple walls
+            secondary: ["#E67E22", "#D35400"],      // orange floor (clashing)
+            tertiary: ["#2ECC71", "#27AE60"],       // green skirting (more clashing)
+            objectColourPalettes: [
+                { primary: ["#3498DB", "#2980B9"], secondary: ["#E74C3C", "#C0392B"] }, // blue with red (confusion)
+                { primary: ["#F39C12", "#E67E22"], secondary: ["#9B59B6", "#8E44AD"] }  // orange with purple
+            ]
+        },
+        
+        // Riddler's colour scheme (from batman)
+        {
+            primary: ["#39ff14", "#00D100"],        // bright neon green walls
+            secondary: ["#4B0082", "#6A0DAD"],      // deep purple floor
+            tertiary: ["#1C1C1C", "#0F0F0F"],       // black skirting (contrast)
+            objectColourPalettes: [
+                { primary: ["#4B0082", "#6A0DAD"], secondary: ["#39ff14", "#00D100"] }, // realistic purple with green
+                { primary: ["#1C1C1C", "#0F0F0F"], secondary: ["#39ff14", "#00D100"], tertiary: ["#FFD700", "#FFA500"] }, // black with green and gold accents
+                { primary: ["#FF00FF", "#8A2BE2"], secondary: ["#00FF00", "#32CD32"] }  // cartoony neon contrast (question marks everywhere!)
+            ]
+        }
     ]
 };
