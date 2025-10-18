@@ -9,10 +9,11 @@
 // import { wallHeight } from "@/utils/3d-canvas/const";
 import { GridManager } from "./GridManager";
 import { PlacementEngine, WorldObject } from "./PlacementEngine";
+import { furnitureRules } from "./rules";
 
 // Room setup defaults
-const roomWidth = 13;    // meters
-const roomDepth = 13;    // meters
+const roomWidth = 9;    // meters
+const roomDepth = 9;    // meters
 const cellSize = 0.25;  // finer precision
 const wallHeight = 10;
  
@@ -68,7 +69,7 @@ export class GenerateEngine {
       name: entry.name,
       path: entry.path,
       dimensions: meta.dimensions,  
-      rules: [],       
+      rules: furnitureRules.find((r) => r.name === name)?.rules || [],       
     };
   }
 

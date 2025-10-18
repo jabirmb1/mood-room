@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "outDir": "dist-node",
+    "target": "ES2022"
+  },
+  "include": ["src/data/testPlacement.ts", "src/data/GenerateEngine.ts"]
+}
