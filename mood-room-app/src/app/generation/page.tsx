@@ -5,10 +5,12 @@
 import { Courier_Prime } from 'next/font/google';
 import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send } from 'lucide-react';
+import { Send} from 'lucide-react';
 import { ProgressBar } from '@/components/UI/ProgressBar';
-import { ErrorMessage } from '@/components/UI/ErrorMessage';
+import { ErrorMessage } from '@/components/UI/Errors/ErrorMessage';
 import { MoodType } from '@/types/types';
+import { ErrorButton } from '@/components/UI/Errors/ErrorButton';
+import { WorkerMessage, WorkerInput } from '@/web-workers/llm.worker';
 
 
 const courierNewFont = Courier_Prime({  //font for the object name
@@ -59,7 +61,7 @@ export default function GenerationPage() {
   useEffect(()=>{
     if (mounted && worker){
      worker.onmessage= handleWebWorkerMessage;
-     worker.postMessage({ type: 'LOAD_MODEL'});
+     worker.postMessage({ type: WorkerInput.LOAD_MODEL});
 
     }}, [mounted, worker])
 
@@ -78,23 +80,35 @@ export default function GenerationPage() {
     //
   function handleWebWorkerMessage(event: MessageEvent){
     const {type, payload} = event.data;
-    if (type === 'MODEL_LOADED'){
+    if (type === WorkerMessage.MODEL_LOADED){
       setModelLoaded(true);// model has finished loading.
     }
-    else if (type === 'LOADING_PROGRESS'){
+    else if (type === WorkerMessage.LOADING_PROGRESS){
       if (typeof payload === 'number' && !isNaN(payload))// only accept number payloads
       setLoadingProgress(payload);
     }
-    else if (type === 'MODEL_RESULT'){
+    else if (type === WorkerMessage.MODEL_RESULT){
       setIsProcessing(false);// model has finished processing
       setModelOutput(payload as MoodType | null);
       // we will pass down result to other parts of the app later
     }
-    else if (type === 'ERROR'){
-      console.error('error from web worker:', payload);
+    else if (type === WorkerMessage.LOAD_ERROR){
+      console.error('model load error:', payload);
       setModelLoaded(false);// model failed to load.
       setLoadingProgress(0);
       setErrorMessage(payload);// show user the error message
+      setIsProcessing(false);// task is completed (even though the error occured);
+    }
+    else if (type === WorkerMessage.RUN_ERROR){
+      console.error('model run error :', payload);
+      setErrorMessage(payload);// show user the error message
+      setIsProcessing(false);// task is completed (even though the error occured);
+    }
+    else if (type === WorkerMessage.WORKER_ERROR){
+      console.error('error from web worker:', payload);
+      setModelLoaded(false)
+      setErrorMessage(payload);// show user the error message
+      setIsProcessing(false);// task is completed (even though the error occured);
     }
     else{
       console.warn('unknown message type from web worker:', type);
@@ -117,7 +131,7 @@ export default function GenerationPage() {
     }
 
     setIsProcessing(true);
-    worker?.postMessage({ type: 'RUN_MODEL', payload: userInput });
+    worker?.postMessage({ type: WorkerInput.RUN_MODEL, payload: userInput });
   }
 
   if (!mounted) return null 
@@ -131,32 +145,42 @@ export default function GenerationPage() {
           </h1>
         </div>
 
-        <div className="w-full max-w-2xl mt-10 flex flex-col items-center">
+        <div className="w-full max-w-2xl mt-10 flex flex-col items-center gap-1">
 
-          {modelLoaded ? (<>
-            <p className="text-base text-center font-bold text-white">
-              Write a sentence about how you feel or how your day went?
-            </p>
+          {modelLoaded ? (
+            <>
+              <p className="text-base text-center font-bold text-white">
+                Write a sentence about how you feel or how your day went?
+              </p>
 
-            <div className="flex items-end p-2 mt-3 border border-gray-200 rounded-lg shadow-sm w-full">
-              <textarea
-                id="input-user"
-                ref={textareaRef}
-                placeholder="Enter your message..."
-                className="flex-1 resize-none overflow-hidden min-h-[2.5rem] max-h-[10rem] text-white p-2 placeholder-gray-600 focus:outline-none border-transparent rounded-md"
-                rows={1}
-                onInput={handleInput}
-              ></textarea>
-              <button className="ml-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              disabled:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-70"
-              type='button' onClick={handleRunModel}
-              disabled={!userInput.trim() || isProcessing || errorMessage !== null}
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
-          </>) : (
+              <div className="flex items-end p-2 mt-3 border border-gray-200 rounded-lg shadow-sm w-full">
+                <textarea
+                  id="input-user"
+                  ref={textareaRef}
+                  placeholder="Enter your message..."
+                  className="flex-1 resize-none overflow-hidden min-h-[2.5rem] max-h-[10rem] text-white p-2 placeholder-gray-600 focus:outline-none border-transparent rounded-md"
+                  rows={1}
+                  onInput={handleInput}
+                ></textarea>
+
+                {!errorMessage ? (
+                  <button 
+                    className="ml-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    disabled:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-70"
+                    type='button' 
+                    onClick={handleRunModel}
+                    disabled={!userInput.trim() || isProcessing}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                ) : (
+                  // retry sending an input (it's a runtime error)
+                  <ErrorButton type= "Retry" onClick={handleRunModel} disabled={!userInput.trim() || isProcessing}/>
+                )}
+              </div>
+          </>
+          ) : (
             <>
               <ProgressBar progress={loadingProgress} label='Loading...' labelFontSize='text-2xl'/>
 
@@ -164,16 +188,24 @@ export default function GenerationPage() {
                 <p className="text-sm text-center font-bold text-white">
                   Please wait whilst the model is loading...
                 </p>
-                <p className="text-xs text-center font-bold text-white">
+                <p className="text-xs text-center font-bold text-white mb-6">
                   (This may take from a few seconds to a few minutes on first load)
                 </p>
+
+                {errorMessage && (
+                   // reload page with error button (model failed to load or there is a webworker error)
+                  <ErrorButton type= "Retry"  text='Retry'onClick={()=>{ window.location.reload()}}
+                   width={80} height={32}/>
+                )}
               </div>
             </>
           )}
 
           {/* our error messages will go here later */}
           {errorMessage && (
-            <ErrorMessage>{errorMessage}</ErrorMessage>
+            <>
+              <ErrorMessage>{errorMessage}</ErrorMessage>
+            </>
           )}
         </div>
       </section>
