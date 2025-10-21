@@ -156,8 +156,10 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
             }
           >
             <Canvas
-              style={{ width: '100%', height: '100%' }}
+              style={{ width: '100%', height: '100%', pointerEvents: 'none' }}// this lives inside a button
+              // hence we don't want for it to be interactible by itself.
               camera={{ position: [0, 0, 5], fov: 50 }}
+              aria-hidden={true}// our canvas is only decorative, users can't interact with this directly.
               gl={{ antialias: true, alpha: true }}
               frameloop="always" // always update the canvas ie rotation
             >

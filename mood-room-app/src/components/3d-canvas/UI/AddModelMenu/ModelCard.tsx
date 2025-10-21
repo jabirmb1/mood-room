@@ -39,6 +39,11 @@ export function ModelCard({ item, hoveredModel, setHoveredModel, onClick }: Mode
             stiffness: 300,
             damping: 10,
         }}
+
+        whileTap={{
+            scale: 0.98,
+        }}
+        aria-label={`Preview model: ${item.name}`}
         >
         {/* thumbnail */}
         <span className="block aspect-square relative w-full relative">
