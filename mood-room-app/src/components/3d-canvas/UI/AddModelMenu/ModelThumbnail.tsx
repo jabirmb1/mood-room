@@ -67,6 +67,8 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null); 
   const isHovered = hoveredModel === name; // check if the model is hovered
 
+  const HOVERCOUNTDOWN = 1000;// start hovering after 1 second
+
   const { ref: group, inView } = useInView({ // check if the model is in view so we diplay for performance purposes
     threshold: 0.1, // 10% of the model needs to be in view
   });
@@ -109,7 +111,7 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
    // console.log('hovering over:', name);
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredModel(name);
-    }, 2000); // delay to ensure on purpose hover
+    }, HOVERCOUNTDOWN); // delay to ensure on purpose hover
   };
 
   // function to handle when thumbnail is not hovered/ stopped being hovered.
@@ -123,9 +125,9 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
   };
 
   return (
-    <div
+    <figure
       ref={group}
-      className="relative w-[100%] h-[100%] bg-gray-100 rounded overflow-hidden"
+      className="relative block w-full h-full bg-gray-100 rounded overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -145,12 +147,12 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
 
       {/* 3D preview */}
       {isHovered && inView && gltf &&(
-        <div className="absolute inset-0">
+        <span className="absolute inset-0 block">
           <Suspense
             fallback={ // for time due to loading
-              <div className="w-full h-full flex items-center justify-center">
+              <span className="w-full h-full flex items-center justify-center text-xs text-gray-500">
                 Loading…
-              </div>
+              </span>
             }
           >
             <Canvas
@@ -164,8 +166,8 @@ export function ModelThumbnail({ path, name, thumbnail, hoveredModel, setHovered
               <ModelPreview gltf={gltf} isHovered={isHovered} /> {/* display the model */}
             </Canvas>
           </Suspense>
-        </div>
+        </span>
       )}
-    </div>
+    </figure>
   );
 }

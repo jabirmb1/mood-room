@@ -5,7 +5,7 @@ import { ModelThumbnail } from './ModelThumbnail';
 import { ModelItem } from './AddModelTab';
 import {useState } from 'react';
 import { useTheme } from 'next-themes';
-import { darkThemeBackground, darkThemeBackgroundSecondary, darkThemeSecondaryText, lightThemeBackground, lightThemeSecondaryText } from '@/utils/UI/const';
+import {darkThemeBackgroundSecondary, darkThemeSecondaryText, lightThemeBackground, lightThemeSecondaryText } from '@/utils/UI/const';
 
 interface ModelCardProps {
   item: ModelItem;
@@ -23,10 +23,11 @@ export function ModelCard({ item, hoveredModel, setHoveredModel, onClick }: Mode
 
     //TO DO: SWAP THIS OUT WITH BUTTONS!!!
     return (
-        <motion.div
+        <motion.button
         key={item.id}
         onClick={() => onClick(item)}
-        className="group cursor-pointer rounded-lg overflow-hidden shadow-md"
+        className={`group cursor-pointer rounded-lg overflow-hidden shadow-md 
+            ${theme === 'dark' ? darkThemeBackgroundSecondary : lightThemeBackground}`}
         whileHover={{
             y: -5,
             scale: 1.02,
@@ -40,7 +41,7 @@ export function ModelCard({ item, hoveredModel, setHoveredModel, onClick }: Mode
         }}
         >
         {/* thumbnail */}
-        <div className="aspect-square relative">
+        <span className="block aspect-square relative w-full relative">
             <ModelThumbnail
             path={item.path}
             name={item.name}
@@ -49,13 +50,15 @@ export function ModelCard({ item, hoveredModel, setHoveredModel, onClick }: Mode
             setHoveredModel={setHoveredModel}
             onError={() => setIsVisible(false)} // hide card if thumbnail fails
             />
-        </div>
+        </span>
 
         {/* name */}
-        <div className={`${theme=== 'dark'? darkThemeBackgroundSecondary: lightThemeBackground} p-2`}>
-            <h3 className={`${theme === 'dark'? darkThemeSecondaryText: lightThemeSecondaryText} text-sm font-medium`}>
-                {item.name}</h3>
-        </div>
-        </motion.div>
+        <span className='p-2'
+        >
+            <span className={`${theme === 'dark'? darkThemeSecondaryText: lightThemeSecondaryText} 
+            text-sm font-medium block`}>
+                {item.name}</span>
+        </span>
+        </motion.button>
     );
 }
