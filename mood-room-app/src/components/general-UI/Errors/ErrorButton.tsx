@@ -1,7 +1,7 @@
 import { RotateCcw } from "lucide-react";
 
 type ErrorButtonProps={
-    type: 'Retry'// what type it is for now we only have the retry part
+    type: 'Retry'// what type it is for now we only have the retry part (will affect what icon that we show.)
     text?: string// optional/ additional text of button
     disabled?: boolean;//whether it is disabled or not
     onClick?: ()=>any;// what to do when button is clicked.

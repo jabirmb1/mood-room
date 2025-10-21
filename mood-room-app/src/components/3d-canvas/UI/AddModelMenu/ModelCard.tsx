@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { ModelThumbnail } from './ModelThumbnail';
 import { ModelItem } from './AddModelTab';
-import { use, useEffect, useState } from 'react';
+import {useState } from 'react';
 import { useTheme } from 'next-themes';
 import { darkThemeBackground, darkThemeBackgroundSecondary, darkThemeSecondaryText, lightThemeBackground, lightThemeSecondaryText } from '@/utils/UI/const';
 
@@ -21,6 +21,7 @@ export function ModelCard({ item, hoveredModel, setHoveredModel, onClick }: Mode
     // If model failed to load, don't render the card
     if (!isVisible) return null;
 
+    //TO DO: SWAP THIS OUT WITH BUTTONS!!!
     return (
         <motion.div
         key={item.id}

@@ -1,8 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { ColourPickerControl } from '../../../UI/ColourPickerControl';
-import { HorizontalSlider } from '../../../UI/HorizontalSlider';
+import { ColourPickerControl } from '../../../general-UI/ColourPickerControl';
+import { HorizontalSlider } from '../../../general-UI/HorizontalSlider';
 import { getObjectLightColour, getObjectLightIntensity, isObjectLightOn, updateAllLights} from '@/utils/3d-canvas/models';
 import {  getModelBaseLightIntensity, hasAnyLightSources, hasAnyThreeLights} from '@/utils/3d-canvas/models/lightingSystem';
 

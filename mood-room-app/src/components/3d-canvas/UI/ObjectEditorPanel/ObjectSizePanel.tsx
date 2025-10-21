@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { HorizontalSlider } from "../../../UI/HorizontalSlider"; 
+import { HorizontalSlider } from "../../../general-UI/HorizontalSlider"; 
 import { getLightSystemData, getObjectLightData, getObjectSizeDifference, updateAllLights } from "@/utils/3d-canvas/models";
 import { globalScale } from "@/utils/3d-canvas/const";
 import { hasAnyThreeLights, hasScreens, updateAllLightBeamDimensions } from "@/utils/3d-canvas/models/lightingSystem";

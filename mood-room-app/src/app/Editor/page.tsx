@@ -20,10 +20,10 @@ import { AddModelButton } from '@/components/3d-canvas/UI/AddModelMenu/AddModelB
 import { ModelItem } from '@/components/3d-canvas/UI/AddModelMenu/AddModelTab';
 import { LightingButton } from '@/components/3d-canvas/UI/LightingPanel/LightingButton';
 import { LightingConfig } from '@/components/3d-canvas/UI/LightingPanel/LightingPanel';
-import { ConfirmDialog } from '@/components/UI/ConfirmDialog';
+import { ConfirmDialog } from '@/components/general-UI/ConfirmDialog';
 import RoomFoundation from '@/components/3d-canvas/scene/scene-objects/RoomFoundation';
 import { RoomContext } from '../contexts/RoomContext';
-import { ColliderJsonData, Model, MoodType } from '@/types/types';
+import { ColliderJsonData, Model, MoodType, resolvedRoomColourPalette } from '@/types/types';
 import { Physics, RigidBody } from '@react-three/rapier';
 import { getCategoryTagsFromURL, getModelColliderDataUrl } from '@/utils/3d-canvas/models';
 import Colliders from '@/components/3d-canvas/scene/scene-infrastructure/Colliders';
@@ -94,29 +94,30 @@ const addModelCooldownTime = 1000;// 1 second.
 
   // testing out moods
   const [mood, setMood] = useState<MoodType | null>(null)
-  const [roomColourPalette, setRoomPalette] = useState();
-  
-  // useEffect to get mood from query params:
+  const [roomColourPalette, setRoomPalette] = useState<resolvedRoomColourPalette | null>(null);
+  const [startFromScratch, setStartFromScratch] = useState<boolean>(true)// flag to check if user
+  // wants to start from scratch, or build up on from a proceurally generated base.
+
+  // useEffect to get mood from query params: if they were provided
+  // if query param were provided, then we will preset the room with a colour palette and a base layout
+  // other wise users can start from scratch.
   useEffect(() => {
     if (searchParams){
-      const mood = searchParams.get('mood') as MoodType | null;
+      const mood = searchParams.get('mood') as MoodType | null;// extend this to later accept either a mood
+      // or a flag, if user does not want to start from a template, allow them to start from scratch
+      // flag can be e.g. no-mood or no-template etc.
       if (mood){
         setMood(mood);
         const palette = generateMoodRoomColourPalette(mood);
         if (palette)
         {
           setRoomPalette(palette);
+          setStartFromScratch(false)// user wishes to start from a procedurally generated base.
         }
         else{
           router.back()
         }
       }
-      else{
-        router.back()
-      }
-    }
-    else{
-      router.back()
     }
   }, [searchParams]);
 

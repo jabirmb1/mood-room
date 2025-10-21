@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import ColourButton from '../ColourButton';
 import * as THREE from 'three';
 import { getLightSystemData, getObjectLightData, getObjectMaterialMap, resetColourPalette, updateAllLights} from '../../../../utils/3d-canvas/models'
-import { ColourPickerControl } from '../../../UI/ColourPickerControl';
+import { ColourPickerControl } from '../../../general-UI/ColourPickerControl';
 import './colourPicker.css';
 import { MaterialColourType } from '@/types/types';
 import { modelMaterialNames } from '@/utils/3d-canvas/const';

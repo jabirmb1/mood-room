@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import DropDownMenu from './UserDropDownMenu';
-import ThemeToggle from '../UI/ThemeToggle';
+import ThemeToggle from '../general-UI/ThemeToggle';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import { darkTheme, lightTheme } from '@/utils/UI/const';
@@ -29,7 +29,7 @@ export default function NavBar() {
                 <Link href="/" className="transition-colours hover:text-[grey]">Home</Link>
             </li>
             <li>
-                <Link href="/generation" className="transition-colours hover:text-[grey]">Generate</Link>
+                <Link href="/RoomCreationOption" className="transition-colours hover:text-[grey]">Create</Link>
             </li>
         </ul>
     </div>

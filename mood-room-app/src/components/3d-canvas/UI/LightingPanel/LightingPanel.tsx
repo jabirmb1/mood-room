@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ColourPickerControl } from '../../../UI/ColourPickerControl';
+import { ColourPickerControl } from '../../../general-UI/ColourPickerControl';
 import { useTheme } from 'next-themes';
 import { darkThemeBorder, darkThemeSecondaryText, darkThemeTitle, lightThemeBorder, lightThemeSecondaryText, lightThemeTitle } from '@/utils/UI/const';
 

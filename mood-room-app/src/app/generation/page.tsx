@@ -6,10 +6,10 @@ import { Courier_Prime } from 'next/font/google';
 import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send} from 'lucide-react';
-import { ProgressBar } from '@/components/UI/ProgressBar';
-import { ErrorMessage } from '@/components/UI/Errors/ErrorMessage';
+import { ProgressBar } from '@/components/general-UI/ProgressBar';
+import { ErrorMessage } from '@/components/general-UI/Errors/ErrorMessage';
 import { MoodType } from '@/types/types';
-import { ErrorButton } from '@/components/UI/Errors/ErrorButton';
+import { ErrorButton } from '@/components/general-UI/Errors/ErrorButton';
 import { WorkerMessage, WorkerInput } from '@/web-workers/llm.worker';
 
 
